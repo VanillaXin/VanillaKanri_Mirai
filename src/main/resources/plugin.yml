@@ -1,0 +1,12 @@
+#file: noinspection YAMLSchemaValidation
+id: "xin.vanilla.vanilla-kanri"
+# 版本
+version: "2.0.0"
+# 名称
+name: "香草群管"
+# 作者
+author: "VanillaXin"
+# 描述
+#dependencies: [ ]
+# 详细信息
+#info: "..."
