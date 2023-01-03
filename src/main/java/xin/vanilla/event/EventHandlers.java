@@ -1,15 +1,36 @@
 package xin.vanilla.event;
 
 import kotlin.coroutines.CoroutineContext;
+import net.mamoe.mirai.event.Event;
 import net.mamoe.mirai.event.EventHandler;
+import net.mamoe.mirai.event.ExceptionInEventHandlerException;
 import net.mamoe.mirai.event.SimpleListenerHost;
 import net.mamoe.mirai.event.events.*;
 import org.jetbrains.annotations.NotNull;
+import xin.vanilla.util.StringUtils;
+
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 public class EventHandlers extends SimpleListenerHost {
     @Override
     public void handleException(@NotNull CoroutineContext context, @NotNull Throwable exception) {
         // 处理事件处理时抛出的异常
+        Event event = ((ExceptionInEventHandlerException) exception).getEvent();
+
+        exception = getBaseException(exception);
+
+        if (event instanceof GroupMessageEvent) {
+            GroupMessageEvent groupMessageEvent = (GroupMessageEvent) event;
+
+            StringWriter stringWriter = new StringWriter();
+            PrintWriter writer = new PrintWriter(stringWriter);
+            exception.printStackTrace(writer);
+            StringBuffer buffer = stringWriter.getBuffer();
+
+            groupMessageEvent.getGroup().sendMessage(StringUtils.getByLine(buffer.toString(), 1, 5, "... [num] more"));
+        }
+
     }
 
     @EventHandler
@@ -40,6 +61,18 @@ public class EventHandlers extends SimpleListenerHost {
     public void onOtherClientMessage(@NotNull OtherClientMessageEvent event) throws Exception {
         // 监听其他客户端消息
         new OtherClientMsgEvent(event).run();
+    }
+
+    /**
+     * 获取最底层的异常
+     */
+    private Throwable getBaseException(Throwable exception) {
+        Throwable cause = exception.getCause();
+        while (cause != null) {
+            cause = exception.getCause();
+            if (cause != null) exception = cause;
+        }
+        return exception;
     }
 
 }

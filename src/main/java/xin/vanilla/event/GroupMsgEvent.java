@@ -29,14 +29,16 @@ public class GroupMsgEvent extends BaseMsgEvent {
     public void run() {
         if (isBlock) return;
         logger.info("群聊: " + group.getId() + ":" + sender.getId() + " -> " + msg.contentToString());
+
         if (msg.contentToString().startsWith("/va botOwner")) {
-            group.sendMessage("香草酱的主人是: " + Va.config.PERMISSIONS.botOwner.get() + " 喵!");
+            group.sendMessage("botOwner is: " + Va.config.PERMISSIONS.botOwner.get());
         }
         if (msg.contentToString().startsWith("/va set botOwner ")) {
             long botOwner = Long.parseLong(msg.contentToString().substring("/va set botOwner ".length()));
             Va.config.PERMISSIONS.botOwner.set(botOwner);
-            Va.reloadPluginConfig(Va.config.PERMISSIONS);
-            group.sendMessage("香草酱的主人现在是: " + Va.config.PERMISSIONS.botOwner.get() + " 喵!");
+            //Va.savePluginConfig(Va.config.PERMISSIONS);
+            //Va.reloadPluginConfig(Va.config.PERMISSIONS);
+            group.sendMessage("botOwner now is: " + Va.config.PERMISSIONS.botOwner.get());
         }
 
     }
