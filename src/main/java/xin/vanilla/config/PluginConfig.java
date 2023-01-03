@@ -6,6 +6,8 @@ public class PluginConfig {
     // 插件指令
     public Instructions INS = new Instructions();
 
+    public PermissionConfig PERMISSIONS = new PermissionConfig();
+
 
     public boolean init() {
         // 初始化指令

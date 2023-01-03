@@ -8,9 +8,6 @@ import org.jetbrains.annotations.NotNull;
 import xin.vanilla.config.PluginConfig;
 import xin.vanilla.event.EventHandlers;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 @SuppressWarnings("unused")
 public final class VanillaKanri extends JavaPlugin {
     public static final VanillaKanri INSTANCE = new VanillaKanri();
@@ -39,6 +36,9 @@ public final class VanillaKanri extends JavaPlugin {
 
         // 注册事件监听
         GlobalEventChannel.INSTANCE.registerListenerHost(new EventHandlers());
+
+        // 建立自动保存链接(未测试)
+        reloadPluginData(config.PERMISSIONS);
 
         // 初始化插件配置
         config.init();

@@ -29,5 +29,8 @@ public class GroupMsgEvent extends BaseMsgEvent {
     public void run() {
         if (isBlock) return;
         logger.info("群聊: " + group.getId() + ":" + sender.getId() + " -> " + msg.contentToString());
+        if (msg.contentToString().startsWith("/va botOwner")) {
+            group.sendMessage("香草酱的主人是: " + Va.config.PERMISSIONS.botOwner.get() + " 喵!");
+        }
     }
 }

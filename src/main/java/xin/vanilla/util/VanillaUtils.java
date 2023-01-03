@@ -7,10 +7,12 @@ import net.mamoe.mirai.contact.MemberPermission;
 import net.mamoe.mirai.message.data.MessageChain;
 import xin.vanilla.VanillaKanri;
 
+@SuppressWarnings("unused")
 public class VanillaUtils {
     private static final VanillaKanri Va = VanillaKanri.INSTANCE;
 
     // region 判断指令格式
+
     /**
      * 判断是否指令消息
      */
@@ -44,6 +46,7 @@ public class VanillaUtils {
     // endregion 判断指令格式
 
     // region 判断权限
+
     /**
      * 机器人是否群主
      */
@@ -77,16 +80,16 @@ public class VanillaUtils {
      *
      * @return boolean, true: 前者大于后者, false: 前者小于等于后者
      */
-    public static boolean equalsPermission(Member a, Member b) {
+    public static boolean equalsLevel(Member a, Member b) {
         return a.getPermission().compareTo(b.getPermission()) > 0;
     }
 
     /**
      * 比较两者群内权限
      *
-     * @return int, 1: 前者大于后者, 0: 前者等于后者, -1: 前者小于后者
+     * @return int, 1: 前者大于后者, 0: 俩者相等, -1: 前者小于后者
      */
-    public static int comparePermission(Member a, Member b) {
+    public static int compareLevel(Member a, Member b) {
         return a.getPermission().compareTo(b.getPermission());
     }
 
@@ -99,6 +102,7 @@ public class VanillaUtils {
 
     /**
      * 判断是否机器人主人
+     * <p>
      * 主人>超管>群主>主管>群管>副管=群副管
      */
     public static boolean isBotOwner(Bot bot, long qq) {
@@ -107,6 +111,7 @@ public class VanillaUtils {
 
     /**
      * 判断是否机器人超管
+     * <p>
      * 主人>超管>群主>主管>群管>副管=群副管
      */
     public static boolean isSuperAdmin(Bot bot, long qq) {
@@ -115,6 +120,7 @@ public class VanillaUtils {
 
     /**
      * 判断是否机器人主管
+     * <p>
      * 主人>超管>群主>主管>群管>副管=群副管
      */
     public static boolean isBotAdmin(Bot bot, long qq) {
@@ -123,6 +129,7 @@ public class VanillaUtils {
 
     /**
      * 判断是否机器人副管
+     * <p>
      * 主人>超管>群主>主管>群管>副管=群副管
      */
     public static boolean isDeputyAdmin(Bot bot, long qq) {
@@ -131,10 +138,29 @@ public class VanillaUtils {
 
     /**
      * 判断是否群副管
+     * <p>
      * 主人>超管>群主>主管>群管>副管=群副管
      */
     public static boolean isDeputyAdmin(Group group, long qq) {
         return false;
+    }
+
+    /**
+     * 比较俩者机器人权限
+     *
+     * @return boolean, true: 前者大于后者, false: 前者小于等于后者
+     */
+    public static boolean equalsPermission(long a, long b) {
+        return false;
+    }
+
+    /**
+     * 比较俩者机器人权限
+     *
+     * @return int, 1: 前者大于后者, 0: 俩者相等, -1: 前者小于后者
+     */
+    public static int comparePermission(long a, long b) {
+        return 0;
     }
 
     // endregion 判断权限
