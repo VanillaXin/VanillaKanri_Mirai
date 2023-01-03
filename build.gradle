@@ -10,11 +10,13 @@ version = '2.0.0'
 
 repositories {
     maven { url 'https://maven.aliyun.com/repository/public' }
+    maven { url "https://jitpack.io" }
     mavenCentral()
 }
 
 dependencies {
     implementation 'io.github.karlatemp:caller:1.1.1'
+    implementation 'com.github.vince-styling:aSQLitePlus-android:asqliteplus-0.2'
 }
 
 tasks.withType(JavaCompile) {

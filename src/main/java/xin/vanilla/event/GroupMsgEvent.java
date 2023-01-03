@@ -13,9 +13,11 @@ public class GroupMsgEvent extends BaseMsgEvent {
     private final Member sender;
     private final Bot bot;
     private final long time;
+    private final boolean isBlock;
 
 
     public GroupMsgEvent(GroupMessageEvent event) {
+        this.isBlock = new InstructionMsgEvent(event).run();
         this.event = event;
         this.msg = this.event.getMessage();
         this.group = this.event.getGroup();
@@ -25,6 +27,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
     }
 
     public void run() {
+        if (isBlock) return;
         logger.info("群聊: " + group.getId() + ":" + sender.getId() + " -> " + msg.contentToString());
     }
 }

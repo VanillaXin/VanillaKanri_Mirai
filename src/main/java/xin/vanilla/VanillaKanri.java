@@ -5,11 +5,17 @@ import net.mamoe.mirai.console.plugin.jvm.JavaPlugin;
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescriptionBuilder;
 import net.mamoe.mirai.event.GlobalEventChannel;
 import org.jetbrains.annotations.NotNull;
+import xin.vanilla.config.PluginConfig;
 import xin.vanilla.event.EventHandlers;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @SuppressWarnings("unused")
 public final class VanillaKanri extends JavaPlugin {
     public static final VanillaKanri INSTANCE = new VanillaKanri();
+
+    public final PluginConfig config = new PluginConfig();
 
     private VanillaKanri() {
         // 不几道为啥找不到配置文件
@@ -33,6 +39,9 @@ public final class VanillaKanri extends JavaPlugin {
 
         // 注册事件监听
         GlobalEventChannel.INSTANCE.registerListenerHost(new EventHandlers());
+
+        // 初始化插件配置
+        config.init();
     }
 
     @Override
