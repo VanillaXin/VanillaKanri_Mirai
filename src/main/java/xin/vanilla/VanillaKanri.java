@@ -38,7 +38,7 @@ public final class VanillaKanri extends JavaPlugin {
         GlobalEventChannel.INSTANCE.registerListenerHost(new EventHandlers());
 
         // 建立自动保存链接(未测试)
-        reloadPluginData(config.PERMISSIONS);
+        reloadPluginConfig(config.PERMISSIONS);
 
         // 初始化插件配置
         config.init();

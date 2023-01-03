@@ -32,5 +32,12 @@ public class GroupMsgEvent extends BaseMsgEvent {
         if (msg.contentToString().startsWith("/va botOwner")) {
             group.sendMessage("香草酱的主人是: " + Va.config.PERMISSIONS.botOwner.get() + " 喵!");
         }
+        if (msg.contentToString().startsWith("/va set botOwner ")) {
+            long botOwner = Long.parseLong(msg.contentToString().substring("/va set botOwner ".length()));
+            Va.config.PERMISSIONS.botOwner.set(botOwner);
+            Va.reloadPluginConfig(Va.config.PERMISSIONS);
+            group.sendMessage("香草酱的主人现在是: " + Va.config.PERMISSIONS.botOwner.get() + " 喵!");
+        }
+
     }
 }
