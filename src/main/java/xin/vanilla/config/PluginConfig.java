@@ -69,7 +69,7 @@ public class PluginConfig {
                 //否则读取配置文件中配置并赋值给插件角色对象
                 for (Field field : fields) {
                     if (permissionMap.containsKey(field.getName())) {
-                        if (field.getType().getTypeName().equals("java.util.Set")) {
+                        if (field.get(PERMISSIONS) instanceof Set) {
                             if (field.getGenericType().getTypeName().contains("java.lang.Long")) {
                                 field.set(PERMISSIONS, permissionMap.get(field.getName()).stream()
                                         .map(Long::parseLong)
