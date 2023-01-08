@@ -12,8 +12,7 @@ public class StringUtils {
 
     /**
      * 根据行号截取字符串
-     * <p>
-     * (开始堆粪
+     * <p>(开始堆粪</p>
      *
      * @param suffix 如果结尾还有内容, 是否需要添加的后缀, 例: "后面还有[num]行"
      */

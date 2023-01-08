@@ -37,7 +37,7 @@ public class InstructionMsgEvent {
     public boolean run() {
         int back;
         // 判断是否指令消息(仅判断顶级前缀)
-        if (!VanillaUtils.isInstructionMsg(msg, false)) return true;
+        if (!VanillaUtils.isInstructionMsg(msg, false)) return false;
 
         // 判断发送者有无操作机器人的权限
 
@@ -47,12 +47,12 @@ public class InstructionMsgEvent {
         // 解析执行群管指令
         back = kanriIns();
         if (back == RETURN_BREAK_TRUE) return true;
-        else if (back == RETURN_BREAK_FALSE) return true;
+        else if (back == RETURN_BREAK_FALSE) return false;
 
         // 解析执行词库指令
         back = keyIns();
         if (back == RETURN_BREAK_TRUE) return true;
-        else if (back == RETURN_BREAK_FALSE) return true;
+        else if (back == RETURN_BREAK_FALSE) return false;
 
 
         return false;

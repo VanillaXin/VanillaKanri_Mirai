@@ -22,16 +22,17 @@ public class VanillaUtils {
 
     /**
      * 判断是否指令消息
+     * <p> 匹配规则: [顶级前缀] [群号] 二级前缀
      *
      * @param secondary 若顶级前缀为空, 是否继续判断二级指令前缀
      */
     public static boolean isInstructionMsg(MessageChain msg, boolean secondary) {
-        String prefix = Va.config.INS.prefix;
+        String prefix = Va.config.INSTRUCTIONS.prefix;
         if ("".equals(prefix)) {
             if (!secondary) return true;
 
             // 如果顶级前缀为空则遍历二级指令前缀
-            for (String prefix_ : Va.config.INS.secondaryPrefix) {
+            for (String prefix_ : Va.config.INSTRUCTIONS.secondaryPrefix) {
                 if ("".equals(prefix_)) continue;
                 if (msg.contentToString().startsWith(prefix_ + " ")) return true;
             }
