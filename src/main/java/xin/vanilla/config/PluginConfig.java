@@ -59,7 +59,7 @@ public class PluginConfig {
                 for (Field field : fields) {
                     permissionMap.put(field.getName(), new HashSet<String>() {{
                         if (field.get(PERMISSIONS) instanceof Set) {
-                            addAll((List<String>) ((Set) field.get(PERMISSIONS)).stream().map(o -> o.toString()).collect(Collectors.toList()));
+                            addAll((List<String>) ((Set) field.get(PERMISSIONS)).stream().map(Object::toString).collect(Collectors.toList()));
                         } else {
                             add(field.get(PERMISSIONS).toString());
                         }

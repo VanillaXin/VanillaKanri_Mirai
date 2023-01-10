@@ -16,9 +16,17 @@ repositories {
 
 dependencies {
     implementation 'io.github.karlatemp:caller:1.1.1'
-    implementation 'com.github.vince-styling:aSQLitePlus-android:asqliteplus-0.2'
+    //implementation 'com.github.vince-styling:aSQLitePlus-android:asqliteplus-0.2'
     implementation 'org.xerial:sqlite-jdbc:3.40.0.0'
+    implementation 'com.aventrix.jnanoid:jnanoid:2.0.0'
+
+    compileOnly 'org.projectlombok:lombok:1.18.24'
+    annotationProcessor 'org.projectlombok:lombok:1.18.24'
+
     testImplementation 'junit:junit:4.13.2'
+
+    testCompileOnly 'org.projectlombok:lombok:1.18.24'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.24'
 }
 
 tasks.withType(JavaCompile) {
