@@ -2,6 +2,9 @@ package xin.vanilla.util;
 
 
 import org.sqlite.JDBC;
+import xin.vanilla.util.statement.Function;
+import xin.vanilla.util.statement.QueryStatement;
+import xin.vanilla.util.statement.Statement;
 
 import java.lang.reflect.Method;
 import java.sql.*;
@@ -120,21 +123,24 @@ public class SqliteUtil {
     /**
      * get statement
      */
-    private Statement getStatement(Connection con) {
+    private PreparedStatement getStatement(Connection con, String sql) {
         try {
-            return con.createStatement();
+            return con.prepareStatement(sql);
         } catch (SQLException e) {
             e.printStackTrace();
             return null;
         }
     }
 
-    public boolean execute(String sql) {
+    /**
+     * 执行SQL语句
+     */
+    public boolean executeSql(String sql) {
         Connection c = this.getConn();
-        Statement ps = this.getStatement(c);
+        PreparedStatement ps = this.getStatement(c, sql);
         try {
             if (ps == null) return false;
-            return ps.execute(sql);
+            return ps.execute();
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
@@ -149,22 +155,81 @@ public class SqliteUtil {
     }
 
     /**
-     * query
-     *
-     * @param sql SQL
+     * 执行查询操作
      */
-    public ResultSet select(String sql) {
+    public ResultSet select(Statement statement) {
         Connection c = this.getConn();
-        Statement stm = this.getStatement(c);
+        PreparedStatement ps = this.getStatement(c, statement.toString());
         try {
-            if (stm == null) return null;
-            return stm.executeQuery(sql);
+            if (setStatement(statement, ps)) return null;
+            return ps.executeQuery();
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
             this.releaseConn(c);
         }
         return null;
+    }
+
+    /**
+     * 执行插入操作
+     */
+    public Integer insert(Statement statement) {
+        Connection c = this.getConn();
+        PreparedStatement ps = this.getStatement(c, statement.toString());
+        try {
+            if (setStatement(statement, ps)) return null;
+            return ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        } finally {
+            try {
+                c.commit();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            this.releaseConn(c);
+        }
+    }
+
+    private boolean setStatement(Statement statement, PreparedStatement ps) throws SQLException {
+        if (ps == null) return true;
+        List<Object> operands = statement.operands;
+        for (int i = 0; i < operands.size(); i++) {
+            Object object = operands.get(i);
+            if (object instanceof Integer)
+                ps.setInt(i + 1, (Integer) object);
+            else if (object instanceof Long)
+                ps.setLong(i + 1, (Long) object);
+            else if (object instanceof Float)
+                ps.setFloat(i + 1, (Float) object);
+            else if (object instanceof Double)
+                ps.setDouble(i + 1, (Double) object);
+            else if (object instanceof String)
+                ps.setString(i + 1, object.toString());
+            else if (object instanceof Byte)
+                ps.setByte(i + 1, (Byte) object);
+            else if (object instanceof byte[])
+                ps.setBytes(i + 1, (byte[]) object);
+            else
+                ps.setObject(i + 1, object);
+        }
+        return false;
+    }
+
+    /**
+     * 执行更新操作
+     */
+    public Integer update(Statement statement) {
+        return insert(statement);
+    }
+
+    /**
+     * 执行删除操作
+     */
+    public Integer delete(Statement statement) {
+        return insert(statement);
     }
 
     public static final String METHOD_PREFIX = "set";
@@ -203,8 +268,11 @@ public class SqliteUtil {
         }
     }
 
-    public <T> T getEntity(Object sql, final Class<T> clazz) {
-        try (ResultSet resultSet = select(sql.toString())) {
+    /**
+     * 查询对象
+     */
+    public <T> T getEntity(Statement statement, final Class<T> clazz) {
+        try (ResultSet resultSet = select(statement)) {
             if (!resultSet.next()) return null;
             return getEntity(resultSet, clazz);
         } catch (SQLException e) {
@@ -212,62 +280,19 @@ public class SqliteUtil {
         }
     }
 
-    public <T> List<T> getList(Object sql, final Class<T> clazz, int limit) {
-        try (ResultSet resultSet = select(sql.toString())) {
+    /**
+     * 查询对象列表
+     */
+    public <T> List<T> getList(Statement statement, final Class<T> clazz) {
+        try (ResultSet resultSet = select(statement)) {
             List<T> list = new ArrayList<>();
-            while (resultSet.next() && (limit < 0 || list.size() < limit)) {
+            while (resultSet.next()) {
                 list.add(getEntity(resultSet, clazz));
             }
             return list;
         } catch (Exception ignored) {
             return null;
         }
-    }
-
-    public <T> List<T> getList(Object sql, final Class<T> clazz) {
-        return getList(sql, clazz, -1);
-    }
-
-    /**
-     * insert
-     *
-     * @param sql SQL
-     */
-    public Integer insert(String sql) {
-        Connection c = this.getConn();
-        Statement ps = this.getStatement(c);
-        try {
-            if (ps == null) return null;
-            return ps.executeUpdate(sql);
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return null;
-        } finally {
-            try {
-                c.commit();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-            this.releaseConn(c);
-        }
-    }
-
-    /**
-     * update
-     *
-     * @param sql SQL
-     */
-    public Integer update(String sql) {
-        return insert(sql);
-    }
-
-    /**
-     * delete
-     *
-     * @param sql SQL
-     */
-    public Integer delete(String sql) {
-        return insert(sql);
     }
 
     /**
@@ -300,12 +325,32 @@ public class SqliteUtil {
         return true;
     }
 
+    /**
+     * 数据库是否存在某表
+     */
     public boolean containsTable(String name) {
-        try (ResultSet resultSet = select("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name = '" + name + "';")) {
+        Statement statement = QueryStatement.produce(Function.count())
+                .from("sqlite_master")
+                .where("type").eq("table")
+                .and("name").eq(name);
+        try (ResultSet resultSet = select(statement)) {
             resultSet.next();
             return resultSet.getInt(1) > 0;
         } catch (SQLException e) {
             return false;
+        }
+    }
+
+    /**
+     * 获取指定表的新插入行ID。 如果给定的表没有 INTEGER 主键，则返回 0。
+     */
+    public int getLastInsertRowId(CharSequence table) {
+        Statement statement = QueryStatement.produce("seq").from("sqlite_sequence").where("name").eq(table);
+        try (ResultSet resultSet = select(statement)) {
+            if (!resultSet.next()) return 0;
+            return resultSet.getInt(1);
+        } catch (SQLException e) {
+            return 0;
         }
     }
 
@@ -326,7 +371,9 @@ public class SqliteUtil {
         }
     }
 
-
+    /**
+     * 转换列名
+     */
     private String translateColumnName(String columnName) {
         return columnName.replaceAll("_", "");
     }

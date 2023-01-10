@@ -52,10 +52,12 @@ public class PluginConfig {
      */
     public boolean initPermissions() {
         try {
+            // 配置文件中的权限map
             Map<String, Set<String>> permissionMap = source.permission.get();
+            // 插件角色对象变量列表
             Field[] fields = PERMISSIONS.getClass().getFields();
             if (permissionMap.isEmpty()) {
-                // 如果权限map为空则初始化插件配置文件中角色配置
+                // 如果配置文件为空则初始化插件配置文件中角色配置
                 for (Field field : fields) {
                     permissionMap.put(field.getName(), new HashSet<String>() {{
                         if (field.get(PERMISSIONS) instanceof Set) {
@@ -66,9 +68,13 @@ public class PluginConfig {
                     }});
                 }
             } else {
-                //否则读取配置文件中配置并赋值给插件角色对象
+                // 否则读取配置文件中配置并赋值给插件角色对象
                 for (Field field : fields) {
                     if (permissionMap.containsKey(field.getName())) {
+                        // 允许的类型: Long、Integer、Float、Double、String
+                        // Set<Long>、Set<Integer>、Set<Float>、Set<Double>、Set<String>
+
+                        // 如果是Set集合
                         if (field.get(PERMISSIONS) instanceof Set) {
                             if (field.getGenericType().getTypeName().contains("java.lang.Long")) {
                                 field.set(PERMISSIONS, permissionMap.get(field.getName()).stream()
@@ -118,7 +124,6 @@ public class PluginConfig {
                                 field.set(PERMISSIONS, permissionMap.get(field.getName()).stream().limit(1).collect(Collectors.toList()).get(0));
                             }
                         }
-
                     }
                 }
             }

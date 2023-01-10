@@ -5,13 +5,16 @@ import org.junit.Test;
 import xin.vanilla.entity.TestTable;
 import xin.vanilla.util.SqliteUtil;
 import xin.vanilla.util.StringUtils;
+import xin.vanilla.util.statement.InsertStatement;
+import xin.vanilla.util.statement.QueryStatement;
+import xin.vanilla.util.statement.Statement;
 
 import java.security.SecureRandom;
 import java.sql.SQLException;
 
 public class VanillaTest {
     @Test
-    public void test01() {
+    public void testGetByLine() {
         String s = "1这是第一行\n"
                 + "2这是第二行\n"
                 + "3这是第三行\n"
@@ -28,7 +31,7 @@ public class VanillaTest {
     public void testCreateTable() throws SQLException {
         SqliteUtil sqliteUtil = SqliteUtil.getInstance();
         if (!sqliteUtil.containsTable("test_table")) {
-            sqliteUtil.update(
+            sqliteUtil.executeSql(
                     "CREATE TABLE test_table " +
                             "(id        INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL , " +
                             " name      TEXT                              NOT NULL, " +
@@ -48,11 +51,23 @@ public class VanillaTest {
         String age = NanoIdUtils.randomNanoId(new SecureRandom(), "0123456789".toCharArray(), 2);
         String address = NanoIdUtils.randomNanoId(new SecureRandom(), "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray(), 10);
 
-        System.out.println(sqliteUtil.insert("INSERT INTO test_table (name, age, address, salary) " +
-                "VALUES ('" + name + "', " + age + ", '" + address + "', " + (Float.parseFloat(age) * 100 / 3) + " );"));
-        System.out.println(sqliteUtil.getEntity("SELECT * FROM test_table", TestTable.class));
-        System.out.println(sqliteUtil.getList("SELECT * FROM test_table", TestTable.class));
-        System.out.println(sqliteUtil.getList("SELECT * FROM test_table", TestTable.class, 5));
+        InsertStatement insert = InsertStatement.produce("test_table")
+                .put("name", name)
+                .put("age", age)
+                .put("address", address)
+                .put("salary", Float.parseFloat(age) * 100 / 3);
+        System.out.println(sqliteUtil.insert(insert));
+
+        Statement select = QueryStatement.produce("*")
+                .from("test_table");
+        System.out.println(sqliteUtil.getEntity(select, TestTable.class));
+        System.out.println(sqliteUtil.getList(select, TestTable.class));
+        System.out.println(sqliteUtil.getList(select.limit(5), TestTable.class));
+    }
+
+    @Test
+    public void test() {
+
     }
 
 }
