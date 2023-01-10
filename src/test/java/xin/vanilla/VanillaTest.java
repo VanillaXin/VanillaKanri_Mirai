@@ -27,16 +27,16 @@ public class VanillaTest {
     @Test
     public void testCreateTable() throws SQLException {
         SqliteUtil sqliteUtil = SqliteUtil.getInstance();
-        if (!sqliteUtil.containsTable("testTable")) {
+        if (!sqliteUtil.containsTable("test_table")) {
             sqliteUtil.update(
-                    "CREATE TABLE testTable " +
-                            "(ID        INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL , " +
-                            " NAME      TEXT                              NOT NULL, " +
-                            " AGE       INTEGER                           NOT NULL, " +
-                            " ADDRESS   CHAR(50), " +
-                            " SALARY    REAL)");
+                    "CREATE TABLE test_table " +
+                            "(id        INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL , " +
+                            " name      TEXT                              NOT NULL, " +
+                            " age       INTEGER                           NOT NULL, " +
+                            " address   CHAR(50), " +
+                            " salary    REAL)");
         }
-        System.out.println(sqliteUtil.containsTable("testTable"));
+        System.out.println(sqliteUtil.containsTable("test_table"));
     }
 
     @Test
@@ -48,11 +48,11 @@ public class VanillaTest {
         String age = NanoIdUtils.randomNanoId(new SecureRandom(), "0123456789".toCharArray(), 2);
         String address = NanoIdUtils.randomNanoId(new SecureRandom(), "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray(), 10);
 
-        System.out.println(sqliteUtil.insert("INSERT INTO testTable (NAME,AGE,ADDRESS,SALARY) " +
+        System.out.println(sqliteUtil.insert("INSERT INTO test_table (name, age, address, salary) " +
                 "VALUES ('" + name + "', " + age + ", '" + address + "', " + (Float.parseFloat(age) * 100 / 3) + " );"));
-        System.out.println(sqliteUtil.getEntity("SELECT * FROM testTable", TestTable.class));
-        System.out.println(sqliteUtil.getList("SELECT * FROM testTable", TestTable.class));
-        System.out.println(sqliteUtil.getList("SELECT * FROM testTable", TestTable.class, 5));
+        System.out.println(sqliteUtil.getEntity("SELECT * FROM test_table", TestTable.class));
+        System.out.println(sqliteUtil.getList("SELECT * FROM test_table", TestTable.class));
+        System.out.println(sqliteUtil.getList("SELECT * FROM test_table", TestTable.class, 5));
     }
 
 }
