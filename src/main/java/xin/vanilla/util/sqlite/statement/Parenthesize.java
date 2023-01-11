@@ -13,25 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package xin.vanilla.util.statement;
+package xin.vanilla.util.sqlite.statement;
+
+import static java.lang.String.format;
 
 /**
- * A base class for implementations which served a clause. {@link Statement}
- * would calls the {@link #toString()} method to take the holding clause.
+ * This class used to parenthesizing the specified statement.
  */
-public abstract class ClauseWrapper {
+public class Parenthesize extends ClauseWrapper {
     /**
-     * The holding clause.
-     */
-    protected String clause;
-
-    /**
-     * Taking the holding clause via this method.
+     * Constructing the parenthesize clause.
      *
-     * @return the holding clause.
+     * @param object the object to be parenthesizing for.
      */
-    @Override
-    public String toString() {
-        return clause;
+    public Parenthesize(Object object) {
+        clause = format("(%s)", object);
     }
 }

@@ -1,10 +1,9 @@
-package xin.vanilla.util;
+package xin.vanilla.util.sqlite;
 
 
 import org.sqlite.JDBC;
-import xin.vanilla.util.statement.Function;
-import xin.vanilla.util.statement.QueryStatement;
-import xin.vanilla.util.statement.Statement;
+import xin.vanilla.util.sqlite.statement.QueryStatement;
+import xin.vanilla.util.sqlite.statement.Statement;
 
 import java.lang.reflect.Method;
 import java.sql.*;
@@ -34,18 +33,18 @@ public class SqliteUtil {
      * init connectionPool
      *
      * @param poolSize 连接池大小
-     * @param fileName 数据库文件名
+     * @param url      数据库地址
      */
-    private SqliteUtil(Integer poolSize, String fileName, Properties properties) throws SQLException {
+    private SqliteUtil(Integer poolSize, String url, Properties properties) throws SQLException {
         // init pool container
         if (null == poolSize || poolSize <= 0) {
-            throw new RuntimeException("'poolSize' 有误, 应大于0.");
+            throw new RuntimeException("连接池大小(poolSize)有误, 应大于0.");
         } else {
             connectionPool = new ArrayDeque<>(poolSize);
         }
 
         for (int i = 0; i < poolSize; i++) {
-            Connection connect = new JDBC().connect("jdbc:sqlite:" + fileName, properties);
+            Connection connect = new JDBC().connect(url, properties);
             connect.setAutoCommit(false);
             connectionPool.add(connect);
         }
@@ -59,6 +58,7 @@ public class SqliteUtil {
      */
     public static SqliteUtil getInstance(int poolSize, String fileName, Properties properties) throws SQLException {
         fileName = fileName != null && !fileName.equals("") ? fileName : "test.db";
+        if (!fileName.startsWith(PREFIX)) fileName = PREFIX + fileName;
         properties = properties != null ? properties : new Properties();
 
         if (!INSTANCE.containsKey(fileName) || null == INSTANCE.get(fileName)) {
@@ -193,6 +193,9 @@ public class SqliteUtil {
         }
     }
 
+    /**
+     * 设置参数
+     */
     private boolean setStatement(Statement statement, PreparedStatement ps) throws SQLException {
         if (ps == null) return true;
         List<Object> operands = statement.operands;
@@ -305,7 +308,10 @@ public class SqliteUtil {
 
     /**
      * 立即释放所有连接对象
-     * <p>不会自动提交或回滚事务</p>
+     * <p/>
+     * 使用 <strong>CLOSE_MODE_COMMIT</strong> 在释放前提交所有事务
+     * <p>
+     * 使用 <strong>CLOSE_MODE_ROLLBACK</strong> 在释放前回滚所有事务
      */
     public static boolean closeAll(int mode) {
         for (String s : SqliteUtil.INSTANCE.keySet()) {
@@ -329,7 +335,7 @@ public class SqliteUtil {
      * 数据库是否存在某表
      */
     public boolean containsTable(String name) {
-        Statement statement = QueryStatement.produce(Function.count())
+        Statement statement = QueryStatement.rowCount()
                 .from("sqlite_master")
                 .where("type").eq("table")
                 .and("name").eq(name);

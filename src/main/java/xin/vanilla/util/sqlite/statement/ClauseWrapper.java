@@ -13,26 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package xin.vanilla.util.statement;
-
-import static java.lang.String.format;
+package xin.vanilla.util.sqlite.statement;
 
 /**
- * This class used to producing an EXISTS operator clause which
- * used to tests whether a sub-query fetches at least one row.
- * <p/>
- * For example:
- * <p/>
- * new Exists(QueryStatement.produce().from("tbl_name"))
- * would produce "EXISTS (SELECT * FROM tbl_name)".
+ * A base class for implementations which served a clause. {@link Statement}
+ * would calls the {@link #toString()} method to take the holding clause.
  */
-public class Exists extends ClauseWrapper {
+public abstract class ClauseWrapper {
     /**
-     * Constructing the clause by a single sub-query.
-     *
-     * @param stmt apply a single sub-query as term.
+     * The holding clause.
      */
-    public Exists(Statement stmt) {
-        clause = format("EXISTS (%s)", stmt);
+    protected String clause;
+
+    /**
+     * Taking the holding clause via this method.
+     *
+     * @return the holding clause.
+     */
+    @Override
+    public String toString() {
+        return clause;
     }
 }

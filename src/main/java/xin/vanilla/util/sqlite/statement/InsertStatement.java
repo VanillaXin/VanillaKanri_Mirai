@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package xin.vanilla.util.statement;
+package xin.vanilla.util.sqlite.statement;
 
 /**
  * A statement producer that use to producing <b>INSERT</b> command of SQL language.

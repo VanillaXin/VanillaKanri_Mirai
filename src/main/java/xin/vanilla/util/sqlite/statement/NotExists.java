@@ -13,28 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package xin.vanilla.util.statement;
+package xin.vanilla.util.sqlite.statement;
+
+import static java.lang.String.format;
 
 /**
- * This class used to wrapping a String which you don't want to be auto quoting.
- * <p/>
- * <strong>Note:</strong> {@link Statement} would calls the {@link #toString()} method to take the final clause.
+ * Appending the NOT EXISTS operator clause by a sub-query.
  *
- * @see Statement#append(StringBuilder, Object)
+ * @see Exists
  */
-public class UnescapeString {
-    private String originStr;
-
-    public UnescapeString(String originStr) {
-        this.originStr = originStr;
-    }
-
-    public static UnescapeString build(String str) {
-        return new UnescapeString(str);
-    }
-
-    @Override
-    public String toString() {
-        return originStr;
+public class NotExists extends Exists {
+    /**
+     * Constructing the clause by a single sub-query.
+     *
+     * @param stmt apply a single sub-query as term.
+     */
+    public NotExists(Statement stmt) {
+        super(stmt);
+        clause = format("NOT %s", clause);
     }
 }

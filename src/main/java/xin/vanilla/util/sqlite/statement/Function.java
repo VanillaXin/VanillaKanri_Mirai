@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package xin.vanilla.util.statement;
+package xin.vanilla.util.sqlite.statement;
 
 import static java.lang.String.format;
 

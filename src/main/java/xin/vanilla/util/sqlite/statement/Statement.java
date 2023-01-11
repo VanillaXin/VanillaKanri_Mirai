@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package xin.vanilla.util.statement;
+package xin.vanilla.util.sqlite.statement;
 
 
 import java.util.ArrayList;
@@ -505,7 +505,6 @@ public class Statement {
      * A safe way to appending a value if instance of {@link String}, include quoting the String value.
      * In order to preventing SQL injection, also escaping that String value which may contain single quotes.
      * <p/>
-     * <strong>Note:</strong> you can wrapping a String as {@link UnescapeString} to avoiding this behaviors.
      *
      * @param value the raw value to be append, would translate to String["null"] if being <code>null</code>.
      * @return this statement.
@@ -519,7 +518,6 @@ public class Statement {
      * A safe way to appending a value if instance of {@link String}, include quoting the String value.
      * In order to preventing SQL injection, also escaping that String value which may contain single quotes.
      * <p/>
-     * <strong>Note:</strong> you can wrapping a String as {@link UnescapeString} to avoiding this behaviors.
      *
      * @param statement the StringBuilder that the SQL statement will be appended to.
      * @param value     the raw value to be append, would translate to String["null"] if being <code>null</code>.

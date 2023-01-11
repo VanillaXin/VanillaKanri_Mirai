@@ -3,11 +3,11 @@ package xin.vanilla;
 import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
 import org.junit.Test;
 import xin.vanilla.entity.TestTable;
-import xin.vanilla.util.SqliteUtil;
+import xin.vanilla.util.sqlite.SqliteUtil;
 import xin.vanilla.util.StringUtils;
-import xin.vanilla.util.statement.InsertStatement;
-import xin.vanilla.util.statement.QueryStatement;
-import xin.vanilla.util.statement.Statement;
+import xin.vanilla.util.sqlite.statement.InsertStatement;
+import xin.vanilla.util.sqlite.statement.QueryStatement;
+import xin.vanilla.util.sqlite.statement.Statement;
 
 import java.security.SecureRandom;
 import java.sql.SQLException;

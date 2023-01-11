@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package xin.vanilla.util.statement;
+package xin.vanilla.util.sqlite.statement;
 
 /**
  * A statement producer that use to producing <b>SELECT</b> command of SQL language. The completed SQL
  */
+@SuppressWarnings("unused")
 public class QueryStatement extends Statement {
     /**
      * Producing a normal SELECT statement.
@@ -75,7 +76,7 @@ public class QueryStatement extends Statement {
     }
 
     /**
-     * Producing an UNION statement that combine the results of two or more SELECT statements.
+     * Producing a UNION statement that combine the results of two or more SELECT statements.
      *
      * @param distinct   true if you want the results without returning any duplicate rows.
      *                   otherwise would including duplicate rows.

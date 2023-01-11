@@ -13,23 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package xin.vanilla.util.statement;
-
-import static java.lang.String.format;
+package xin.vanilla.util.sqlite.statement;
 
 /**
- * Appending the NOT EXISTS operator clause by a sub-query.
+ * A statement producer that use to producing <b>DELETE</b> command of SQL language.
  *
- * @see Exists
  */
-public class NotExists extends Exists {
+public class DeleteStatement extends Statement {
     /**
-     * Constructing the clause by a single sub-query.
+     * Producing a normal DELETE statement.
      *
-     * @param stmt apply a single sub-query as term.
+     * @param table the name of the table to deleting.
+     * @return the created statement.
      */
-    public NotExists(Statement stmt) {
-        super(stmt);
-        clause = format("NOT %s", clause);
+    public static Statement produce(CharSequence table) {
+        DeleteStatement deleteStmt = new DeleteStatement();
+        deleteStmt.statement.append("DELETE");
+        return deleteStmt.from(table);
     }
 }
