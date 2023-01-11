@@ -39,7 +39,7 @@ public class VanillaTest {
                             " address   CHAR(50), " +
                             " salary    REAL)");
         }
-        System.out.println(sqliteUtil.containsTable("test_table"));
+        System.out.println("是否存在`test_table`表: " + sqliteUtil.containsTable("test_table"));
     }
 
     @Test
@@ -56,13 +56,14 @@ public class VanillaTest {
                 .put("age", age)
                 .put("address", address)
                 .put("salary", Float.parseFloat(age) * 100 / 3);
-        System.out.println(sqliteUtil.insert(insert));
+        System.out.println("新增条数: " + sqliteUtil.insert(insert));
 
-        Statement select = QueryStatement.produce("*")
-                .from("test_table");
+        Statement select = QueryStatement.produce().from("test_table");
         System.out.println(sqliteUtil.getEntity(select, TestTable.class));
         System.out.println(sqliteUtil.getList(select, TestTable.class));
-        System.out.println(sqliteUtil.getList(select.limit(5), TestTable.class));
+        System.out.println(sqliteUtil.getList(select.orderBy("id").desc().limit(2), TestTable.class));
+
+        System.out.println("最后插入主键: " + sqliteUtil.getLastInsertRowId("test_table"));
     }
 
     @Test
