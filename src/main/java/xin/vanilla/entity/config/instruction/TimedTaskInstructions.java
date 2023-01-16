@@ -1,4 +1,4 @@
-package xin.vanilla.entity.instruction;
+package xin.vanilla.entity.config.instruction;
 
 /**
  * 定时任务操作指令

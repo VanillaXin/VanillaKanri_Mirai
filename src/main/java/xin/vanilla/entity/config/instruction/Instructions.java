@@ -1,4 +1,4 @@
-package xin.vanilla.entity.instruction;
+package xin.vanilla.entity.config.instruction;
 
 import java.util.HashSet;
 import java.util.Set;

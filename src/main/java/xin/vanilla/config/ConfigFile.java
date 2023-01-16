@@ -3,7 +3,6 @@ package xin.vanilla.config;
 import net.mamoe.mirai.console.data.SerializerAwareValue;
 import net.mamoe.mirai.console.data.java.JavaAutoSavePluginConfig;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -17,8 +16,8 @@ public class ConfigFile extends JavaAutoSavePluginConfig {
     /**
      * 基础配置
      */
-    public SerializerAwareValue<Map<String, String>> base = typedValue("base",
-            createKType(Map.class, createKType(String.class), createKType(String.class)));
+    public SerializerAwareValue<Map<String, Set<String>>> base = typedValue("base",
+            createKType(Map.class, createKType(String.class), createKType(Set.class, createKType(String.class))));
 
     /**
      * 权限配置
@@ -30,8 +29,8 @@ public class ConfigFile extends JavaAutoSavePluginConfig {
     /**
      * 指令配置
      */
-    public SerializerAwareValue<Map<String, List<String>>> instruction = typedValue("instruction",
-            createKType(Map.class, createKType(String.class), createKType(List.class, createKType(String.class))));
+    public SerializerAwareValue<Map<String, Set<String>>> instruction = typedValue("instruction",
+            createKType(Map.class, createKType(String.class), createKType(Set.class, createKType(String.class))));
 
     public ConfigFile set(String key, Object value) {
 

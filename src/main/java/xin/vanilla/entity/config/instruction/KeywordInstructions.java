@@ -1,4 +1,4 @@
-package xin.vanilla.entity.instruction;
+package xin.vanilla.entity.config.instruction;
 
 /**
  * 关键词词库操作指令
