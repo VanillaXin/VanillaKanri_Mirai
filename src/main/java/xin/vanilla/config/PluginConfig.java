@@ -22,7 +22,6 @@ import java.util.stream.Collectors;
  */
 @Deprecated
 public class PluginConfig {
-    // TODO 将该类内容迁移至*ConfigFile类
 
     /**
      * 可自动保存的源配置信息
@@ -53,7 +52,6 @@ public class PluginConfig {
      */
     public boolean refreshSource() {
         for (Field field : this.getClass().getFields()) {
-            // TODO 考虑使用注解判断
             if (field.getType().getName().contains("xin.vanilla.entity.config")) {
                 if (!refreshSource(field.getClass())) return false;
             }

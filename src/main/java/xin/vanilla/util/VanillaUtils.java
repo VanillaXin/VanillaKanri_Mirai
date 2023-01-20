@@ -11,13 +11,34 @@ import xin.vanilla.VanillaKanri;
 public class VanillaUtils {
     private static final VanillaKanri Va = VanillaKanri.INSTANCE;
     // 主人>超管>群主>主管>群管>副管=群副管
-    public static final int PERMISSION_LEVEL_SUPEROWNER = 0;
-    public static final int PERMISSION_LEVEL_BOTOWNER = 1;
-    public static final int PERMISSION_LEVEL_SUPERADMIN = 2;
-    public static final int PERMISSION_LEVEL_GROUPOWNER = 3;
-    public static final int PERMISSION_LEVEL_BOTADMIN = 4;
-    public static final int PERMISSION_LEVEL_GROUPADMIN = 5;
-    public static final int PERMISSION_LEVEL_DEPUTYADMIN = 6;
+    /**
+     * ?管理(?)
+     */
+    public static final int PERMISSION_LEVEL_SUPEROWNER = 100;
+    /**
+     * 机器人主人
+     */
+    public static final int PERMISSION_LEVEL_BOTOWNER = 6;
+    /**
+     * 机器人超管
+     */
+    public static final int PERMISSION_LEVEL_SUPERADMIN = 5;
+    /**
+     * 群主
+     */
+    public static final int PERMISSION_LEVEL_GROUPOWNER = 4;
+    /**
+     * 机器人主管
+     */
+    public static final int PERMISSION_LEVEL_BOTADMIN = 3;
+    /**
+     * 群管
+     */
+    public static final int PERMISSION_LEVEL_GROUPADMIN = 2;
+    /**
+     * 副管
+     */
+    public static final int PERMISSION_LEVEL_DEPUTYADMIN = 1;
 
     // region 判断指令格式
 
