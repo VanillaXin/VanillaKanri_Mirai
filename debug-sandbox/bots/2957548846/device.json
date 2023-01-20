@@ -1,0 +1,29 @@
+{
+    "deviceInfoVersion": 2,
+    "data": {
+        "display": "HUAWEI.426047.001",
+        "product": "HUAWEI",
+        "device": "HUAWEI",
+        "board": "HUAWEI",
+        "brand": "DUK-AL20",
+        "model": "HUAWEI",
+        "bootloader": "unknown",
+        "fingerprint": "HUAWEI/DUK-AL20/HUAWEI:10/HUAWEI.200122.001/4140537:user/release-keys",
+        "bootId": "CE6FD4E5-0E75-2912-5D27-E23E7C84BB93",
+        "procVersion": "Linux version 3.0.31-5cTDdQR8 (android-build@xxx.xxx.xxx.xxx.com)",
+        "baseBand": "",
+        "version": {
+            "incremental": "5891938",
+            "release": "10",
+            "codename": "REL"
+        },
+        "simInfo": "T-Mobile",
+        "osType": "android",
+        "macAddress": "02:00:00:00:00:00",
+        "wifiBSSID": "02:00:00:00:00:00",
+        "wifiSSID": "<unknown ssid>",
+        "imsiMd5": "7e0b906711d2515147c4f867930a343d",
+        "imei": "865085322123808",
+        "apn": "wifi"
+    }
+}
