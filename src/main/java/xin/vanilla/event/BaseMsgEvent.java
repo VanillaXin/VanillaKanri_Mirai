@@ -9,6 +9,6 @@ public class BaseMsgEvent {
     protected static final MiraiLogger logger = Va.getLogger();
 
     BaseMsgEvent() {
-        Va.config.init();
+        // Va.config.init();
     }
 }

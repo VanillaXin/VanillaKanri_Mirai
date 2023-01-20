@@ -10,6 +10,14 @@ import xin.vanilla.VanillaKanri;
 @SuppressWarnings("unused")
 public class VanillaUtils {
     private static final VanillaKanri Va = VanillaKanri.INSTANCE;
+    // 主人>超管>群主>主管>群管>副管=群副管
+    public static final int PERMISSION_LEVEL_SUPEROWNER = 0;
+    public static final int PERMISSION_LEVEL_BOTOWNER = 1;
+    public static final int PERMISSION_LEVEL_SUPERADMIN = 2;
+    public static final int PERMISSION_LEVEL_GROUPOWNER = 3;
+    public static final int PERMISSION_LEVEL_BOTADMIN = 4;
+    public static final int PERMISSION_LEVEL_GROUPADMIN = 5;
+    public static final int PERMISSION_LEVEL_DEPUTYADMIN = 6;
 
     // region 判断指令格式
 
@@ -27,12 +35,12 @@ public class VanillaUtils {
      * @param secondary 若顶级前缀为空, 是否继续判断二级指令前缀
      */
     public static boolean isInstructionMsg(MessageChain msg, boolean secondary) {
-        String prefix = Va.config.INSTRUCTIONS.prefix;
+        String prefix = Va.globalConfig.INSTRUCTIONS.get().getPrefix();
         if ("".equals(prefix)) {
             if (!secondary) return true;
 
             // 如果顶级前缀为空则遍历二级指令前缀
-            for (String prefix_ : Va.config.INSTRUCTIONS.secondaryPrefix) {
+            for (String prefix_ : Va.globalConfig.INSTRUCTIONS.get().getSecondaryPrefix()) {
                 if ("".equals(prefix_)) continue;
                 if (msg.contentToString().startsWith(prefix_ + " ")) return true;
             }
@@ -98,7 +106,7 @@ public class VanillaUtils {
      * 判断是否机器人超人(不是)
      */
     public static boolean isSuperOwner(Bot bot, long qq) {
-        return false;
+        return Va.globalConfig.PERMISSIONS.get().getSuperOwner() == qq;
     }
 
     /**
@@ -107,7 +115,7 @@ public class VanillaUtils {
      * 主人>超管>群主>主管>群管>副管=群副管
      */
     public static boolean isBotOwner(Bot bot, long qq) {
-        return false;
+        return Va.globalConfig.PERMISSIONS.get().getBotOwner() == qq;
     }
 
     /**
@@ -116,7 +124,7 @@ public class VanillaUtils {
      * 主人>超管>群主>主管>群管>副管=群副管
      */
     public static boolean isSuperAdmin(Bot bot, long qq) {
-        return false;
+        return Va.globalConfig.PERMISSIONS.get().getSuperAdmin().contains(qq);
     }
 
     /**
@@ -125,7 +133,7 @@ public class VanillaUtils {
      * 主人>超管>群主>主管>群管>副管=群副管
      */
     public static boolean isBotAdmin(Bot bot, long qq) {
-        return false;
+        return Va.globalConfig.PERMISSIONS.get().getBotAdmin().contains(qq);
     }
 
     /**
@@ -134,7 +142,7 @@ public class VanillaUtils {
      * 主人>超管>群主>主管>群管>副管=群副管
      */
     public static boolean isDeputyAdmin(Bot bot, long qq) {
-        return false;
+        return Va.globalConfig.PERMISSIONS.get().getDeputyAdmin().contains(qq);
     }
 
     /**
@@ -162,6 +170,15 @@ public class VanillaUtils {
      */
     public static int comparePermission(long a, long b) {
         return 0;
+    }
+
+    /**
+     * 是否有或(有大于)给定的权限等级
+     *
+     * @param level 权限等级 例: PERMISSION_LEVEL_BOTADMIN
+     */
+    public static boolean hasPermissionOrMore(long qq, int level) {
+        return false;
     }
 
     // endregion 判断权限

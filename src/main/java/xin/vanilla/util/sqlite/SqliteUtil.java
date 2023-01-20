@@ -2,6 +2,7 @@ package xin.vanilla.util.sqlite;
 
 
 import org.sqlite.JDBC;
+import xin.vanilla.util.StringUtils;
 import xin.vanilla.util.sqlite.statement.QueryStatement;
 import xin.vanilla.util.sqlite.statement.Statement;
 
@@ -235,8 +236,6 @@ public class SqliteUtil {
         return insert(statement);
     }
 
-    public static final String METHOD_PREFIX = "set";
-
     public <T> T getEntity(final ResultSet resultSet, final Class<T> clazz) {
         try {
             String[] columnNames = getColumnNames(resultSet);
@@ -244,7 +243,7 @@ public class SqliteUtil {
 
             for (String columnName : columnNames) {
                 for (Method method : clazz.getMethods()) {
-                    if (method.getName().equalsIgnoreCase(METHOD_PREFIX + translateColumnName(columnName))) {
+                    if (method.getName().equalsIgnoreCase(StringUtils.METHOD_SET_PREFIX + translateColumnName(columnName))) {
                         Class<?> paramType = method.getParameterTypes()[0];
                         // invoke the proper getter method of Cursor to putting the value in.
                         if (paramType == String.class)

@@ -5,18 +5,19 @@ import net.mamoe.mirai.console.plugin.jvm.JavaPlugin;
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescriptionBuilder;
 import net.mamoe.mirai.event.GlobalEventChannel;
 import org.jetbrains.annotations.NotNull;
-import xin.vanilla.config.PluginConfig;
+import xin.vanilla.config.GlobalConfigFile;
 import xin.vanilla.event.EventHandlers;
 
 @SuppressWarnings("unused")
 public final class VanillaKanri extends JavaPlugin {
     public static final VanillaKanri INSTANCE = new VanillaKanri();
 
-    public final PluginConfig config = new PluginConfig();
+    // public final PluginConfig config = new PluginConfig();
+    public final GlobalConfigFile globalConfig = new GlobalConfigFile();
 
     private VanillaKanri() {
         // 不几道为啥找不到配置文件
-        //super(JvmPluginDescription.loadFromResource());
+        // super(JvmPluginDescription.loadFromResource());
         super(new JvmPluginDescriptionBuilder("xin.vanilla.vanilla-kanri", "2.0.0")
                 .name("香草群管")
                 .author("VanillaXin")
@@ -38,10 +39,10 @@ public final class VanillaKanri extends JavaPlugin {
         GlobalEventChannel.INSTANCE.registerListenerHost(new EventHandlers());
 
         // 建立自动保存链接
-        reloadPluginConfig(config.source);
+        reloadPluginConfig(globalConfig);
 
         // 初始化插件配置
-        config.init();
+        // config.init();
     }
 
     @Override

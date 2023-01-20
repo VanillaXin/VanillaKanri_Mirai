@@ -1,6 +1,9 @@
 package xin.vanilla.util;
 
 public class StringUtils {
+
+    public static final String METHOD_SET_PREFIX = "set";
+    public static final String METHOD_GET_PREFIX = "get";
     public static final String COMMON_MARK = ",<.>/?;:'\"[{]}\\|`~!@#$%^&*()-_=+，《。》、？；：‘“【】·~！￥…（）—";
 
     /**
