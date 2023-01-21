@@ -11,10 +11,10 @@ import lombok.experimental.Accessors
 @Accessors(chain = true)
 @Serializable
 class Permissions {
-    /**
-     * 超人
-     */
-    var superOwner: Long = 0L
+    // /**
+    //  * 超人
+    //  */
+    // var superOwner: Long = 0L
 
     /**
      * 主人

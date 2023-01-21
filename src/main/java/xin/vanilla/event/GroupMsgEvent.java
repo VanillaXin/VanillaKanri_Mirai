@@ -42,41 +42,41 @@ public class GroupMsgEvent extends BaseMsgEvent {
 
     private void test() {
         if (msg.contentToString().startsWith("/va get string")) {
-            group.sendMessage("testString is: " + Va.globalConfig.mc_rcon_ip.get());
+            group.sendMessage("testString is: " + Va.globalConfig.getMc_rcon_ip().get());
         }
         if (msg.contentToString().startsWith("/va set string ")) {
             String s = msg.contentToString().substring("/va set string ".length());
-            Va.globalConfig.mc_rcon_ip.set(s);
-            group.sendMessage("testString now is: " + Va.globalConfig.mc_rcon_ip.get());
+            Va.globalConfig.getMc_rcon_ip().set(s);
+            group.sendMessage("testString now is: " + Va.globalConfig.getMc_rcon_ip().get());
         }
 
         if (msg.contentToString().startsWith("/va get int")) {
-            group.sendMessage("testInt is: " + Va.globalConfig.mc_rcon_port.get());
+            group.sendMessage("testInt is: " + Va.globalConfig.getMc_rcon_port().get());
         }
         if (msg.contentToString().startsWith("/va set int ")) {
             int s = Integer.parseInt(msg.contentToString().substring("/va set int ".length()));
-            Va.globalConfig.mc_rcon_port.set(s);
-            group.sendMessage("testInt now is: " + Va.globalConfig.mc_rcon_port.get());
+            Va.globalConfig.getMc_rcon_port().set(s);
+            group.sendMessage("testInt now is: " + Va.globalConfig.getMc_rcon_port().get());
         }
 
         if (msg.contentToString().startsWith("/va get owner")) {
-            group.sendMessage("botOwner is: " + Va.globalConfig.PERMISSIONS.get().getSuperOwner());
+            group.sendMessage("botOwner is: " + Va.globalConfig.getPermissions().get().get(bot.getId()).getBotOwner());
         }
         if (msg.contentToString().startsWith("/va set owner ")) {
             String s = msg.contentToString().substring("/va set owner ".length());
-            Va.globalConfig.PERMISSIONS.get().setSuperOwner(Long.valueOf(s));
-            group.sendMessage("botOwner now is: " + s);
+            Va.globalConfig.getPermissions().get().get(bot.getId()).setBotOwner(Long.parseLong(s));
+            group.sendMessage("botOwner now is: " + Va.globalConfig.getPermissions().get().get(bot.getId()).getBotOwner());
         }
 
         if (msg.contentToString().startsWith("/va get superAdmin")) {
-            group.sendMessage("superAdmin is: " + Va.globalConfig.PERMISSIONS.get().getSuperAdmin());
+            group.sendMessage("superAdmin is: " + Va.globalConfig.getPermissions().get().get(bot.getId()).getSuperAdmin());
         }
         if (msg.contentToString().startsWith("/va set superAdmin ")) {
             String s = msg.contentToString().substring("/va set superAdmin ".length());
-            Va.globalConfig.PERMISSIONS.get().setSuperAdmin(new HashSet<Long>() {{
+            Va.globalConfig.getPermissions().get().get(bot.getId()).setSuperAdmin(new HashSet<Long>() {{
                 addAll(Arrays.stream(s.split(" ")).map(Long::parseLong).collect(Collectors.toList()));
             }});
-            group.sendMessage("superAdmin now is: " + s);
+            group.sendMessage("superAdmin now is: " + Va.globalConfig.getPermissions().get().get(bot.getId()).getSuperAdmin());
         }
 
         // Va.config.refreshSource();
@@ -97,8 +97,8 @@ public class GroupMsgEvent extends BaseMsgEvent {
         } else if (msg.contentToString().equals("/list") || msg.contentToString().equals("/ls")) command = "list";
         else return false;
 
-        try (Rcon rcon = Rcon.open(Va.globalConfig.mc_rcon_ip.get(), Va.globalConfig.mc_rcon_port.get())) {
-            if (rcon.authenticate(Va.globalConfig.mc_rcon_psw.get())) {
+        try (Rcon rcon = Rcon.open(Va.globalConfig.getMc_rcon_ip().get(), Va.globalConfig.getMc_rcon_port().get())) {
+            if (rcon.authenticate(Va.globalConfig.getMc_rcon_psw().get())) {
                 group.sendMessage(rcon.sendCommand(command));
             } else {
                 group.sendMessage("Failed to authenticate");

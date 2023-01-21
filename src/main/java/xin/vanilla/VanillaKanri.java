@@ -6,14 +6,21 @@ import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescriptionBuilder;
 import net.mamoe.mirai.event.GlobalEventChannel;
 import org.jetbrains.annotations.NotNull;
 import xin.vanilla.config.GlobalConfigFile;
+import xin.vanilla.config.GroupConfigFile;
 import xin.vanilla.event.EventHandlers;
 
 @SuppressWarnings("unused")
 public final class VanillaKanri extends JavaPlugin {
     public static final VanillaKanri INSTANCE = new VanillaKanri();
 
-    // public final PluginConfig config = new PluginConfig();
+    /**
+     * 全局设置
+     */
     public final GlobalConfigFile globalConfig = new GlobalConfigFile();
+    /**
+     * 群独立设置
+     */
+    public final GroupConfigFile groupConfig = new GroupConfigFile();
 
     private VanillaKanri() {
         // 不几道为啥找不到配置文件
@@ -40,9 +47,7 @@ public final class VanillaKanri extends JavaPlugin {
 
         // 建立自动保存链接
         reloadPluginConfig(globalConfig);
-
-        // 初始化插件配置
-        // config.init();
+        reloadPluginConfig(groupConfig);
     }
 
     @Override

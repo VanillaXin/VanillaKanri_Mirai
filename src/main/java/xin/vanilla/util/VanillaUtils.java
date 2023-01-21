@@ -39,6 +39,10 @@ public class VanillaUtils {
      * 副管
      */
     public static final int PERMISSION_LEVEL_DEPUTYADMIN = 1;
+    /**
+     * 普通群员
+     */
+    public static final int PERMISSION_LEVEL_MEMBER = 0;
 
     // region 判断指令格式
 
@@ -56,12 +60,13 @@ public class VanillaUtils {
      * @param secondary 若顶级前缀为空, 是否继续判断二级指令前缀
      */
     public static boolean isInstructionMsg(MessageChain msg, boolean secondary) {
-        String prefix = Va.globalConfig.INSTRUCTIONS.get().getPrefix();
+        String prefix = Va.globalConfig.getInstructions().get().getPrefix();
         if ("".equals(prefix)) {
             if (!secondary) return true;
 
+            // TODO 初始化二级前缀列表
             // 如果顶级前缀为空则遍历二级指令前缀
-            for (String prefix_ : Va.globalConfig.INSTRUCTIONS.get().getSecondaryPrefix()) {
+            for (String prefix_ : Va.globalConfig.getInstructions().get().getSecondaryPrefix()) {
                 if ("".equals(prefix_)) continue;
                 if (msg.contentToString().startsWith(prefix_ + " ")) return true;
             }
@@ -124,10 +129,14 @@ public class VanillaUtils {
     }
 
     /**
-     * 判断是否机器人超人(不是)
+     * 判断是否超人(不是)
      */
     public static boolean isSuperOwner(Bot bot, long qq) {
-        return Va.globalConfig.PERMISSIONS.get().getSuperOwner() == qq;
+        try {
+            return Va.globalConfig.getSuperOwner().get() == qq;
+        } catch (NullPointerException e) {
+            return false;
+        }
     }
 
     /**
@@ -136,7 +145,11 @@ public class VanillaUtils {
      * 主人>超管>群主>主管>群管>副管=群副管
      */
     public static boolean isBotOwner(Bot bot, long qq) {
-        return Va.globalConfig.PERMISSIONS.get().getBotOwner() == qq;
+        try {
+            return Va.globalConfig.getPermissions().get().get(bot.getId()).getBotOwner() == qq;
+        } catch (NullPointerException e) {
+            return false;
+        }
     }
 
     /**
@@ -145,7 +158,11 @@ public class VanillaUtils {
      * 主人>超管>群主>主管>群管>副管=群副管
      */
     public static boolean isSuperAdmin(Bot bot, long qq) {
-        return Va.globalConfig.PERMISSIONS.get().getSuperAdmin().contains(qq);
+        try {
+            return Va.globalConfig.getPermissions().get().get(bot.getId()).getSuperAdmin().contains(qq);
+        } catch (NullPointerException e) {
+            return false;
+        }
     }
 
     /**
@@ -154,7 +171,24 @@ public class VanillaUtils {
      * 主人>超管>群主>主管>群管>副管=群副管
      */
     public static boolean isBotAdmin(Bot bot, long qq) {
-        return Va.globalConfig.PERMISSIONS.get().getBotAdmin().contains(qq);
+        try {
+            return Va.globalConfig.getPermissions().get().get(bot.getId()).getBotAdmin().contains(qq);
+        } catch (NullPointerException e) {
+            return false;
+        }
+    }
+
+    /**
+     * 判断是否群管理员
+     * <p>
+     * 主人>超管>群主>主管>群管>副管=群副管
+     */
+    public static boolean isGroupAdmin(Group group, long qq) {
+        try {
+            return group.get(qq).getPermission().getLevel() == MemberPermission.ADMINISTRATOR.getLevel();
+        } catch (NullPointerException e) {
+            return false;
+        }
     }
 
     /**
@@ -163,7 +197,11 @@ public class VanillaUtils {
      * 主人>超管>群主>主管>群管>副管=群副管
      */
     public static boolean isDeputyAdmin(Bot bot, long qq) {
-        return Va.globalConfig.PERMISSIONS.get().getDeputyAdmin().contains(qq);
+        try {
+            return Va.globalConfig.getPermissions().get().get(bot.getId()).getDeputyAdmin().contains(qq);
+        } catch (NullPointerException e) {
+            return false;
+        }
     }
 
     /**
@@ -172,25 +210,86 @@ public class VanillaUtils {
      * 主人>超管>群主>主管>群管>副管=群副管
      */
     public static boolean isDeputyAdmin(Group group, long qq) {
-        return false;
+        try {
+            return Va.groupConfig.getDeputyAdmin().get().get(group.getId()).contains(qq);
+        } catch (NullPointerException e) {
+            return false;
+        }
     }
 
     /**
-     * 比较俩者机器人权限
+     * 获取某人机器人权限
+     *
+     * @return int, 参考 PERMISSION_LEVEL_*
+     */
+    public static int getPermissionLevel(Bot bot, Group group, long qq) {
+        int permission = PERMISSION_LEVEL_MEMBER;
+        if (bot != null) {
+            if (isBotOwner(bot, qq)) permission = PERMISSION_LEVEL_BOTOWNER;
+            else if (isSuperAdmin(bot, qq)) permission = PERMISSION_LEVEL_SUPERADMIN;
+            else if (isBotAdmin(bot, qq)) permission = PERMISSION_LEVEL_BOTADMIN;
+            else if (isDeputyAdmin(bot, qq)) permission = PERMISSION_LEVEL_DEPUTYADMIN;
+        }
+        if (group != null) {
+            if (isGroupOwner(group, qq)) permission = Math.max(permission, PERMISSION_LEVEL_GROUPOWNER);
+            else if (isGroupAdmin(group, qq)) permission = Math.max(permission, PERMISSION_LEVEL_GROUPADMIN);
+            else if (isDeputyAdmin(group, qq)) permission = Math.max(permission, PERMISSION_LEVEL_DEPUTYADMIN);
+        }
+        return permission;
+    }
+
+    /**
+     * 比较俩者权限
      *
      * @return boolean, true: 前者大于后者, false: 前者小于等于后者
      */
-    public static boolean equalsPermission(long a, long b) {
-        return false;
+    public static boolean equalsPermission(Bot bot, Group group, long a, long b) {
+        return getPermissionLevel(bot, group, a) > getPermissionLevel(bot, group, b);
     }
 
     /**
-     * 比较俩者机器人权限
+     * 比较俩者权限
      *
-     * @return int, 1: 前者大于后者, 0: 俩者相等, -1: 前者小于后者
+     * @return boolean, true: 前者大于后者, false: 前者小于等于后者
      */
-    public static int comparePermission(long a, long b) {
-        return 0;
+    public static boolean equalsPermission(Bot bot, long a, long b) {
+        return equalsPermission(bot, null, a, b);
+    }
+
+    /**
+     * 比较俩者权限
+     *
+     * @return boolean, true: 前者大于后者, false: 前者小于等于后者
+     */
+    public static boolean equalsPermission(Group group, long a, long b) {
+        return equalsPermission(null, group, a, b);
+    }
+
+    /**
+     * 比较俩者权限
+     *
+     * @return int, 正整数: 前者大于后者, 0: 俩者相等, 负整数: 前者小于后者
+     */
+    public static int comparePermission(Bot bot, Group group, long a, long b) {
+        return getPermissionLevel(bot, group, a) - getPermissionLevel(bot, group, b);
+    }
+
+    /**
+     * 比较俩者权限
+     *
+     * @return int, 正整数: 前者大于后者, 0: 俩者相等, 负整数: 前者小于后者
+     */
+    public static int comparePermission(Bot bot, long a, long b) {
+        return comparePermission(bot, null, a, b);
+    }
+
+    /**
+     * 比较俩者权限
+     *
+     * @return int, 正整数: 前者大于后者, 0: 俩者相等, 负整数: 前者小于后者
+     */
+    public static int comparePermission(Group group, long a, long b) {
+        return comparePermission(null, group, a, b);
     }
 
     /**
@@ -198,8 +297,10 @@ public class VanillaUtils {
      *
      * @param level 权限等级 例: PERMISSION_LEVEL_BOTADMIN
      */
-    public static boolean hasPermissionOrMore(long qq, int level) {
-        return false;
+    public static boolean hasPermissionOrMore(Bot bot, Group group, long qq, int level) {
+        if (level == PERMISSION_LEVEL_SUPEROWNER && bot != null)
+            return isSuperOwner(bot, qq);
+        else return getPermissionLevel(bot, group, qq) >= level;
     }
 
     // endregion 判断权限
