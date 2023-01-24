@@ -42,41 +42,41 @@ public class GroupMsgEvent extends BaseMsgEvent {
 
     private void test() {
         if (msg.contentToString().startsWith("/va get string")) {
-            group.sendMessage("testString is: " + Va.globalConfig.getMc_rcon_ip().get());
+            group.sendMessage("testString is: " + Va.globalConfig.getMc_rcon_ip());
         }
         if (msg.contentToString().startsWith("/va set string ")) {
             String s = msg.contentToString().substring("/va set string ".length());
-            Va.globalConfig.getMc_rcon_ip().set(s);
-            group.sendMessage("testString now is: " + Va.globalConfig.getMc_rcon_ip().get());
+            Va.globalConfig.setMc_rcon_ip(s);
+            group.sendMessage("testString now is: " + Va.globalConfig.getMc_rcon_ip());
         }
 
         if (msg.contentToString().startsWith("/va get int")) {
-            group.sendMessage("testInt is: " + Va.globalConfig.getMc_rcon_port().get());
+            group.sendMessage("testInt is: " + Va.globalConfig.getMc_rcon_port());
         }
         if (msg.contentToString().startsWith("/va set int ")) {
             int s = Integer.parseInt(msg.contentToString().substring("/va set int ".length()));
-            Va.globalConfig.getMc_rcon_port().set(s);
-            group.sendMessage("testInt now is: " + Va.globalConfig.getMc_rcon_port().get());
+            Va.globalConfig.setMc_rcon_port(s);
+            group.sendMessage("testInt now is: " + Va.globalConfig.getMc_rcon_port());
         }
 
         if (msg.contentToString().startsWith("/va get owner")) {
-            group.sendMessage("botOwner is: " + Va.globalConfig.getPermissions().get().get(bot.getId()).getBotOwner());
+            group.sendMessage("botOwner is: " + Va.globalConfig.getPermissions().get(bot.getId()).getBotOwner());
         }
         if (msg.contentToString().startsWith("/va set owner ")) {
             String s = msg.contentToString().substring("/va set owner ".length());
-            Va.globalConfig.getPermissions().get().get(bot.getId()).setBotOwner(Long.parseLong(s));
-            group.sendMessage("botOwner now is: " + Va.globalConfig.getPermissions().get().get(bot.getId()).getBotOwner());
+            Va.globalConfig.getPermissions().get(bot.getId()).setBotOwner(Long.parseLong(s));
+            group.sendMessage("botOwner now is: " + Va.globalConfig.getPermissions().get(bot.getId()).getBotOwner());
         }
 
         if (msg.contentToString().startsWith("/va get superAdmin")) {
-            group.sendMessage("superAdmin is: " + Va.globalConfig.getPermissions().get().get(bot.getId()).getSuperAdmin());
+            group.sendMessage("superAdmin is: " + Va.globalConfig.getPermissions().get(bot.getId()).getSuperAdmin());
         }
         if (msg.contentToString().startsWith("/va set superAdmin ")) {
             String s = msg.contentToString().substring("/va set superAdmin ".length());
-            Va.globalConfig.getPermissions().get().get(bot.getId()).setSuperAdmin(new HashSet<Long>() {{
+            Va.globalConfig.getPermissions().get(bot.getId()).setSuperAdmin(new HashSet<Long>() {{
                 addAll(Arrays.stream(s.split(" ")).map(Long::parseLong).collect(Collectors.toList()));
             }});
-            group.sendMessage("superAdmin now is: " + Va.globalConfig.getPermissions().get().get(bot.getId()).getSuperAdmin());
+            group.sendMessage("superAdmin now is: " + Va.globalConfig.getPermissions().get(bot.getId()).getSuperAdmin());
         }
 
         // Va.config.refreshSource();
@@ -97,8 +97,8 @@ public class GroupMsgEvent extends BaseMsgEvent {
         } else if (msg.contentToString().equals("/list") || msg.contentToString().equals("/ls")) command = "list";
         else return false;
 
-        try (Rcon rcon = Rcon.open(Va.globalConfig.getMc_rcon_ip().get(), Va.globalConfig.getMc_rcon_port().get())) {
-            if (rcon.authenticate(Va.globalConfig.getMc_rcon_psw().get())) {
+        try (Rcon rcon = Rcon.open(Va.globalConfig.getMc_rcon_ip(), Va.globalConfig.getMc_rcon_port())) {
+            if (rcon.authenticate(Va.globalConfig.getMc_rcon_psw())) {
                 group.sendMessage(rcon.sendCommand(command));
             } else {
                 group.sendMessage("Failed to authenticate");

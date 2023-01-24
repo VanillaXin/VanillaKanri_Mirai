@@ -8,11 +8,14 @@ import org.jetbrains.annotations.NotNull;
 import xin.vanilla.config.GlobalConfigFile;
 import xin.vanilla.config.GroupConfigFile;
 import xin.vanilla.event.EventHandlers;
+import xin.vanilla.mapper.MessageCache;
+import xin.vanilla.mapper.impl.MessageCacheImpl;
+import xin.vanilla.util.sqlite.SqliteUtil;
 
 @SuppressWarnings("unused")
 public final class VanillaKanri extends JavaPlugin {
     public static final VanillaKanri INSTANCE = new VanillaKanri();
-
+    public final MessageCache messageCache = new MessageCacheImpl(getDataFolderPath().toString());
     /**
      * 全局设置
      */
@@ -46,7 +49,9 @@ public final class VanillaKanri extends JavaPlugin {
         GlobalEventChannel.INSTANCE.registerListenerHost(new EventHandlers());
 
         // 建立自动保存链接
+        // 全局配置
         reloadPluginConfig(globalConfig);
+        // 群聊配置
         reloadPluginConfig(groupConfig);
     }
 
@@ -54,6 +59,7 @@ public final class VanillaKanri extends JavaPlugin {
     public void onDisable() {
         // 插件创建的所有线程或异步任务都需要在 onDisable() 时关闭。
         getLogger().info("Plugin disabled!");
+        SqliteUtil.closeAll(SqliteUtil.CLOSE_MODE_COMMIT);
         super.onDisable();
     }
 }

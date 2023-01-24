@@ -60,13 +60,13 @@ public class VanillaUtils {
      * @param secondary 若顶级前缀为空, 是否继续判断二级指令前缀
      */
     public static boolean isInstructionMsg(MessageChain msg, boolean secondary) {
-        String prefix = Va.globalConfig.getInstructions().get().getPrefix();
+        String prefix = Va.globalConfig.getInstructions().getPrefix();
         if ("".equals(prefix)) {
             if (!secondary) return true;
 
             // TODO 初始化二级前缀列表
             // 如果顶级前缀为空则遍历二级指令前缀
-            for (String prefix_ : Va.globalConfig.getInstructions().get().getSecondaryPrefix()) {
+            for (String prefix_ : Va.globalConfig.getInstructions().getSecondaryPrefix()) {
                 if ("".equals(prefix_)) continue;
                 if (msg.contentToString().startsWith(prefix_ + " ")) return true;
             }
@@ -133,7 +133,7 @@ public class VanillaUtils {
      */
     public static boolean isSuperOwner(Bot bot, long qq) {
         try {
-            return Va.globalConfig.getSuperOwner().get() == qq;
+            return Va.globalConfig.getSuperOwner() == qq;
         } catch (NullPointerException e) {
             return false;
         }
@@ -146,7 +146,7 @@ public class VanillaUtils {
      */
     public static boolean isBotOwner(Bot bot, long qq) {
         try {
-            return Va.globalConfig.getPermissions().get().get(bot.getId()).getBotOwner() == qq;
+            return Va.globalConfig.getPermissions().get(bot.getId()).getBotOwner() == qq;
         } catch (NullPointerException e) {
             return false;
         }
@@ -159,7 +159,7 @@ public class VanillaUtils {
      */
     public static boolean isSuperAdmin(Bot bot, long qq) {
         try {
-            return Va.globalConfig.getPermissions().get().get(bot.getId()).getSuperAdmin().contains(qq);
+            return Va.globalConfig.getPermissions().get(bot.getId()).getSuperAdmin().contains(qq);
         } catch (NullPointerException e) {
             return false;
         }
@@ -172,7 +172,7 @@ public class VanillaUtils {
      */
     public static boolean isBotAdmin(Bot bot, long qq) {
         try {
-            return Va.globalConfig.getPermissions().get().get(bot.getId()).getBotAdmin().contains(qq);
+            return Va.globalConfig.getPermissions().get(bot.getId()).getBotAdmin().contains(qq);
         } catch (NullPointerException e) {
             return false;
         }
@@ -198,7 +198,7 @@ public class VanillaUtils {
      */
     public static boolean isDeputyAdmin(Bot bot, long qq) {
         try {
-            return Va.globalConfig.getPermissions().get().get(bot.getId()).getDeputyAdmin().contains(qq);
+            return Va.globalConfig.getPermissions().get(bot.getId()).getDeputyAdmin().contains(qq);
         } catch (NullPointerException e) {
             return false;
         }
@@ -211,7 +211,7 @@ public class VanillaUtils {
      */
     public static boolean isDeputyAdmin(Group group, long qq) {
         try {
-            return Va.groupConfig.getDeputyAdmin().get().get(group.getId()).contains(qq);
+            return Va.groupConfig.getDeputyAdmin().get(group.getId()).contains(qq);
         } catch (NullPointerException e) {
             return false;
         }

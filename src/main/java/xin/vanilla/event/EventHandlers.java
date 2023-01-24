@@ -34,33 +34,39 @@ public class EventHandlers extends SimpleListenerHost {
     }
 
     @EventHandler
-    public void onGroupMessage(@NotNull GroupMessageEvent event) throws Exception {
+    public void onGroupMessage(@NotNull GroupMessageEvent event) {
         // 监听群消息
         new GroupMsgEvent(event).run();
     }
 
     @EventHandler
-    public void onFriendMessage(@NotNull FriendMessageEvent event) throws Exception {
+    public void onFriendMessage(@NotNull FriendMessageEvent event) {
         // 监听好友消息
         new FriendMsgEvent(event).run();
     }
 
     @EventHandler
-    public void onGroupTempMessage(@NotNull GroupTempMessageEvent event) throws Exception {
+    public void onGroupTempMessage(@NotNull GroupTempMessageEvent event) {
         // 监听群临时会话消息
         new GroupTempMsgEvent(event).run();
     }
 
     @EventHandler
-    public void onStrangerMessage(@NotNull StrangerMessageEvent event) throws Exception {
+    public void onStrangerMessage(@NotNull StrangerMessageEvent event) {
         // 监听陌生人消息
         new StrangerMsgEvent(event).run();
     }
 
     @EventHandler
-    public void onOtherClientMessage(@NotNull OtherClientMessageEvent event) throws Exception {
+    public void onOtherClientMessage(@NotNull OtherClientMessageEvent event) {
         // 监听其他客户端消息
         new OtherClientMsgEvent(event).run();
+    }
+
+    @EventHandler
+    public void onMessageRecall(@NotNull MessageRecallEvent event) {
+        // 监听消息撤回事件
+        new MsgRecallEvent(event).run();
     }
 
     /**

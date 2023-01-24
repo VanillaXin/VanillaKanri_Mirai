@@ -17,8 +17,17 @@ import java.util.*;
  */
 @SuppressWarnings("unused")
 public class SqliteUtil {
+    /**
+     * 提交已创建的事务
+     */
     public static final int CLOSE_MODE_COMMIT = 1;
+    /**
+     * 直接关闭
+     */
     public static final int CLOSE_MODE_CLOSE = 0;
+    /**
+     * 回滚未提交的事务
+     */
     public static final int CLOSE_MODE_ROLLBACK = -1;
 
     public static final String PREFIX = "jdbc:sqlite:";
@@ -300,6 +309,10 @@ public class SqliteUtil {
     /**
      * 立即释放所有连接对象
      * <p>不会自动提交或回滚事务</p>
+     * <p/>
+     * 使用 <strong>CLOSE_MODE_COMMIT</strong> 在释放前提交所有事务
+     * <p>
+     * 使用 <strong>CLOSE_MODE_ROLLBACK</strong> 在释放前回滚所有事务
      */
     public static boolean closeAll() {
         return closeAll(CLOSE_MODE_CLOSE);
