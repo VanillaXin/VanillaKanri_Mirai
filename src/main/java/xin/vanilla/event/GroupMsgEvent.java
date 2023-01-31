@@ -5,7 +5,7 @@ import net.mamoe.mirai.contact.Group;
 import net.mamoe.mirai.contact.Member;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
 import net.mamoe.mirai.message.data.MessageChain;
-import nl.vv32.rcon.Rcon;
+import xin.vanilla.rcon.Rcon;
 
 import java.io.IOException;
 import java.util.Arrays;

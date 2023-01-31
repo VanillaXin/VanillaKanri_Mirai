@@ -19,7 +19,7 @@ dependencies {
     //implementation 'com.github.vince-styling:aSQLitePlus-android:asqliteplus-0.2'
     implementation 'org.xerial:sqlite-jdbc:3.40.0.0'
     implementation 'com.aventrix.jnanoid:jnanoid:2.0.0'
-    implementation 'nl.vv32.rcon:rcon:1.2.0' // MC RCON依赖
+    implementation 'xin.vanilla.rcon:rcon:1.2.1' // MC RCON依赖
 
     compileOnly 'org.projectlombok:lombok:1.18.24'
     annotationProcessor 'org.projectlombok:lombok:1.18.24'
