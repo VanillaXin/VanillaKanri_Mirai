@@ -59,6 +59,7 @@ public final class VanillaKanri extends JavaPlugin {
     public void onDisable() {
         // 插件创建的所有线程或异步任务都需要在 onDisable() 时关闭。
         getLogger().info("Plugin disabled!");
+        // 关闭SQLite连接
         SqliteUtil.closeAll(SqliteUtil.CLOSE_MODE_COMMIT);
         super.onDisable();
     }

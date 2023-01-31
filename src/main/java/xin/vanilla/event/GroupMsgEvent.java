@@ -4,7 +4,7 @@ import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.contact.Group;
 import net.mamoe.mirai.contact.Member;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
-import net.mamoe.mirai.message.data.MessageChain;
+import net.mamoe.mirai.message.data.*;
 import xin.vanilla.rcon.Rcon;
 
 import java.io.IOException;
@@ -41,6 +41,45 @@ public class GroupMsgEvent extends BaseMsgEvent {
     }
 
     private void test() {
+        // 构造消息
+        MessageChain chain = new MessageChainBuilder()
+                .append(new PlainText("string"))
+                .append("string") // 会被构造成 PlainText 再添加, 相当于上一行
+                .append(AtAll.INSTANCE)
+                .append(Image.fromId("{f8f1ab55-bf8e-4236-b55e-955848d7069f}.png"))
+                .build();
+
+        // 取某类型消息
+        Image image = (Image) msg.stream().filter(Image.class::isInstance).findFirst().orElse(null);
+
+        // 撤回指定消息
+        QuoteReply quote = msg.get(QuoteReply.Key);
+        if (quote != null && msg.contentToString().equals("recall"))
+            MessageSource.recall(quote.getSource());
+
+        // 利用缓存的ids与internalIds撤回消息
+        if (group.getId() == 851159783L) {
+            MessageSource source = msg.get(MessageSource.Key);
+            logger.info(Arrays.toString(source.getIds()));
+            logger.info(Arrays.toString(source.getInternalIds()));
+
+            if (msg.contentToString().startsWith("/va recall by ")) {
+                String s = msg.contentToString().substring("/va recall by ".length());
+
+                int[] ids = Arrays.stream(s.substring(0, s.indexOf("|")).split(","))
+                        .mapToInt(Integer::parseInt).toArray();
+                int[] internalIds = Arrays.stream(s.substring(s.indexOf("|") + 1).split(","))
+                        .mapToInt(Integer::parseInt).toArray();
+
+                MessageSource.recall(new MessageSourceBuilder()
+                        .sender(3085477411L)
+                        .target(group.getId())
+                        .id(ids)
+                        .internalId(internalIds)
+                        .build(bot.getId(), MessageSourceKind.GROUP));
+            }
+        }
+
         if (msg.contentToString().startsWith("/va get string")) {
             group.sendMessage("testString is: " + Va.globalConfig.getMc_rcon_ip());
         }
