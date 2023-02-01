@@ -26,6 +26,6 @@ public class FriendMsgEvent extends BaseMsgEvent {
 
     public void run() {
         if (isBlock) return;
-        logger.info("好友: " + friend.getId() + " -> " + msg.contentToString());
+        logger.info("好友: " + friend.getId() + " -> " + msg.serializeToMiraiCode());
     }
 }

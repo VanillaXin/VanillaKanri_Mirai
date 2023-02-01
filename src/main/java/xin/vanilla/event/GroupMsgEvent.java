@@ -37,7 +37,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
 
     public void run() {
         if (isBlock) return;
-        logger.info("群聊: " + group.getId() + ":" + sender.getId() + " -> " + msg.contentToString());
+        logger.info("群聊: " + group.getId() + ":" + sender.getId() + " -> " + msg.serializeToMiraiCode());
         if (rcon()) return;
 
         test();
@@ -63,8 +63,8 @@ public class GroupMsgEvent extends BaseMsgEvent {
         // 利用缓存的ids与internalIds撤回消息
         if (group.getId() == 851159783L) {
             MessageSource source = msg.get(MessageSource.Key);
-            logger.info(Arrays.toString(source.getIds()));
-            logger.info(Arrays.toString(source.getInternalIds()));
+            // logger.info(Arrays.toString(source.getIds()));
+            // logger.info(Arrays.toString(source.getInternalIds()));
 
             if (msg.contentToString().startsWith("/va recall by ")) {
                 String s = msg.contentToString().substring("/va recall by ".length());
@@ -85,7 +85,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
 
         // 序列化转码消息
         if (msg.contentToString().startsWith("/va to string"))
-            group.sendMessage(MiraiCode.serializeToMiraiCode(msg.stream().iterator()));
+            group.sendMessage(msg.serializeToMiraiCode());
 
 
         if (msg.contentToString().startsWith("/va get string")) {

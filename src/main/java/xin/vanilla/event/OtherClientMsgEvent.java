@@ -21,6 +21,6 @@ public class OtherClientMsgEvent extends BaseMsgEvent {
     }
 
     public void run() {
-        logger.info("客户端: " + client.getId() + " -> " + msg.contentToString());
+        logger.info("客户端: " + client.getId() + " -> " + msg.serializeToMiraiCode());
     }
 }

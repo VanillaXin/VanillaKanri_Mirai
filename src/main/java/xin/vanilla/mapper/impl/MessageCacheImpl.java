@@ -4,9 +4,7 @@ import net.mamoe.mirai.contact.Friend;
 import net.mamoe.mirai.contact.Group;
 import net.mamoe.mirai.contact.Member;
 import net.mamoe.mirai.contact.Stranger;
-import net.mamoe.mirai.message.code.MiraiCode;
-import net.mamoe.mirai.message.data.MessageChain;
-import net.mamoe.mirai.message.data.MessageSource;
+import net.mamoe.mirai.message.data.*;
 import xin.vanilla.mapper.MessageCache;
 import xin.vanilla.util.DateUtils;
 import xin.vanilla.util.StringUtils;
@@ -93,13 +91,29 @@ public class MessageCacheImpl implements MessageCache {
 
         createTable(table);
         String nos = StringUtils.toString(ids) + "|" + StringUtils.toString(internalIds);
-        InsertStatement insert = InsertStatement.produce(getTableName(time))
+        String msgString = msg.serializeToMiraiCode();
+
+        if (msgString.equals("")) {
+            MarketFace marketFace = msg.get(MarketFace.Key);
+            ForwardMessage forwardMessage = msg.get(ForwardMessage.Key);
+            Audio audio = msg.get(Audio.Key);
+
+            if (marketFace != null) {
+                msgString = marketFace.toString();
+            } else if (forwardMessage != null) {
+                msgString = forwardMessage.toString();
+            } else if (audio != null) {
+                msgString = audio.toString();
+            }
+        }
+
+        InsertStatement insert = InsertStatement.produce(table)
                 .put("nos", nos)
                 .put("bot", botId)
                 .put("sender", sender)
                 .put("target", target)
                 .put("time", time)
-                .put("msg", MiraiCode.serializeToMiraiCode(msg.stream().iterator()));
+                .put("msg", msgString);
 
         sqliteUtil.insert(insert);
     }
