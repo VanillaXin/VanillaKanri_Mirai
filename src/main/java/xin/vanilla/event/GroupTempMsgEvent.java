@@ -5,6 +5,7 @@ import net.mamoe.mirai.contact.Group;
 import net.mamoe.mirai.contact.Member;
 import net.mamoe.mirai.event.events.GroupTempMessageEvent;
 import net.mamoe.mirai.message.data.MessageChain;
+import xin.vanilla.VanillaKanri;
 
 public class GroupTempMsgEvent extends BaseMsgEvent {
     private final GroupTempMessageEvent event;
@@ -21,6 +22,7 @@ public class GroupTempMsgEvent extends BaseMsgEvent {
         this.sender = this.event.getSender();
         this.bot = this.event.getBot();
         this.time = this.event.getTime();
+        VanillaKanri.INSTANCE.messageCache.addMsg(this.sender, this.msg);
     }
 
     public void run() {

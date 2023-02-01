@@ -7,6 +7,7 @@ import net.mamoe.mirai.event.ExceptionInEventHandlerException;
 import net.mamoe.mirai.event.SimpleListenerHost;
 import net.mamoe.mirai.event.events.*;
 import org.jetbrains.annotations.NotNull;
+import xin.vanilla.VanillaKanri;
 import xin.vanilla.util.StringUtils;
 
 import java.io.PrintWriter;

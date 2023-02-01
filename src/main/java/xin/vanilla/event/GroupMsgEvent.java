@@ -4,7 +4,9 @@ import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.contact.Group;
 import net.mamoe.mirai.contact.Member;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
+import net.mamoe.mirai.message.code.MiraiCode;
 import net.mamoe.mirai.message.data.*;
+import xin.vanilla.VanillaKanri;
 import xin.vanilla.rcon.Rcon;
 
 import java.io.IOException;
@@ -30,6 +32,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
         this.sender = this.event.getSender();
         this.bot = this.event.getBot();
         this.time = this.event.getTime();
+        VanillaKanri.INSTANCE.messageCache.addMsg(this.group, this.msg);
     }
 
     public void run() {
@@ -79,6 +82,11 @@ public class GroupMsgEvent extends BaseMsgEvent {
                         .build(bot.getId(), MessageSourceKind.GROUP));
             }
         }
+
+        // 序列化转码消息
+        if (msg.contentToString().startsWith("/va to string"))
+            group.sendMessage(MiraiCode.serializeToMiraiCode(msg.stream().iterator()));
+
 
         if (msg.contentToString().startsWith("/va get string")) {
             group.sendMessage("testString is: " + Va.globalConfig.getMc_rcon_ip());
