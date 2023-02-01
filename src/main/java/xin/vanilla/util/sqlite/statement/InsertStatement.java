@@ -17,7 +17,6 @@ package xin.vanilla.util.sqlite.statement;
 
 /**
  * A statement producer that use to producing <b>INSERT</b> command of SQL language.
- *
  */
 public class InsertStatement extends Statement {
     /**
@@ -115,7 +114,7 @@ public class InsertStatement extends Statement {
         InsertStatement createStmt = new InsertStatement();
         createStmt.statement.append("INSERT");
         if (clause != null) createStmt.statement.append(" OR ").append(clause);
-        createStmt.statement.append(" INTO ").append(table);
+        createStmt.statement.append(" INTO ").append("'").append(table).append("'");
         return createStmt;
     }
 
