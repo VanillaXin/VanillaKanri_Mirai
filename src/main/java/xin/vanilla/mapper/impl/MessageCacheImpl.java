@@ -30,14 +30,14 @@ public class MessageCacheImpl implements MessageCache {
 
     private String getTableName(long time) {
         Date date = new Date(time * 1000);
-        return DateUtils.getYearOfDate(date) + "." + DateUtils.getMonthOfDate(date);
+        return DateUtils.getYearOfDate(date) + "." + DateUtils.getMonthOfDateWithZero(date);
     }
 
     @Override
     public void createTable(String table) {
         if (!sqliteUtil.containsTable(table)) {
             sqliteUtil.executeSql(
-                    "CREATE TABLE " + table + " (" +
+                    "CREATE TABLE '" + table + "' (" +
                             " id     INTEGER     PRIMARY KEY AUTOINCREMENT NOT NULL," +
                             " nos    TEXT        UNIQUE                    NOT NULL," +
                             " bot    INTEGER(10)                           NOT NULL," +

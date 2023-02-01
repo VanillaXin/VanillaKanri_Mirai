@@ -241,6 +241,15 @@ public class DateUtils {
         return localDate.getMonthValue();
     }
 
+    public static String getMonthOfDateWithZero(Date date) {
+        if (date == null) {
+            date = new Date();
+        }
+
+        LocalDate localDate = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        return localDate.getMonthValue() < 10 ? "0" + localDate.getMonthValue() : String.valueOf(localDate.getMonthValue());
+    }
+
     public static int getDayOfMonth(Date date) {
         if (date == null) {
             date = new Date();
