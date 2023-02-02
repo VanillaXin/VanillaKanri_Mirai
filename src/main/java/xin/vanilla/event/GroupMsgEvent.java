@@ -5,13 +5,14 @@ import net.mamoe.mirai.contact.Group;
 import net.mamoe.mirai.contact.Member;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
 import net.mamoe.mirai.message.data.*;
-import xin.vanilla.VanillaKanri;
 import xin.vanilla.rcon.Rcon;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.stream.Collectors;
+
+import static xin.vanilla.mapper.impl.MessageCacheImpl.MSG_TYPE_GROUP;
 
 public class GroupMsgEvent extends BaseMsgEvent {
     private final GroupMessageEvent event;
@@ -31,7 +32,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
         this.sender = this.event.getSender();
         this.bot = this.event.getBot();
         this.time = this.event.getTime();
-        VanillaKanri.INSTANCE.messageCache.addMsg(this.group, this.msg);
+        Va.messageCache.addMsg(this.group, this.msg);
     }
 
     public void run() {
@@ -61,7 +62,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
 
         // 利用缓存的ids与internalIds撤回消息
         if (group.getId() == 851159783L) {
-            MessageSource source = msg.get(MessageSource.Key);
+            // MessageSource source = msg.get(MessageSource.Key);
             // logger.info(Arrays.toString(source.getIds()));
             // logger.info(Arrays.toString(source.getInternalIds()));
 
@@ -87,9 +88,12 @@ public class GroupMsgEvent extends BaseMsgEvent {
             group.sendMessage(msg.serializeToMiraiCode());
 
         if (msg.contentToString().startsWith("/va get msgcache ")) {
-
+            int no = Integer.parseInt(msg.contentToString().substring("/va get msgcache ".length()));
+            MessageSource source = msg.get(MessageSource.Key);
+            no = source.getIds()[0] - no;
+            String msgCache = Va.messageCache.getMsgMiraiCode(String.valueOf(no), group.getId(), MSG_TYPE_GROUP);
+            group.sendMessage(msgCache);
         }
-
 
         if (msg.contentToString().equals("/va get string")) {
             group.sendMessage("testString is: " + Va.globalConfig.getMc_rcon_ip());

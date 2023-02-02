@@ -29,6 +29,10 @@ public interface MessageCache {
 
     String getMsgString(String no, long sender, long target);
 
+    String getMsgString(String no, long target, String type);
+
+    String getMsgString(String no, long target);
+
     MessageChain getMsgChain(String no, long sender, long target, long time, String type);
 
     MessageChain getMsgChain(String no, long sender, long target, String type);
@@ -37,6 +41,10 @@ public interface MessageCache {
 
     MessageChain getMsgChain(String no, long sender, long target);
 
+    MessageChain getMsgChain(String no, long target, String type);
+
+    MessageChain getMsgChain(String no, long target);
+
     String getMsgMiraiCode(String no, long sender, long target, long time, String type);
 
     String getMsgMiraiCode(String no, long sender, long target, String type);
@@ -44,4 +52,8 @@ public interface MessageCache {
     String getMsgMiraiCode(String no, long sender, long target, long time);
 
     String getMsgMiraiCode(String no, long sender, long target);
+
+    String getMsgMiraiCode(String no, long target, String type);
+
+    String getMsgMiraiCode(String no, long target);
 }

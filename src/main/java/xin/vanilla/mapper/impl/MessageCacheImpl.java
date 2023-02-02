@@ -152,7 +152,17 @@ public class MessageCacheImpl implements MessageCache {
 
     @Override
     public String getMsgString(String no, long sender, long target) {
-        return getMsgString(no, sender, target, 0, null);
+        return getMsgString(no, sender, target, 0);
+    }
+
+    @Override
+    public String getMsgString(String no, long target, String type) {
+        return getMsgString(no, 0, target, 0, type);
+    }
+
+    @Override
+    public String getMsgString(String no, long target) {
+        return getMsgString(no, 0, target);
     }
 
     @Override
@@ -172,7 +182,17 @@ public class MessageCacheImpl implements MessageCache {
 
     @Override
     public MessageChain getMsgChain(String no, long sender, long target) {
-        return getMsgChain(no, sender, target, 0, null);
+        return getMsgChain(no, sender, target, 0);
+    }
+
+    @Override
+    public MessageChain getMsgChain(String no, long target, String type) {
+        return getMsgChain(no, 0, target, 0, type);
+    }
+
+    @Override
+    public MessageChain getMsgChain(String no, long target) {
+        return getMsgChain(no, 0, target);
     }
 
     @Override
@@ -184,10 +204,10 @@ public class MessageCacheImpl implements MessageCache {
         for (String msgType : MSG_TYPES) {
             Statement query = QueryStatement.produce()
                     .from(msgType + getTableName())
-                    .where(SENDER).eq(sender)
-                    .and(TARGET).eq(target);
-            if (time > 0) query.and(TIME).eq(time);
+                    .where(TARGET).eq(target);
 
+            if (sender > 0) query.and(TARGET).eq(target);
+            if (time > 0) query.and(TIME).eq(time);
             if (!no.contains("|"))
                 query.and(NOS).likeStartsWith(no);
             else if (no.startsWith("|"))
@@ -211,7 +231,17 @@ public class MessageCacheImpl implements MessageCache {
 
     @Override
     public String getMsgMiraiCode(String no, long sender, long target) {
-        return getMsgMiraiCode(no, sender, target, 0, null);
+        return getMsgMiraiCode(no, sender, target, 0);
+    }
+
+    @Override
+    public String getMsgMiraiCode(String no, long target, String type) {
+        return getMsgMiraiCode(no, 0, target, 0, type);
+    }
+
+    @Override
+    public String getMsgMiraiCode(String no, long target) {
+        return getMsgMiraiCode(no, 0, target);
     }
 
 }
