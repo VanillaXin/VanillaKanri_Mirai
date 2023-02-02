@@ -541,7 +541,7 @@ public class Statement {
     protected void appendClauses(Object... clauses) {
         for (int i = 0; i < clauses.length; i++) {
             if (i > 0) statement.append(", ");
-            statement.append(clauses[i]);
+            statement.append("'").append(clauses[i]).append("'");
         }
     }
 
