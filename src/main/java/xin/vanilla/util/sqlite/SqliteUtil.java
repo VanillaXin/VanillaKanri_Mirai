@@ -284,7 +284,7 @@ public class SqliteUtil {
      */
     public <T> T getEntity(Statement statement, final Class<T> clazz) {
         try (ResultSet resultSet = select(statement)) {
-            if (!resultSet.next()) return null;
+            if (resultSet == null || !resultSet.next()) return null;
             return getEntity(resultSet, clazz);
         } catch (SQLException e) {
             return null;
