@@ -4,6 +4,7 @@ import net.mamoe.mirai.contact.Contact;
 import net.mamoe.mirai.message.MessageReceipt;
 import net.mamoe.mirai.message.data.Message;
 import net.mamoe.mirai.message.data.MessageUtils;
+import net.mamoe.mirai.message.data.PlainText;
 import xin.vanilla.VanillaKanri;
 
 /**
@@ -14,7 +15,7 @@ public class Api {
 
     public static MessageReceipt<Contact> sendMessage(Contact contact, String message) {
         MessageReceipt<Contact> contactMessageReceipt = contact.sendMessage(message);
-        Va.messageCache.addMsg(contact, contactMessageReceipt.getSource(), MessageUtils.newChain(message));
+        Va.messageCache.addMsg(contact, contactMessageReceipt.getSource(), MessageUtils.newChain(new PlainText(message)));
         return contactMessageReceipt;
     }
 
