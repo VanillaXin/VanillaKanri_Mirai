@@ -49,7 +49,10 @@ public class Statement {
      */
     public Statement from(Object... tables) {
         statement.append(" FROM ");
-        appendClauses(tables);
+        for (int i = 0; i < tables.length; i++) {
+            if (i > 0) statement.append(", ");
+            statement.append("'").append(tables[i]).append("'");
+        }
         return this;
     }
 
@@ -541,7 +544,7 @@ public class Statement {
     protected void appendClauses(Object... clauses) {
         for (int i = 0; i < clauses.length; i++) {
             if (i > 0) statement.append(", ");
-            statement.append("'").append(clauses[i]).append("'");
+            statement.append(clauses[i]);
         }
     }
 
