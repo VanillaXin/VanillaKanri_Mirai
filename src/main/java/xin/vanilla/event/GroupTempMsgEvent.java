@@ -22,7 +22,7 @@ public class GroupTempMsgEvent extends BaseMsgEvent {
         this.sender = this.event.getSender();
         this.bot = this.event.getBot();
         this.time = this.event.getTime();
-        VanillaKanri.INSTANCE.messageCache.addMsg(this.sender, this.msg);
+        Va.messageCache.addMsg(this.sender, this.msg);
     }
 
     public void run() {

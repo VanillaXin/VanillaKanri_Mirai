@@ -6,6 +6,7 @@ import net.mamoe.mirai.contact.Member;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
 import net.mamoe.mirai.message.data.*;
 import xin.vanilla.rcon.Rcon;
+import xin.vanilla.util.Api;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -85,52 +86,52 @@ public class GroupMsgEvent extends BaseMsgEvent {
 
         // 序列化转码消息
         if (msg.contentToString().startsWith("/va to string "))
-            group.sendMessage(msg.serializeToMiraiCode());
+            Api.sendMessage(group, msg.serializeToMiraiCode());
 
         if (msg.contentToString().startsWith("/va get msgcache ")) {
             int no = Integer.parseInt(msg.contentToString().substring("/va get msgcache ".length()));
             MessageSource source = msg.get(MessageSource.Key);
             no = source.getIds()[0] - no;
             String msgCache = Va.messageCache.getMsgMiraiCode(String.valueOf(no), group.getId(), MSG_TYPE_GROUP);
-            group.sendMessage(msgCache);
+            Api.sendMessage(group, msgCache);
         }
 
         if (msg.contentToString().equals("/va get string")) {
-            group.sendMessage("testString is: " + Va.globalConfig.getMc_rcon_ip());
+            Api.sendMessage(group, "testString is: " + Va.globalConfig.getMc_rcon_ip());
         }
         if (msg.contentToString().startsWith("/va set string ")) {
             String s = msg.contentToString().substring("/va set string ".length());
             Va.globalConfig.setMc_rcon_ip(s);
-            group.sendMessage("testString now is: " + Va.globalConfig.getMc_rcon_ip());
+            Api.sendMessage(group, "testString now is: " + Va.globalConfig.getMc_rcon_ip());
         }
 
         if (msg.contentToString().equals("/va get int")) {
-            group.sendMessage("testInt is: " + Va.globalConfig.getMc_rcon_port());
+            Api.sendMessage(group, "testInt is: " + Va.globalConfig.getMc_rcon_port());
         }
         if (msg.contentToString().startsWith("/va set int ")) {
             int s = Integer.parseInt(msg.contentToString().substring("/va set int ".length()));
             Va.globalConfig.setMc_rcon_port(s);
-            group.sendMessage("testInt now is: " + Va.globalConfig.getMc_rcon_port());
+            Api.sendMessage(group, "testInt now is: " + Va.globalConfig.getMc_rcon_port());
         }
 
         if (msg.contentToString().equals("/va get owner")) {
-            group.sendMessage("botOwner is: " + Va.globalConfig.getPermissions().get(bot.getId()).getBotOwner());
+            Api.sendMessage(group, "botOwner is: " + Va.globalConfig.getPermissions().get(bot.getId()).getBotOwner());
         }
         if (msg.contentToString().startsWith("/va set owner ")) {
             String s = msg.contentToString().substring("/va set owner ".length());
             Va.globalConfig.getPermissions().get(bot.getId()).setBotOwner(Long.parseLong(s));
-            group.sendMessage("botOwner now is: " + Va.globalConfig.getPermissions().get(bot.getId()).getBotOwner());
+            Api.sendMessage(group, "botOwner now is: " + Va.globalConfig.getPermissions().get(bot.getId()).getBotOwner());
         }
 
         if (msg.contentToString().equals("/va get superAdmin")) {
-            group.sendMessage("superAdmin is: " + Va.globalConfig.getPermissions().get(bot.getId()).getSuperAdmin());
+            Api.sendMessage(group, "superAdmin is: " + Va.globalConfig.getPermissions().get(bot.getId()).getSuperAdmin());
         }
         if (msg.contentToString().startsWith("/va set superAdmin ")) {
             String s = msg.contentToString().substring("/va set superAdmin ".length());
             Va.globalConfig.getPermissions().get(bot.getId()).setSuperAdmin(new HashSet<Long>() {{
                 addAll(Arrays.stream(s.split(" ")).map(Long::parseLong).collect(Collectors.toList()));
             }});
-            group.sendMessage("superAdmin now is: " + Va.globalConfig.getPermissions().get(bot.getId()).getSuperAdmin());
+            Api.sendMessage(group, "superAdmin now is: " + Va.globalConfig.getPermissions().get(bot.getId()).getSuperAdmin());
         }
 
         // Va.config.refreshSource();
@@ -153,9 +154,9 @@ public class GroupMsgEvent extends BaseMsgEvent {
 
         try (Rcon rcon = Rcon.open(Va.globalConfig.getMc_rcon_ip(), Va.globalConfig.getMc_rcon_port())) {
             if (rcon.authenticate(Va.globalConfig.getMc_rcon_psw())) {
-                group.sendMessage(rcon.sendCommand(command));
+                Api.sendMessage(group, rcon.sendCommand(command));
             } else {
-                group.sendMessage("Failed to authenticate");
+                Api.sendMessage(group, "Failed to authenticate");
             }
             return true;
         } catch (IOException e) {

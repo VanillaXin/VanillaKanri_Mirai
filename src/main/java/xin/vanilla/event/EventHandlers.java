@@ -7,7 +7,7 @@ import net.mamoe.mirai.event.ExceptionInEventHandlerException;
 import net.mamoe.mirai.event.SimpleListenerHost;
 import net.mamoe.mirai.event.events.*;
 import org.jetbrains.annotations.NotNull;
-import xin.vanilla.VanillaKanri;
+import xin.vanilla.util.Api;
 import xin.vanilla.util.StringUtils;
 
 import java.io.PrintWriter;
@@ -29,7 +29,7 @@ public class EventHandlers extends SimpleListenerHost {
             exception.printStackTrace(writer);
             StringBuffer buffer = stringWriter.getBuffer();
 
-            groupMessageEvent.getGroup().sendMessage(StringUtils.getByLine(buffer.toString(), 1, 5, "... [num] more"));
+            Api.sendMessage(groupMessageEvent.getGroup(), StringUtils.getByLine(buffer.toString(), 1, 5, "... [num] more"));
         }
 
     }

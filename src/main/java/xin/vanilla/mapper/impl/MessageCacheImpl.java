@@ -1,9 +1,6 @@
 package xin.vanilla.mapper.impl;
 
-import net.mamoe.mirai.contact.Friend;
-import net.mamoe.mirai.contact.Group;
-import net.mamoe.mirai.contact.Member;
-import net.mamoe.mirai.contact.Stranger;
+import net.mamoe.mirai.contact.*;
 import net.mamoe.mirai.message.code.MiraiCode;
 import net.mamoe.mirai.message.data.*;
 import xin.vanilla.entity.mapper.MsgCache;
@@ -100,12 +97,29 @@ public class MessageCacheImpl implements MessageCache {
         addMsg(msg, source, time, table, stranger.getId());
     }
 
-    private void addMsg(MessageChain msg, MessageSource source, int time, String table, long target) {
-        long sender = source.getFromId();
-        int[] ids = source.getIds();
-        int[] internalIds = source.getInternalIds();
-        long botId = source.getBotId();
+    @Override
+    public void addMsg(Contact contact, OnlineMessageSource.Outgoing outgoing, Message msg) {
+        String table;
+        if (contact instanceof Group)
+            table = MSG_TYPE_GROUP + getTableName();
+        else if (contact instanceof Friend)
+            table = MSG_TYPE_FRIEND + getTableName();
+        else if (contact instanceof Member)
+            table = MSG_TYPE_MEMBER + getTableName();
+        else if (contact instanceof Stranger)
+            table = MSG_TYPE_STRANGER + getTableName();
+        else return;
 
+        long targetId = outgoing.getTargetId();
+        long sender = outgoing.getFromId();
+        long botId = outgoing.getBot().getId();
+        int[] ids = outgoing.getIds();
+        int[] internalIds = outgoing.getInternalIds();
+        int time = outgoing.getTime();
+        addMsg(MessageUtils.newChain(msg), time, table, targetId, sender, ids, internalIds, botId);
+    }
+
+    private void addMsg(MessageChain msg, int time, String table, long target, long sender, int[] ids, int[] internalIds, long botId) {
         createTable(table);
         String nos = StringUtils.toString(ids) + "|" + StringUtils.toString(internalIds);
         String msgString = msg.serializeToMiraiCode();
@@ -133,6 +147,14 @@ public class MessageCacheImpl implements MessageCache {
                 .put("msg", msgString);
 
         sqliteUtil.insert(insert);
+    }
+
+    private void addMsg(MessageChain msg, MessageSource source, int time, String table, long target) {
+        long sender = source.getFromId();
+        int[] ids = source.getIds();
+        int[] internalIds = source.getInternalIds();
+        long botId = source.getBotId();
+        addMsg(msg, time, table, target, sender, ids, internalIds, botId);
     }
 
     @Override

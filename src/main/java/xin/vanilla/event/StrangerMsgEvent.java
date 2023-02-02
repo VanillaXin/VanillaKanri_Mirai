@@ -4,7 +4,6 @@ import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.contact.Stranger;
 import net.mamoe.mirai.event.events.StrangerMessageEvent;
 import net.mamoe.mirai.message.data.MessageChain;
-import xin.vanilla.VanillaKanri;
 
 public class StrangerMsgEvent extends BaseMsgEvent {
     private final StrangerMessageEvent event;
@@ -19,7 +18,7 @@ public class StrangerMsgEvent extends BaseMsgEvent {
         this.sender = this.event.getSender();
         this.bot = this.event.getBot();
         this.time = this.event.getTime();
-        VanillaKanri.INSTANCE.messageCache.addMsg(this.sender, this.msg);
+        Va.messageCache.addMsg(this.sender, this.msg);
     }
 
     public void run() {

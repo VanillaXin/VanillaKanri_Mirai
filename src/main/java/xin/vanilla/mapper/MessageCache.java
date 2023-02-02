@@ -1,10 +1,9 @@
 package xin.vanilla.mapper;
 
-import net.mamoe.mirai.contact.Friend;
-import net.mamoe.mirai.contact.Group;
-import net.mamoe.mirai.contact.Member;
-import net.mamoe.mirai.contact.Stranger;
+import net.mamoe.mirai.contact.*;
+import net.mamoe.mirai.message.data.Message;
 import net.mamoe.mirai.message.data.MessageChain;
+import net.mamoe.mirai.message.data.OnlineMessageSource;
 
 public interface MessageCache {
 
@@ -20,6 +19,8 @@ public interface MessageCache {
     void addMsg(Member member, MessageChain msg);
 
     void addMsg(Stranger stranger, MessageChain msg);
+
+    void addMsg(Contact contact, OnlineMessageSource.Outgoing outgoing, Message message);
 
     String getMsgString(String no, long sender, long target, long time, String type);
 
