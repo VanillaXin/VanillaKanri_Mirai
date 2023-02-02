@@ -4,18 +4,34 @@ import net.mamoe.mirai.contact.Friend;
 import net.mamoe.mirai.contact.Group;
 import net.mamoe.mirai.contact.Member;
 import net.mamoe.mirai.contact.Stranger;
+import net.mamoe.mirai.message.code.MiraiCode;
 import net.mamoe.mirai.message.data.*;
+import xin.vanilla.entity.mapper.MsgCache;
 import xin.vanilla.mapper.MessageCache;
-import xin.vanilla.util.DateUtils;
 import xin.vanilla.util.StringUtils;
 import xin.vanilla.util.sqlite.SqliteUtil;
 import xin.vanilla.util.sqlite.statement.InsertStatement;
+import xin.vanilla.util.sqlite.statement.QueryStatement;
+import xin.vanilla.util.sqlite.statement.Statement;
 
 import java.sql.SQLException;
-import java.util.Date;
 
 public class MessageCacheImpl implements MessageCache {
+    public static String MSG_TYPE_GROUP = "group_";
+    public static String MSG_TYPE_FRIEND = "friend_";
+    public static String MSG_TYPE_MEMBER = "member_";
+    public static String MSG_TYPE_STRANGER = "stranger_";
     public static String dbname = "\\msg_cache.db";
+    public static String dbVersion = "1.0.0";
+    public static String ID = "id";
+    public static String NOS = "nos";
+    public static String BOT = "bot";
+    public static String SENDER = "sender";
+    public static String TARGET = "target";
+    public static String TIME = "time";
+    public static String MSG = "msg";
+
+    private static String[] MSG_TYPES = {MSG_TYPE_GROUP, MSG_TYPE_FRIEND, MSG_TYPE_MEMBER, MSG_TYPE_STRANGER};
     private final SqliteUtil sqliteUtil;
 
     public MessageCacheImpl(String path) {
@@ -26,9 +42,10 @@ public class MessageCacheImpl implements MessageCache {
         }
     }
 
-    private String getTableName(long time) {
-        Date date = new Date(time * 1000);
-        return DateUtils.getYearOfDate(date) + "." + DateUtils.getMonthOfDateWithZero(date);
+    private String getTableName() {
+        // Date date = new Date(time * 1000);
+        // return DateUtils.getYearOfDate(date) + "." + DateUtils.getMonthOfDateWithZero(date);
+        return dbVersion;
     }
 
     @Override
@@ -52,7 +69,7 @@ public class MessageCacheImpl implements MessageCache {
         MessageSource source = msg.get(MessageSource.Key);
         if (null == source) return;
         int time = source.getTime();
-        String table = "group_" + getTableName(time);
+        String table = MSG_TYPE_GROUP + getTableName();
         addMsg(msg, source, time, table, group.getId());
     }
 
@@ -61,7 +78,7 @@ public class MessageCacheImpl implements MessageCache {
         MessageSource source = msg.get(MessageSource.Key);
         if (null == source) return;
         int time = source.getTime();
-        String table = "friend_" + getTableName(time);
+        String table = MSG_TYPE_FRIEND + getTableName();
         addMsg(msg, source, time, table, friend.getId());
     }
 
@@ -70,7 +87,7 @@ public class MessageCacheImpl implements MessageCache {
         MessageSource source = msg.get(MessageSource.Key);
         if (null == source) return;
         int time = source.getTime();
-        String table = "member_" + getTableName(time);
+        String table = MSG_TYPE_MEMBER + getTableName();
         addMsg(msg, source, time, table, member.getId());
     }
 
@@ -79,7 +96,7 @@ public class MessageCacheImpl implements MessageCache {
         MessageSource source = msg.get(MessageSource.Key);
         if (null == source) return;
         int time = source.getTime();
-        String table = "stranger_" + getTableName(time);
+        String table = MSG_TYPE_STRANGER + getTableName();
         addMsg(msg, source, time, table, stranger.getId());
     }
 
@@ -116,6 +133,85 @@ public class MessageCacheImpl implements MessageCache {
                 .put("msg", msgString);
 
         sqliteUtil.insert(insert);
+    }
+
+    @Override
+    public String getMsgString(String no, long sender, long target, long time, String type) {
+        return getMsgChain(no, sender, target, time, type).contentToString();
+    }
+
+    @Override
+    public String getMsgString(String no, long sender, long target, String type) {
+        return getMsgString(no, sender, target, 0, type);
+    }
+
+    @Override
+    public String getMsgString(String no, long sender, long target, long time) {
+        return getMsgString(no, sender, target, time, null);
+    }
+
+    @Override
+    public String getMsgString(String no, long sender, long target) {
+        return getMsgString(no, sender, target, 0, null);
+    }
+
+    @Override
+    public MessageChain getMsgChain(String no, long sender, long target, long time, String type) {
+        return MiraiCode.deserializeMiraiCode(getMsgMiraiCode(no, sender, target, time, type));
+    }
+
+    @Override
+    public MessageChain getMsgChain(String no, long sender, long target, String type) {
+        return getMsgChain(no, sender, target, 0, type);
+    }
+
+    @Override
+    public MessageChain getMsgChain(String no, long sender, long target, long time) {
+        return getMsgChain(no, sender, target, time, null);
+    }
+
+    @Override
+    public MessageChain getMsgChain(String no, long sender, long target) {
+        return getMsgChain(no, sender, target, 0, null);
+    }
+
+    @Override
+    public String getMsgMiraiCode(String no, long sender, long target, long time, String type) {
+        MsgCache msgCache = null;
+        if (StringUtils.isNullOrEmpty(type))
+            MSG_TYPES = new String[]{type};
+
+        for (String msgType : MSG_TYPES) {
+            Statement query = QueryStatement.produce()
+                    .from(msgType + getTableName())
+                    .where(SENDER).eq(sender)
+                    .and(TARGET).eq(target);
+            if (time > 0) query.and(TIME).eq(time);
+
+            if (!no.contains("|"))
+                query.and(NOS).likeStartsWith(no);
+            else if (no.startsWith("|"))
+                query.and(NOS).likeEndsWith(no);
+            msgCache = sqliteUtil.getEntity(query, MsgCache.class);
+            if (msgCache != null && msgCache.getId() > 0) break;
+        }
+        if (msgCache == null) return null;
+        return msgCache.getMsg();
+    }
+
+    @Override
+    public String getMsgMiraiCode(String no, long sender, long target, String type) {
+        return getMsgMiraiCode(no, sender, target, 0, type);
+    }
+
+    @Override
+    public String getMsgMiraiCode(String no, long sender, long target, long time) {
+        return getMsgMiraiCode(no, sender, target, time, null);
+    }
+
+    @Override
+    public String getMsgMiraiCode(String no, long sender, long target) {
+        return getMsgMiraiCode(no, sender, target, 0, null);
     }
 
 }

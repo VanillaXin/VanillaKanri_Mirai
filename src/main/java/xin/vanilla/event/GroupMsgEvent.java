@@ -4,7 +4,6 @@ import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.contact.Group;
 import net.mamoe.mirai.contact.Member;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
-import net.mamoe.mirai.message.code.MiraiCode;
 import net.mamoe.mirai.message.data.*;
 import xin.vanilla.VanillaKanri;
 import xin.vanilla.rcon.Rcon;
@@ -84,11 +83,15 @@ public class GroupMsgEvent extends BaseMsgEvent {
         }
 
         // 序列化转码消息
-        if (msg.contentToString().startsWith("/va to string"))
+        if (msg.contentToString().startsWith("/va to string "))
             group.sendMessage(msg.serializeToMiraiCode());
 
+        if (msg.contentToString().startsWith("/va get msgcache ")) {
 
-        if (msg.contentToString().startsWith("/va get string")) {
+        }
+
+
+        if (msg.contentToString().equals("/va get string")) {
             group.sendMessage("testString is: " + Va.globalConfig.getMc_rcon_ip());
         }
         if (msg.contentToString().startsWith("/va set string ")) {
@@ -97,7 +100,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
             group.sendMessage("testString now is: " + Va.globalConfig.getMc_rcon_ip());
         }
 
-        if (msg.contentToString().startsWith("/va get int")) {
+        if (msg.contentToString().equals("/va get int")) {
             group.sendMessage("testInt is: " + Va.globalConfig.getMc_rcon_port());
         }
         if (msg.contentToString().startsWith("/va set int ")) {
@@ -106,7 +109,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
             group.sendMessage("testInt now is: " + Va.globalConfig.getMc_rcon_port());
         }
 
-        if (msg.contentToString().startsWith("/va get owner")) {
+        if (msg.contentToString().equals("/va get owner")) {
             group.sendMessage("botOwner is: " + Va.globalConfig.getPermissions().get(bot.getId()).getBotOwner());
         }
         if (msg.contentToString().startsWith("/va set owner ")) {
@@ -115,7 +118,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
             group.sendMessage("botOwner now is: " + Va.globalConfig.getPermissions().get(bot.getId()).getBotOwner());
         }
 
-        if (msg.contentToString().startsWith("/va get superAdmin")) {
+        if (msg.contentToString().equals("/va get superAdmin")) {
             group.sendMessage("superAdmin is: " + Va.globalConfig.getPermissions().get(bot.getId()).getSuperAdmin());
         }
         if (msg.contentToString().startsWith("/va set superAdmin ")) {

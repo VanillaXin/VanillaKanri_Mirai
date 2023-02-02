@@ -1,5 +1,7 @@
 package xin.vanilla.util;
 
+import java.util.Arrays;
+
 public class StringUtils {
 
     public static final String METHOD_SET_PREFIX = "set";
@@ -56,6 +58,7 @@ public class StringUtils {
     public static String toString(int[] a) {
         if (a == null)
             return "null";
+        a = Arrays.stream(a).sorted().toArray();
         int iMax = a.length - 1;
         if (iMax == -1)
             return "";

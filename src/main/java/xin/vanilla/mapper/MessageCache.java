@@ -20,4 +20,28 @@ public interface MessageCache {
     void addMsg(Member member, MessageChain msg);
 
     void addMsg(Stranger stranger, MessageChain msg);
+
+    String getMsgString(String no, long sender, long target, long time, String type);
+
+    String getMsgString(String no, long sender, long target, String type);
+
+    String getMsgString(String no, long sender, long target, long time);
+
+    String getMsgString(String no, long sender, long target);
+
+    MessageChain getMsgChain(String no, long sender, long target, long time, String type);
+
+    MessageChain getMsgChain(String no, long sender, long target, String type);
+
+    MessageChain getMsgChain(String no, long sender, long target, long time);
+
+    MessageChain getMsgChain(String no, long sender, long target);
+
+    String getMsgMiraiCode(String no, long sender, long target, long time, String type);
+
+    String getMsgMiraiCode(String no, long sender, long target, String type);
+
+    String getMsgMiraiCode(String no, long sender, long target, long time);
+
+    String getMsgMiraiCode(String no, long sender, long target);
 }
