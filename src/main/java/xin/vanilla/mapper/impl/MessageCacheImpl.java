@@ -3,7 +3,7 @@ package xin.vanilla.mapper.impl;
 import net.mamoe.mirai.contact.*;
 import net.mamoe.mirai.message.code.MiraiCode;
 import net.mamoe.mirai.message.data.*;
-import xin.vanilla.entity.mapper.MsgCache;
+import xin.vanilla.entity.data.MsgCache;
 import xin.vanilla.mapper.MessageCache;
 import xin.vanilla.util.StringUtils;
 import xin.vanilla.util.sqlite.SqliteUtil;

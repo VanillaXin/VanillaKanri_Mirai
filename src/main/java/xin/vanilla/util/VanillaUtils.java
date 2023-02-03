@@ -4,8 +4,16 @@ import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.contact.Group;
 import net.mamoe.mirai.contact.Member;
 import net.mamoe.mirai.contact.MemberPermission;
+import net.mamoe.mirai.contact.NormalMember;
+import net.mamoe.mirai.message.code.MiraiCode;
+import net.mamoe.mirai.message.data.At;
 import net.mamoe.mirai.message.data.MessageChain;
+import net.mamoe.mirai.message.data.SingleMessage;
 import xin.vanilla.VanillaKanri;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 @SuppressWarnings("unused")
 public class VanillaUtils {
@@ -64,7 +72,6 @@ public class VanillaUtils {
         if ("".equals(prefix)) {
             if (!secondary) return true;
 
-            // TODO 初始化二级前缀列表
             // 如果顶级前缀为空则遍历二级指令前缀
             for (String prefix_ : Va.globalConfig.getInstructions().getSecondaryPrefix()) {
                 if ("".equals(prefix_)) continue;
@@ -184,11 +191,9 @@ public class VanillaUtils {
      * 主人>超管>群主>主管>群管>副管=群副管
      */
     public static boolean isGroupAdmin(Group group, long qq) {
-        try {
-            return group.get(qq).getPermission().getLevel() == MemberPermission.ADMINISTRATOR.getLevel();
-        } catch (NullPointerException e) {
-            return false;
-        }
+        NormalMember normalMember = group.get(qq);
+        if (normalMember == null) return false;
+        else return normalMember.getPermission().getLevel() == MemberPermission.ADMINISTRATOR.getLevel();
     }
 
     /**
@@ -304,4 +309,27 @@ public class VanillaUtils {
     }
 
     // endregion 判断权限
+
+    public static long[] getQQFromAt(String qq) {
+        try {
+            if (qq.trim().contains(" ")) {
+                String[] s = qq.trim().split(" ");
+                return Arrays.stream(s).mapToLong(Long::parseLong).toArray();
+            } else {
+                return new long[]{Long.parseLong(qq)};
+            }
+        } catch (NumberFormatException ignored) {
+            try {
+                Set<Long> qqs = new HashSet<>();
+                for (SingleMessage singleMessage : MiraiCode.deserializeMiraiCode(qq)) {
+                    if (singleMessage instanceof At) {
+                        qqs.add(((At) singleMessage).getTarget());
+                    }
+                }
+                return qqs.stream().mapToLong(Long::longValue).toArray();
+            } catch (Exception e) {
+                return new long[0];
+            }
+        }
+    }
 }

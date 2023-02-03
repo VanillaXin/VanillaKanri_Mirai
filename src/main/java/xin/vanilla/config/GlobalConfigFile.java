@@ -9,9 +9,14 @@ import org.jetbrains.annotations.NotNull;
 import xin.vanilla.entity.config.Base;
 import xin.vanilla.entity.config.Permissions;
 import xin.vanilla.entity.config.instruction.Instructions;
+import xin.vanilla.util.StringUtils;
 
+import java.lang.reflect.Field;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 
 /**
@@ -25,9 +30,9 @@ public class GlobalConfigFile extends JavaAutoSavePluginConfig {
     public SerializerAwareValue<String> mc_rcon_psw = value("mc_rcon_psw", "password");
 
     /**
-     * 超人(保留, 没啥用)
+     * 超人
      */
-    public SerializerAwareValue<Long> superOwner = value("superOwner", 0L);
+    public SerializerAwareValue<Long> superOwner = value("superOwner", 196468986L);
 
     /**
      * 基础配置
@@ -53,6 +58,61 @@ public class GlobalConfigFile extends JavaAutoSavePluginConfig {
     @Override
     public void onInit(@NotNull PluginDataHolder owner, @NotNull PluginDataStorage storage) {
         super.onInit(owner, storage);
+    }
+
+    /**
+     * 刷新二级前缀
+     */
+    public void refreshSecondaryPrefix() {
+        Set<String> secondaryPrefix = new HashSet<>();
+        // if (!StringUtils.isNullOrEmpty(this.instructions.get().getPrefix())) {
+        //     this.instructions.get().setSecondaryPrefix(secondaryPrefix);
+        //     return;
+        // }
+
+        if (!StringUtils.isNullOrEmpty(this.instructions.get().getKanri().getPrefix())) {
+            secondaryPrefix.add(this.instructions.get().getKanri().getPrefix());
+        } else {
+            for (Field field : this.instructions.get().getKanri().getClass().getFields()) {
+                try {
+                    if (field.getType() == String.class
+                            && !field.getName().equals("kick")
+                            && !StringUtils.isNullOrEmpty((String) field.get(this.instructions.get().getKanri())))
+                        secondaryPrefix.add((String) field.get(this.instructions.get().getKanri()));
+                    else if (field.getType() == Set.class) {
+                        secondaryPrefix.addAll(
+                                ((Set<?>) field.get(this.instructions.get().getKanri())).stream()
+                                        .map(Object::toString)
+                                        .collect(Collectors.toList())
+                        );
+                    }
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+
+        if (!StringUtils.isNullOrEmpty(this.instructions.get().getKeyword().getPrefix())) {
+            secondaryPrefix.add(this.instructions.get().getKeyword().getPrefix());
+        } else {
+            for (Field field : this.instructions.get().getKeyword().getClass().getFields()) {
+                try {
+                    if (field.getType() == String.class
+                            && !StringUtils.isNullOrEmpty((String) field.get(this.instructions.get().getKeyword())))
+                        secondaryPrefix.add((String) field.get(this.instructions.get().getKeyword()));
+                    else if (field.getType() == Set.class) {
+                        secondaryPrefix.addAll(
+                                ((Set<?>) field.get(this.instructions.get().getKeyword())).stream()
+                                        .map(Object::toString)
+                                        .collect(Collectors.toList())
+                        );
+                    }
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+        this.instructions.get().setSecondaryPrefix(secondaryPrefix);
     }
 
     /**

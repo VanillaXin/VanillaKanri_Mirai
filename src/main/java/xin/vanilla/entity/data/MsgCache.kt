@@ -1,4 +1,4 @@
-package xin.vanilla.entity.mapper
+package xin.vanilla.entity.data
 
 import kotlinx.serialization.Serializable
 import lombok.Data

@@ -10,8 +10,6 @@ import xin.vanilla.util.Api;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.stream.Collectors;
 
 import static xin.vanilla.mapper.impl.MessageCacheImpl.MSG_TYPE_GROUP;
 
@@ -42,6 +40,33 @@ public class GroupMsgEvent extends BaseMsgEvent {
         if (rcon()) return;
 
         test();
+    }
+
+    /**
+     * 执行MC RCON指令
+     *
+     * @return 是否不继续执行
+     */
+    private boolean rcon() {
+        final String prefix = "/va mc.rcon ";
+
+        String command;
+        if (msg.contentToString().startsWith(prefix)) {
+            if (!(sender.getId() == 196468986L || sender.getId() == 3085477411L)) return false;
+            command = msg.contentToString().substring(prefix.length());
+        } else if (msg.contentToString().equals("/list") || msg.contentToString().equals("/ls")) command = "list";
+        else return false;
+
+        try (Rcon rcon = Rcon.open(Va.globalConfig.getMc_rcon_ip(), Va.globalConfig.getMc_rcon_port())) {
+            if (rcon.authenticate(Va.globalConfig.getMc_rcon_psw())) {
+                Api.sendMessage(group, rcon.sendCommand(command));
+            } else {
+                Api.sendMessage(group, "Failed to authenticate");
+            }
+            return true;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void test() {
@@ -96,71 +121,48 @@ public class GroupMsgEvent extends BaseMsgEvent {
             Api.sendMessage(group, msgCache);
         }
 
-        if (msg.contentToString().equals("/va get string")) {
-            Api.sendMessage(group, "testString is: " + Va.globalConfig.getMc_rcon_ip());
-        }
-        if (msg.contentToString().startsWith("/va set string ")) {
-            String s = msg.contentToString().substring("/va set string ".length());
-            Va.globalConfig.setMc_rcon_ip(s);
-            Api.sendMessage(group, "testString now is: " + Va.globalConfig.getMc_rcon_ip());
-        }
+        // if (msg.contentToString().equals("/va get string")) {
+        //     Api.sendMessage(group, "testString is: " + Va.globalConfig.getMc_rcon_ip());
+        // }
+        // if (msg.contentToString().startsWith("/va set string ")) {
+        //     String s = msg.contentToString().substring("/va set string ".length());
+        //     Va.globalConfig.setMc_rcon_ip(s);
+        //     Api.sendMessage(group, "testString now is: " + Va.globalConfig.getMc_rcon_ip());
+        // }
 
-        if (msg.contentToString().equals("/va get int")) {
-            Api.sendMessage(group, "testInt is: " + Va.globalConfig.getMc_rcon_port());
-        }
-        if (msg.contentToString().startsWith("/va set int ")) {
-            int s = Integer.parseInt(msg.contentToString().substring("/va set int ".length()));
-            Va.globalConfig.setMc_rcon_port(s);
-            Api.sendMessage(group, "testInt now is: " + Va.globalConfig.getMc_rcon_port());
-        }
+        // if (msg.contentToString().equals("/va get int")) {
+        //     Api.sendMessage(group, "testInt is: " + Va.globalConfig.getMc_rcon_port());
+        // }
+        // if (msg.contentToString().startsWith("/va set int ")) {
+        //     int s = Integer.parseInt(msg.contentToString().substring("/va set int ".length()));
+        //     Va.globalConfig.setMc_rcon_port(s);
+        //     Api.sendMessage(group, "testInt now is: " + Va.globalConfig.getMc_rcon_port());
+        // }
 
         if (msg.contentToString().equals("/va get owner")) {
             Api.sendMessage(group, "botOwner is: " + Va.globalConfig.getPermissions().get(bot.getId()).getBotOwner());
         }
-        if (msg.contentToString().startsWith("/va set owner ")) {
-            String s = msg.contentToString().substring("/va set owner ".length());
-            Va.globalConfig.getPermissions().get(bot.getId()).setBotOwner(Long.parseLong(s));
-            Api.sendMessage(group, "botOwner now is: " + Va.globalConfig.getPermissions().get(bot.getId()).getBotOwner());
-        }
+        // if (msg.contentToString().startsWith("/va set owner ")) {
+        //     String s = msg.contentToString().substring("/va set owner ".length());
+        //     Va.globalConfig.getPermissions().get(bot.getId()).setBotOwner(Long.parseLong(s));
+        //     Api.sendMessage(group, "botOwner now is: " + Va.globalConfig.getPermissions().get(bot.getId()).getBotOwner());
+        // }
 
         if (msg.contentToString().equals("/va get superAdmin")) {
             Api.sendMessage(group, "superAdmin is: " + Va.globalConfig.getPermissions().get(bot.getId()).getSuperAdmin());
         }
-        if (msg.contentToString().startsWith("/va set superAdmin ")) {
-            String s = msg.contentToString().substring("/va set superAdmin ".length());
-            Va.globalConfig.getPermissions().get(bot.getId()).setSuperAdmin(new HashSet<Long>() {{
-                addAll(Arrays.stream(s.split(" ")).map(Long::parseLong).collect(Collectors.toList()));
-            }});
-            Api.sendMessage(group, "superAdmin now is: " + Va.globalConfig.getPermissions().get(bot.getId()).getSuperAdmin());
-        }
+        // if (msg.contentToString().startsWith("/va set superAdmin ")) {
+        //     String s = msg.contentToString().substring("/va set superAdmin ".length());
+        //     Va.globalConfig.getPermissions().get(bot.getId()).setSuperAdmin(new HashSet<Long>() {{
+        //         addAll(Arrays.stream(s.split(" ")).map(Long::parseLong).collect(Collectors.toList()));
+        //     }});
+        //     Api.sendMessage(group, "superAdmin now is: " + Va.globalConfig.getPermissions().get(bot.getId()).getSuperAdmin());
+        // }
 
         // Va.config.refreshSource();
-    }
 
-    /**
-     * 执行MC RCON指令
-     *
-     * @return 是否不继续执行
-     */
-    private boolean rcon() {
-        final String prefix = "/va mc.rcon ";
-
-        String command;
-        if (msg.contentToString().startsWith(prefix)) {
-            if (!(sender.getId() == 196468986L || sender.getId() == 3085477411L)) return false;
-            command = msg.contentToString().substring(prefix.length());
-        } else if (msg.contentToString().equals("/list") || msg.contentToString().equals("/ls")) command = "list";
-        else return false;
-
-        try (Rcon rcon = Rcon.open(Va.globalConfig.getMc_rcon_ip(), Va.globalConfig.getMc_rcon_port())) {
-            if (rcon.authenticate(Va.globalConfig.getMc_rcon_psw())) {
-                Api.sendMessage(group, rcon.sendCommand(command));
-            } else {
-                Api.sendMessage(group, "Failed to authenticate");
-            }
-            return true;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        if (msg.contentToString().equals("/va get secondaryPrefix")) {
+            Api.sendMessage(group, Va.globalConfig.getInstructions().getSecondaryPrefix().toString());
         }
     }
 }

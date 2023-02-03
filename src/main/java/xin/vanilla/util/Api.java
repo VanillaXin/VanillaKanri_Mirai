@@ -13,12 +13,18 @@ import xin.vanilla.VanillaKanri;
 public class Api {
     private static final VanillaKanri Va = VanillaKanri.INSTANCE;
 
+    /**
+     * 发送消息
+     */
     public static MessageReceipt<Contact> sendMessage(Contact contact, String message) {
         MessageReceipt<Contact> contactMessageReceipt = contact.sendMessage(message);
         Va.messageCache.addMsg(contact, contactMessageReceipt.getSource(), MessageUtils.newChain(new PlainText(message)));
         return contactMessageReceipt;
     }
 
+    /**
+     * 发送消息
+     */
     public static MessageReceipt<Contact> sendMessage(Contact contact, Message message) {
         MessageReceipt<Contact> contactMessageReceipt = contact.sendMessage(message);
         Va.messageCache.addMsg(contact, contactMessageReceipt.getSource(), message);

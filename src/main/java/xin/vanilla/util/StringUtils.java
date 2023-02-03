@@ -1,5 +1,7 @@
 package xin.vanilla.util;
 
+import net.mamoe.mirai.message.data.At;
+
 import java.util.Arrays;
 
 public class StringUtils {
@@ -7,6 +9,8 @@ public class StringUtils {
     public static final String METHOD_SET_PREFIX = "set";
     public static final String METHOD_GET_PREFIX = "get";
     public static final String COMMON_MARK = ",<.>/?;:'\"[{]}\\|`~!@#$%^&*()-_=+，《。》、？；：‘“【】·~！￥…（）—";
+
+    public static final String REG_ATCODE = "(?:(?:" + escapeExprSpecialWord(new At(2333).toString()).replace("2333", "\\d{6,10}") + "|\\d{6,10}) ?)";
 
     /**
      * 字符串是否为常用标点符号
@@ -71,4 +75,37 @@ public class StringUtils {
             b.append(",");
         }
     }
+
+    public static String toString(long[] a) {
+        if (a == null)
+            return "null";
+        a = Arrays.stream(a).sorted().toArray();
+        int iMax = a.length - 1;
+        if (iMax == -1)
+            return "";
+
+        StringBuilder b = new StringBuilder();
+        for (int i = 0; ; i++) {
+            b.append(a[i]);
+            if (i == iMax)
+                return b.toString();
+            b.append(",");
+        }
+    }
+
+    /**
+     * 转义正则特殊字符  $()*+.[]?\^{},|
+     */
+    public static String escapeExprSpecialWord(String keyword) {
+        if (!StringUtils.isNullOrEmpty(keyword)) {
+            String[] fbsArr = {"\\", "$", "(", ")", "*", "+", ".", "[", "]", "?", "^", "{", "}", "|"};
+            for (String key : fbsArr) {
+                if (keyword.contains(key)) {
+                    keyword = keyword.replace(key, "\\" + key);
+                }
+            }
+        }
+        return keyword;
+    }
+
 }
