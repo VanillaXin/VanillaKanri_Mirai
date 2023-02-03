@@ -113,8 +113,8 @@ public class InstructionMsgEvent {
                         rep.append(qq).append(',');
                     }
                 }
-                if (operation) Api.sendMessage(group, "已将 " + rep.substring(rep.length() - 1) + " 添加为管理员");
-                else Api.sendMessage(group, "已取消 " + rep.substring(rep.length() - 1) + " 的管理员");
+                if (operation) Api.sendMessage(group, "已将 " + rep.substring(0, rep.length() - 1) + " 添加为管理员");
+                else Api.sendMessage(group, "已取消 " + rep.substring(0, rep.length() - 1) + " 的管理员");
                 return RETURN_BREAK_TRUE;
             }
         }
