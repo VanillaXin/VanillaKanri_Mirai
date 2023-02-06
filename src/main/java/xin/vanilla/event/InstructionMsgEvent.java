@@ -8,6 +8,9 @@ import net.mamoe.mirai.event.events.GroupMessageEvent;
 import net.mamoe.mirai.event.events.GroupTempMessageEvent;
 import net.mamoe.mirai.event.events.MessageEvent;
 import net.mamoe.mirai.message.data.MessageChain;
+import net.mamoe.mirai.message.data.MessageChainBuilder;
+import net.mamoe.mirai.message.data.OnlineMessageSource;
+import net.mamoe.mirai.message.data.QuoteReply;
 import xin.vanilla.VanillaKanri;
 import xin.vanilla.entity.config.instruction.BaseInstructions;
 import xin.vanilla.entity.config.instruction.KanriInstructions;
@@ -16,13 +19,15 @@ import xin.vanilla.util.Api;
 import xin.vanilla.util.StringUtils;
 import xin.vanilla.util.VanillaUtils;
 
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static xin.vanilla.util.VanillaUtils.PERMISSION_LEVEL_GROUPADMIN;
-import static xin.vanilla.util.VanillaUtils.PERMISSION_LEVEL_GROUPOWNER;
+import static xin.vanilla.util.StringUtils.REG_SEPARATOR;
+import static xin.vanilla.util.VanillaUtils.*;
 
 public class InstructionMsgEvent {
     private static final int RETURN_CONTINUE = 1;
@@ -89,19 +94,22 @@ public class InstructionMsgEvent {
     public int kanriIns() {
         // 判断是否群管指令
         if (delPrefix(kanri.getPrefix())) return RETURN_CONTINUE;
-        String prefix = ins.substring(0, ins.indexOf(' '));
+        int index = StringUtils.containsRegSeparator(ins);
+        if (index < 0) return RETURN_CONTINUE;
+        String prefix = ins.substring(0, index);
 
         // 添加/取消管理员
         if (kanri.getAdmin().contains(prefix)) {
             if (!VanillaUtils.hasPermissionOrMore(bot, group, sender.getId(), PERMISSION_LEVEL_GROUPOWNER))
                 return RETURN_BREAK_FALSE;
 
-            String reg = "^" + prefix + " " + toRegString(new HashSet<String>() {{
+            //  ad add <QQ>
+            String reg = "^" + prefix + REG_SEPARATOR + toRegString(new HashSet<String>() {{
                 addAll(base.getAdd());
                 addAll(base.getDelete());
-            }}) + " (" + StringUtils.REG_ATCODE + "+)$";
+            }}) + REG_SEPARATOR + "(" + StringUtils.REG_ATCODE + "+)$";
 
-            Matcher m = Pattern.compile(reg).matcher(ins);
+            Matcher m = Pattern.compile(reg, Pattern.DOTALL).matcher(ins);
 
             if (m.find()) {
                 boolean operation = base.getAdd().contains(m.group(1));
@@ -113,37 +121,109 @@ public class InstructionMsgEvent {
                         rep.append(qq).append(',');
                     }
                 }
-                if (operation) Api.sendMessage(group, "已将 " + rep.substring(0, rep.length() - 1) + " 添加为管理员");
-                else Api.sendMessage(group, "已取消 " + rep.substring(0, rep.length() - 1) + " 的管理员");
+
+                if (!StringUtils.isNullOrEmpty(rep.toString())) {
+                    if (operation)
+                        Api.sendMessage(group, "已将 " + rep.substring(0, rep.length() - 1) + " 添加为管理员");
+                    else Api.sendMessage(group, "已取消 " + rep.substring(0, rep.length() - 1) + " 的管理员");
+                } else {
+                    Api.sendMessage(group, "待操作对象为空");
+                }
                 return RETURN_BREAK_TRUE;
             }
         }
         // 设置群名片
         else if (kanri.getCard().contains(prefix)) {
+            if (!VanillaUtils.hasPermissionOrMore(bot, group, sender.getId(), PERMISSION_LEVEL_DEPUTYADMIN))
+                return RETURN_BREAK_FALSE;
 
+            //  card <QQ> [CONTENT]
+            String reg = "^" + prefix + REG_SEPARATOR + "(" + StringUtils.REG_ATCODE + "+)" + REG_SEPARATOR + "?" + "(.*?)$";
+
+            Matcher m = Pattern.compile(reg, Pattern.DOTALL).matcher(ins);
+
+            if (m.find()) {
+                StringBuilder rep = new StringBuilder();
+                for (long qq : VanillaUtils.getQQFromAt(m.group(1))) {
+                    NormalMember normalMember = group.get(qq);
+                    if (normalMember != null) {
+                        normalMember.setNameCard(m.group(2));
+                        rep.append(qq).append(',');
+                    }
+                }
+                if (!StringUtils.isNullOrEmpty(rep.toString())) {
+                    if (StringUtils.isNullOrEmpty(m.group(2)))
+                        Api.sendMessage(group, "已清除 " + rep.substring(0, rep.length() - 1) + " 的名片");
+                    else
+                        Api.sendMessage(group, "已将 " + rep.substring(0, rep.length() - 1) + " 的名片修改为:\n" + m.group(2));
+                } else {
+                    Api.sendMessage(group, "待操作对象为空");
+                }
+            }
         }
         // 添加群精华
         else if (kanri.getEssence().contains(prefix)) {
+            if (!VanillaUtils.hasPermissionOrMore(bot, group, sender.getId(), PERMISSION_LEVEL_DEPUTYADMIN))
+                return RETURN_BREAK_FALSE;
 
+            //  essence add/del/[CONTENT]
+            String reg = "^" + prefix + REG_SEPARATOR + "(.*?)$";
+
+            Matcher m = Pattern.compile(reg, Pattern.DOTALL).matcher(ins);
+
+            if (m.find()) {
+                String con = m.group(1);
+                if (base.getAdd().contains(con)) {
+                    QuoteReply quoteReply = msg.get(QuoteReply.Key);
+                    if (quoteReply != null) {
+                        if (group.setEssenceMessage(quoteReply.getSource())) {
+                            Api.sendMessage(group, new MessageChainBuilder().append(quoteReply).append("已将该消息设为精华").build());
+                        } else {
+                            Api.sendMessage(group, "精华消息设置失败");
+                        }
+                    }
+                } else if (base.getDelete().contains(con)) {
+                    // 未发现取消精华消息接口
+                    // QuoteReply quoteReply = msg.get(QuoteReply.Key);
+                    // if (quoteReply != null) {
+                    // }
+                } else {
+                    OnlineMessageSource.Outgoing source = Api.sendMessage(group, con).getSource();
+                    if (!group.setEssenceMessage(source)) {
+                        Api.sendMessage(group, "精华消息设置失败");
+                    }
+                }
+                Va.getLogger().info("精华: " + con);
+            }
         }
         // 解除禁言
         else if (kanri.getLoud().contains(prefix)) {
+            if (!VanillaUtils.hasPermissionOrMore(bot, group, sender.getId(), PERMISSION_LEVEL_DEPUTYADMIN))
+                return RETURN_BREAK_FALSE;
 
         }
         // 禁言
         else if (kanri.getMute().contains(prefix)) {
+            if (!VanillaUtils.hasPermissionOrMore(bot, group, sender.getId(), PERMISSION_LEVEL_DEPUTYADMIN))
+                return RETURN_BREAK_FALSE;
 
         }
         // 设置群头衔
         else if (kanri.getTag().contains(prefix)) {
+            if (!VanillaUtils.hasPermissionOrMore(bot, group, sender.getId(), PERMISSION_LEVEL_DEPUTYADMIN))
+                return RETURN_BREAK_FALSE;
 
         }
         // 戳一戳
         else if (kanri.getTap().contains(prefix)) {
+            if (!VanillaUtils.hasPermissionOrMore(bot, group, sender.getId(), PERMISSION_LEVEL_DEPUTYADMIN))
+                return RETURN_BREAK_FALSE;
 
         }
         // 撤回消息
         else if (kanri.getWithdraw().contains(prefix)) {
+            if (!VanillaUtils.hasPermissionOrMore(bot, group, sender.getId(), PERMISSION_LEVEL_DEPUTYADMIN))
+                return RETURN_BREAK_FALSE;
 
         }
         // 踢出群成员
@@ -178,25 +258,29 @@ public class InstructionMsgEvent {
     private boolean delPrefix(String prefix) {
         String s = delPrefix();
         if (StringUtils.isNullOrEmpty(prefix)) {
-            ins = s;
-            return false;
+            setIns(s);
+            return StringUtils.isNullOrEmpty(this.ins);
         } else if (s.startsWith(prefix)) {
-            ins = s.substring(prefix.length()).trim();
-            return false;
+            setIns(s.substring(prefix.length()).trim());
+            return StringUtils.isNullOrEmpty(this.ins);
         }
         return true;
     }
 
     private <T> String toRegString(Set<T> set) {
-        if (set == null)
+        return toRegString(Arrays.asList(set.toArray()));
+    }
+
+    private <T> String toRegString(List<T> list) {
+        if (list == null)
             return "";
-        int iMax = set.size() - 1;
+        int iMax = list.size() - 1;
         if (iMax == -1) return "";
 
         StringBuilder b = new StringBuilder();
         b.append("(");
         int i = 0;
-        for (T t : set) {
+        for (T t : list) {
             b.append(StringUtils.escapeExprSpecialWord(t.toString()));
             if (i == iMax)
                 return b.append(')').toString();
@@ -204,5 +288,13 @@ public class InstructionMsgEvent {
             i++;
         }
         return b.toString();
+    }
+
+    private void setIns(String s) {
+        //[ \f\n\r\t\v]
+        this.ins = s.replace("\\f", "\f")
+                .replace("\\n", "\n")
+                .replace("\\r", "\r")
+                .replace("\\t", "\t");
     }
 }

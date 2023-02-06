@@ -3,6 +3,8 @@ package xin.vanilla.util;
 import net.mamoe.mirai.message.data.At;
 
 import java.util.Arrays;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class StringUtils {
 
@@ -10,7 +12,11 @@ public class StringUtils {
     public static final String METHOD_GET_PREFIX = "get";
     public static final String COMMON_MARK = ",<.>/?;:'\"[{]}\\|`~!@#$%^&*()-_=+，《。》、？；：‘“【】·~！￥…（）—";
 
-    public static final String REG_ATCODE = "(?:(?:" + escapeExprSpecialWord(new At(2333).toString()).replace("2333", "\\d{6,10}") + "|\\d{6,10}) ?)";
+    public static final String REG_SEPARATOR = "\\s";
+
+    public static final String REG_ATCODE = "(?:(?:" +
+            escapeExprSpecialWord(new At(2333).toString()).replace("2333", "\\d{6,10}")
+            + "|\\d{6,10})" + REG_SEPARATOR + "?)";
 
     /**
      * 字符串是否为常用标点符号
@@ -106,6 +112,14 @@ public class StringUtils {
             }
         }
         return keyword;
+    }
+
+    public static int containsRegSeparator(String s) {
+        Matcher matcher = Pattern.compile(REG_SEPARATOR).matcher(s);
+        if (matcher.find()) {
+            return matcher.start();
+        }
+        return -1;
     }
 
 }
