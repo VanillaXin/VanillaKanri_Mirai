@@ -16,6 +16,7 @@ import xin.vanilla.entity.config.instruction.BaseInstructions;
 import xin.vanilla.entity.config.instruction.KanriInstructions;
 import xin.vanilla.entity.config.instruction.KeywordInstructions;
 import xin.vanilla.util.Api;
+import xin.vanilla.util.RegUtils;
 import xin.vanilla.util.StringUtils;
 import xin.vanilla.util.VanillaUtils;
 
@@ -26,7 +27,6 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static xin.vanilla.util.StringUtils.REG_SEPARATOR;
 import static xin.vanilla.util.VanillaUtils.*;
 
 public class InstructionMsgEvent {
@@ -94,7 +94,7 @@ public class InstructionMsgEvent {
     public int kanriIns() {
         // 判断是否群管指令
         if (delPrefix(kanri.getPrefix())) return RETURN_CONTINUE;
-        int index = StringUtils.containsRegSeparator(ins);
+        int index = RegUtils.containsRegSeparator(ins);
         if (index < 0) return RETURN_CONTINUE;
         String prefix = ins.substring(0, index);
 
@@ -104,10 +104,10 @@ public class InstructionMsgEvent {
                 return RETURN_BREAK_FALSE;
 
             //  ad add <QQ>
-            String reg = "^" + prefix + REG_SEPARATOR + toRegString(new HashSet<String>() {{
+            String reg = "^" + prefix + RegUtils.REG_SEPARATOR + toRegString(new HashSet<String>() {{
                 addAll(base.getAdd());
                 addAll(base.getDelete());
-            }}) + REG_SEPARATOR + "(" + StringUtils.REG_ATCODE + "+)$";
+            }}) + RegUtils.REG_SEPARATOR + "(" + RegUtils.REG_ATCODE + "+)$";
 
             Matcher m = Pattern.compile(reg, Pattern.DOTALL).matcher(ins);
 
@@ -138,7 +138,7 @@ public class InstructionMsgEvent {
                 return RETURN_BREAK_FALSE;
 
             //  card <QQ> [CONTENT]
-            String reg = "^" + prefix + REG_SEPARATOR + "(" + StringUtils.REG_ATCODE + "+)" + REG_SEPARATOR + "?" + "(.*?)$";
+            String reg = "^" + prefix + RegUtils.REG_SEPARATOR + "(" + RegUtils.REG_ATCODE + "+)" + RegUtils.REG_SEPARATOR + "?" + "(.*?)$";
 
             Matcher m = Pattern.compile(reg, Pattern.DOTALL).matcher(ins);
 
@@ -167,7 +167,7 @@ public class InstructionMsgEvent {
                 return RETURN_BREAK_FALSE;
 
             //  essence add/del/[CONTENT]
-            String reg = "^" + prefix + REG_SEPARATOR + "(.*?)$";
+            String reg = "^" + prefix + RegUtils.REG_SEPARATOR + "(.*?)$";
 
             Matcher m = Pattern.compile(reg, Pattern.DOTALL).matcher(ins);
 
@@ -201,6 +201,11 @@ public class InstructionMsgEvent {
             if (!VanillaUtils.hasPermissionOrMore(bot, group, sender.getId(), PERMISSION_LEVEL_DEPUTYADMIN))
                 return RETURN_BREAK_FALSE;
 
+            //  loud <QQ>
+            RegUtils reg = RegUtils.start().groupNon(kanri.getLoud()).separator().groupIgByName("qq", RegUtils.REG_ATCODE).end();
+            if (reg.matcher(ins).find()) {
+
+            }
         }
         // 禁言
         else if (kanri.getMute().contains(prefix)) {
