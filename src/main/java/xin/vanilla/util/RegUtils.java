@@ -2,6 +2,7 @@ package xin.vanilla.util;
 
 import lombok.Getter;
 import net.mamoe.mirai.message.data.At;
+import net.mamoe.mirai.message.data.AtAll;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -18,6 +19,7 @@ public class RegUtils {
     public static final String REG_SEPARATOR = "\\s";
     public static final String REG_ATCODE = "(?:(?:" +
             StringUtils.escapeExprSpecialWord(new At(2333333333L).toString()).replace("2333333333", "\\d{6,10}")
+            + "|" + StringUtils.escapeExprSpecialWord(AtAll.INSTANCE.toString())
             + "|\\d{6,10})" + REG_SEPARATOR + "?)";
 
     public static RegUtils start() {

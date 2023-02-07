@@ -7,10 +7,7 @@ import net.mamoe.mirai.contact.User;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
 import net.mamoe.mirai.event.events.GroupTempMessageEvent;
 import net.mamoe.mirai.event.events.MessageEvent;
-import net.mamoe.mirai.message.data.MessageChain;
-import net.mamoe.mirai.message.data.MessageChainBuilder;
-import net.mamoe.mirai.message.data.OnlineMessageSource;
-import net.mamoe.mirai.message.data.QuoteReply;
+import net.mamoe.mirai.message.data.*;
 import xin.vanilla.VanillaKanri;
 import xin.vanilla.entity.config.instruction.BaseInstructions;
 import xin.vanilla.entity.config.instruction.KanriInstructions;
@@ -204,7 +201,29 @@ public class InstructionMsgEvent {
             //  loud <QQ>
             RegUtils reg = RegUtils.start().groupNon(kanri.getLoud()).separator().groupIgByName("qq", RegUtils.REG_ATCODE).end();
             if (reg.matcher(ins).find()) {
-
+                StringBuilder rep = new StringBuilder();
+                String qqString = reg.getMatcher().group("qq");
+                if (qqString.equals(AtAll.INSTANCE.toString())) {
+                    if (group.getSettings().isMuteAll()) {
+                        group.getSettings().setMuteAll(false);
+                    }
+                    rep.append("全体成员,");
+                } else {
+                    for (long qq : VanillaUtils.getQQFromAt(qqString)) {
+                        NormalMember normalMember = group.get(qq);
+                        if (normalMember != null) {
+                            if (normalMember.isMuted()) {
+                                normalMember.mute(0);
+                                rep.append(qq).append(',');
+                            }
+                        }
+                    }
+                }
+                if (!StringUtils.isNullOrEmpty(rep.toString())) {
+                    Api.sendMessage(group, "已解除 " + rep.substring(0, rep.length() - 1) + " 的禁言");
+                } else {
+                    Api.sendMessage(group, "待操作对象为空或未被禁言");
+                }
             }
         }
         // 禁言
