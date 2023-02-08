@@ -231,6 +231,43 @@ public class InstructionMsgEvent {
             if (!VanillaUtils.hasPermissionOrMore(bot, group, sender.getId(), PERMISSION_LEVEL_DEPUTYADMIN))
                 return RETURN_BREAK_FALSE;
 
+            //  mute <QQ>/<全体成员> [时间]
+            RegUtils reg = RegUtils.start().groupNon(kanri.getMute()).separator()
+                    .groupIgByName("qq", RegUtils.REG_ATCODE, "@全体成员").separator()
+                    .groupIgByName("time", "\\d{1,}(?:\\.\\d{1,2})?").end();
+            if (reg.matcher(ins).find()) {
+                StringBuilder rep = new StringBuilder();
+                String qqString = reg.getMatcher().group("qq");
+                if (qqString.equals(AtAll.INSTANCE.toString()) || qqString.equals("@全体成员")) {
+                    if (group.getSettings().isMuteAll()) {
+                        group.getSettings().setMuteAll(true);
+                    }
+                    rep.append("全体成员,");
+                } else {
+                    int time = Math.round(Float.parseFloat(reg.getMatcher().group("time")) * 60);
+                    for (long qq : VanillaUtils.getQQFromAt(qqString)) {
+                        NormalMember normalMember = group.get(qq);
+                        if (normalMember != null) {
+                            if (normalMember.isMuted()) {
+                                try {
+                                    normalMember.mute(time);
+                                    rep.append(qq).append(',');
+                                } catch (NumberFormatException ignored) {
+                                }
+                            }
+                        }
+                    }
+                }
+                if (!StringUtils.isNullOrEmpty(rep.toString())) {
+                    if (rep.toString().equals("全体成员,")) {
+                        Api.sendMessage(group, "已开启全体禁言");
+                    } else {
+                        Api.sendMessage(group, "已禁言 " + rep.substring(0, rep.length() - 1) + " " + reg.getMatcher().group("time") + "分钟");
+                    }
+                } else {
+                    Api.sendMessage(group, "待操作对象为空或未被禁言");
+                }
+            }
         }
         // 设置群头衔
         else if (kanri.getTag().contains(prefix)) {

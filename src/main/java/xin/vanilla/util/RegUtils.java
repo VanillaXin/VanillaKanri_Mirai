@@ -80,8 +80,13 @@ public class RegUtils {
      * <p>
      * 不进行特殊字符转义
      */
-    public RegUtils groupIgByName(String name, String str) {
-        statement.append("(?<").append(name).append(">").append(str).append(")");
+    public RegUtils groupIgByName(String name, String... str) {
+        statement.append("(?<").append(name).append(">");
+        for (int i = 0; i < str.length; i++) {
+            if (i > 0) statement.append("|");
+            statement.append(str[i]);
+        }
+        statement.append(")");
         return this;
     }
 
