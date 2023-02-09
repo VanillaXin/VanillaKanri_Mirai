@@ -4,6 +4,7 @@ import lombok.Getter;
 import net.mamoe.mirai.message.data.At;
 import net.mamoe.mirai.message.data.AtAll;
 
+import java.util.Collection;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -42,11 +43,39 @@ public class RegUtils {
      * <p>
      * 自动转义正则特殊字符
      *
+     * @param cols 多个由|分隔
+     */
+    public RegUtils group(Collection<?> cols) {
+        statement.append("(");
+        processGroup(cols.toArray());
+        statement.append(")");
+        return this;
+    }
+
+    /**
+     * () 捕获组
+     * <p>
+     * 自动转义正则特殊字符
+     *
      * @param objects 多个由|分隔
      */
     public RegUtils group(Object... objects) {
         statement.append("(");
         processGroup(objects);
+        statement.append(")");
+        return this;
+    }
+
+    /**
+     * (?&lt;name&gt;) 命名捕获组
+     * <p>
+     * 自动转义正则特殊字符
+     *
+     * @param cols 多个由|分隔
+     */
+    public RegUtils groupByName(String name, Collection<?> cols) {
+        statement.append("(?<").append(name).append(">");
+        processGroup(cols.toArray());
         statement.append(")");
         return this;
     }
@@ -95,6 +124,20 @@ public class RegUtils {
      * <p>
      * 自动转义正则特殊字符
      *
+     * @param cols 多个由|分隔
+     */
+    public RegUtils groupNon(Collection<?> cols) {
+        statement.append("(?:");
+        processGroup(cols.toArray());
+        statement.append(")");
+        return this;
+    }
+
+    /**
+     * (?:) 非捕获组
+     * <p>
+     * 自动转义正则特殊字符
+     *
      * @param objects 多个由|分隔
      */
     public RegUtils groupNon(Object... objects) {
@@ -117,10 +160,34 @@ public class RegUtils {
     /**
      * 字符集合
      */
+    public RegUtils characters(Collection<?> cols) {
+        statement.append("[");
+        for (Object col : cols) {
+            statement.append(StringUtils.escapeExprSpecialWord(col.toString()));
+        }
+        statement.append("]");
+        return this;
+    }
+
+    /**
+     * 字符集合
+     */
     public RegUtils characters(Object... objects) {
         statement.append("[");
         for (Object object : objects) {
             statement.append(StringUtils.escapeExprSpecialWord(object.toString()));
+        }
+        statement.append("]");
+        return this;
+    }
+
+    /**
+     * 否定字符集合
+     */
+    public RegUtils charactersNon(Collection<?> cols) {
+        statement.append("[^");
+        for (Object col : cols) {
+            statement.append(StringUtils.escapeExprSpecialWord(col.toString()));
         }
         statement.append("]");
         return this;
