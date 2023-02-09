@@ -64,7 +64,7 @@ public class InstructionMsgEvent {
         if (!VanillaUtils.isInstructionMsg(msg, false)) return false;
 
         // 判断发送者有无操作机器人的权限
-        if (!VanillaUtils.hasPermissionOrMore(bot, group, sender.getId(), PERMISSION_LEVEL_GROUPADMIN)) return false;
+        // if (!VanillaUtils.hasPermissionOrMore(bot, group, sender.getId(), PERMISSION_LEVEL_GROUPADMIN)) return false;
 
         // 判断机器人是否群管
         if (!VanillaUtils.isGroupOwnerOrAdmin(group)) return false;
@@ -97,6 +97,7 @@ public class InstructionMsgEvent {
 
         // 添加/取消管理员
         if (kanri.getAdmin().contains(prefix)) {
+            // 判断发送者有无操作的权限
             if (!VanillaUtils.hasPermissionOrMore(bot, group, sender.getId(), PERMISSION_LEVEL_GROUPOWNER))
                 return RETURN_BREAK_FALSE;
 
@@ -131,6 +132,7 @@ public class InstructionMsgEvent {
         }
         // 设置群名片
         else if (kanri.getCard().contains(prefix)) {
+            // 判断发送者有无操作的权限
             if (!VanillaUtils.hasPermissionOrMore(bot, group, sender.getId(), PERMISSION_LEVEL_DEPUTYADMIN))
                 return RETURN_BREAK_FALSE;
 
@@ -160,6 +162,7 @@ public class InstructionMsgEvent {
         }
         // 添加群精华
         else if (kanri.getEssence().contains(prefix)) {
+            // 判断发送者有无操作的权限
             if (!VanillaUtils.hasPermissionOrMore(bot, group, sender.getId(), PERMISSION_LEVEL_DEPUTYADMIN))
                 return RETURN_BREAK_FALSE;
 
@@ -195,6 +198,7 @@ public class InstructionMsgEvent {
         }
         // 解除禁言
         else if (kanri.getLoud().contains(prefix)) {
+            // 判断发送者有无操作的权限
             if (!VanillaUtils.hasPermissionOrMore(bot, group, sender.getId(), PERMISSION_LEVEL_DEPUTYADMIN))
                 return RETURN_BREAK_FALSE;
 
@@ -228,6 +232,7 @@ public class InstructionMsgEvent {
         }
         // 禁言
         else if (kanri.getMute().contains(prefix)) {
+            // 判断发送者有无操作的权限
             if (!VanillaUtils.hasPermissionOrMore(bot, group, sender.getId(), PERMISSION_LEVEL_DEPUTYADMIN))
                 return RETURN_BREAK_FALSE;
 
@@ -245,14 +250,19 @@ public class InstructionMsgEvent {
                     rep.append("全体成员,");
                 } else {
                     int time = Math.round(Float.parseFloat(reg.getMatcher().group("time")) * 60);
+                    NormalMember senderMember = group.get(sender.getId());
                     for (long qq : VanillaUtils.getQQFromAt(qqString)) {
                         NormalMember normalMember = group.get(qq);
-                        if (normalMember != null) {
-                            try {
-                                normalMember.mute(time);
-                                rep.append(qq).append(',');
-                            } catch (NumberFormatException ignored) {
+                        if (normalMember != null && senderMember != null) {
+                            // 比较操作者与被操作者权限
+                            if (VanillaUtils.equalsLevel(senderMember, normalMember)) {
+                                try {
+                                    normalMember.mute(time);
+                                    rep.append(qq).append(',');
+                                } catch (NumberFormatException ignored) {
+                                }
                             }
+                            // TODO 权限不足提示
                         }
                     }
                 }
@@ -269,24 +279,27 @@ public class InstructionMsgEvent {
         }
         // 设置群头衔
         else if (kanri.getTag().contains(prefix)) {
-            if (!VanillaUtils.hasPermissionOrMore(bot, group, sender.getId(), PERMISSION_LEVEL_DEPUTYADMIN))
-                return RETURN_BREAK_FALSE;
+            // 判断机器人是否群主
+            if (!VanillaUtils.isGroupOwner(group)) return RETURN_BREAK_FALSE;
 
         }
         // 戳一戳
         else if (kanri.getTap().contains(prefix)) {
-            if (!VanillaUtils.hasPermissionOrMore(bot, group, sender.getId(), PERMISSION_LEVEL_DEPUTYADMIN))
-                return RETURN_BREAK_FALSE;
+
 
         }
         // 撤回消息
         else if (kanri.getWithdraw().contains(prefix)) {
+            // 判断发送者有无操作的权限
             if (!VanillaUtils.hasPermissionOrMore(bot, group, sender.getId(), PERMISSION_LEVEL_DEPUTYADMIN))
                 return RETURN_BREAK_FALSE;
 
         }
         // 踢出群成员
         else if (kanri.getKick().equals(prefix)) {
+            // 判断发送者有无操作的权限
+            if (!VanillaUtils.hasPermissionOrMore(bot, group, sender.getId(), PERMISSION_LEVEL_DEPUTYADMIN))
+                return RETURN_BREAK_FALSE;
             // TODO 判断踢出指令
         }
         return RETURN_CONTINUE;
