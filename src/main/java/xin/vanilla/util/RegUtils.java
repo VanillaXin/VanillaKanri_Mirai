@@ -4,6 +4,7 @@ import lombok.Getter;
 import net.mamoe.mirai.message.data.At;
 import net.mamoe.mirai.message.data.AtAll;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -45,9 +46,9 @@ public class RegUtils {
      *
      * @param cols 多个由|分隔
      */
-    public RegUtils group(Collection<?> cols) {
+    public RegUtils group(Collection<?>... cols) {
         statement.append("(");
-        processGroup(cols.toArray());
+        processGroup(Arrays.stream(cols).toArray());
         statement.append(")");
         return this;
     }
@@ -73,9 +74,9 @@ public class RegUtils {
      *
      * @param cols 多个由|分隔
      */
-    public RegUtils groupByName(String name, Collection<?> cols) {
+    public RegUtils groupByName(String name, Collection<?>... cols) {
         statement.append("(?<").append(name).append(">");
-        processGroup(cols.toArray());
+        processGroup(Arrays.stream(cols).toArray());
         statement.append(")");
         return this;
     }
@@ -126,9 +127,9 @@ public class RegUtils {
      *
      * @param cols 多个由|分隔
      */
-    public RegUtils groupNon(Collection<?> cols) {
+    public RegUtils groupNon(Collection<?>... cols) {
         statement.append("(?:");
-        processGroup(cols.toArray());
+        processGroup(Arrays.stream(cols).toArray());
         statement.append(")");
         return this;
     }
@@ -160,9 +161,9 @@ public class RegUtils {
     /**
      * 字符集合
      */
-    public RegUtils characters(Collection<?> cols) {
+    public RegUtils characters(Collection<?>... cols) {
         statement.append("[");
-        for (Object col : cols) {
+        for (Object col : Arrays.stream(cols).toArray()) {
             statement.append(StringUtils.escapeExprSpecialWord(col.toString()));
         }
         statement.append("]");
@@ -184,7 +185,7 @@ public class RegUtils {
     /**
      * 否定字符集合
      */
-    public RegUtils charactersNon(Collection<?> cols) {
+    public RegUtils charactersNon(Collection<?>... cols) {
         statement.append("[^");
         for (Object col : cols) {
             statement.append(StringUtils.escapeExprSpecialWord(col.toString()));

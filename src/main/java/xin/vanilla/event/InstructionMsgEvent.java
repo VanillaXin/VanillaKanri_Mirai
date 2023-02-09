@@ -18,13 +18,11 @@ import xin.vanilla.util.StringUtils;
 import xin.vanilla.util.VanillaUtils;
 
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import static xin.vanilla.util.VanillaUtils.*;
+import static xin.vanilla.util.VanillaUtils.PERMISSION_LEVEL_DEPUTYADMIN;
+import static xin.vanilla.util.VanillaUtils.PERMISSION_LEVEL_GROUPOWNER;
 
 public class InstructionMsgEvent {
     private static final int RETURN_CONTINUE = 1;
@@ -102,28 +100,27 @@ public class InstructionMsgEvent {
                 return RETURN_BREAK_FALSE;
 
             //  ad add <QQ>
-            String reg = "^" + prefix + RegUtils.REG_SEPARATOR + toRegString(new HashSet<String>() {{
-                addAll(base.getAdd());
-                addAll(base.getDelete());
-            }}) + RegUtils.REG_SEPARATOR + "(" + RegUtils.REG_ATCODE + "+)$";
+            RegUtils reg = RegUtils.start().groupNon(prefix).separator()
+                    .groupByName("operation", base.getAdd(), base.getDelete())
+                    .groupIgByName("qq", RegUtils.REG_ATCODE).end();
 
-            Matcher m = Pattern.compile(reg, Pattern.DOTALL).matcher(ins);
-
-            if (m.find()) {
-                boolean operation = base.getAdd().contains(m.group(1));
+            if (reg.matcher(ins).find()) {
+                boolean operation = base.getAdd().contains(reg.getMatcher().group("operation"));
                 StringBuilder rep = new StringBuilder();
-                for (long qq : VanillaUtils.getQQFromAt(m.group(2))) {
+                for (long qq : VanillaUtils.getQQFromAt(reg.getMatcher().group("qq"))) {
+                    rep.append(',');
                     NormalMember normalMember = group.get(qq);
                     if (normalMember != null) {
                         normalMember.modifyAdmin(operation);
-                        rep.append(qq).append(',');
+                        rep.append(qq);
                     }
                 }
 
                 if (!StringUtils.isNullOrEmpty(rep.toString())) {
+                    rep.delete(0, 1);
                     if (operation)
-                        Api.sendMessage(group, "已将 " + rep.substring(0, rep.length() - 1) + " 添加为管理员");
-                    else Api.sendMessage(group, "已取消 " + rep.substring(0, rep.length() - 1) + " 的管理员");
+                        Api.sendMessage(group, "已将 " + rep + " 添加为管理员");
+                    else Api.sendMessage(group, "已取消 " + rep + " 的管理员");
                 } else {
                     Api.sendMessage(group, "待操作对象为空");
                 }
@@ -137,24 +134,30 @@ public class InstructionMsgEvent {
                 return RETURN_BREAK_FALSE;
 
             //  card <QQ> [CONTENT]
-            String reg = "^" + prefix + RegUtils.REG_SEPARATOR + "(" + RegUtils.REG_ATCODE + "+)" + RegUtils.REG_SEPARATOR + "?" + "(.*?)$";
+            RegUtils reg = RegUtils.start().groupNon(prefix).separator()
+                    .groupIgByName("qq", RegUtils.REG_ATCODE).separator("?")
+                    .groupIgByName("card", "(.*?)").end();
 
-            Matcher m = Pattern.compile(reg, Pattern.DOTALL).matcher(ins);
-
-            if (m.find()) {
+            if (reg.matcher(ins).find()) {
                 StringBuilder rep = new StringBuilder();
-                for (long qq : VanillaUtils.getQQFromAt(m.group(1))) {
+                for (long qq : VanillaUtils.getQQFromAt(reg.getMatcher().group("qq"))) {
+                    rep.append(',');
                     NormalMember normalMember = group.get(qq);
                     if (normalMember != null) {
-                        normalMember.setNameCard(m.group(2));
-                        rep.append(qq).append(',');
+                        normalMember.setNameCard(reg.getMatcher().group("card"));
+                        rep.append(qq);
                     }
                 }
                 if (!StringUtils.isNullOrEmpty(rep.toString())) {
-                    if (StringUtils.isNullOrEmpty(m.group(2)))
-                        Api.sendMessage(group, "已清除 " + rep.substring(0, rep.length() - 1) + " 的名片");
-                    else
-                        Api.sendMessage(group, "已将 " + rep.substring(0, rep.length() - 1) + " 的名片修改为:\n" + m.group(2));
+                    rep.delete(0, 1);
+                    if (rep.toString().equals("")) {
+                        Api.sendMessage(group, "操作失败");
+                    } else {
+                        if (StringUtils.isNullOrEmpty(reg.getMatcher().group("card")))
+                            Api.sendMessage(group, "已清除 " + rep + " 的名片");
+                        else
+                            Api.sendMessage(group, "已将 " + rep + " 的名片修改为:\n" + reg.getMatcher().group("card"));
+                    }
                 } else {
                     Api.sendMessage(group, "待操作对象为空");
                 }
@@ -167,12 +170,11 @@ public class InstructionMsgEvent {
                 return RETURN_BREAK_FALSE;
 
             //  essence add/del/[CONTENT]
-            String reg = "^" + prefix + RegUtils.REG_SEPARATOR + "(.*?)$";
+            RegUtils reg = RegUtils.start().groupNon(prefix).separator()
+                    .groupIgByName("text", "(.*?)").end();
 
-            Matcher m = Pattern.compile(reg, Pattern.DOTALL).matcher(ins);
-
-            if (m.find()) {
-                String con = m.group(1);
+            if (reg.matcher(ins).find()) {
+                String con = reg.getMatcher().group("text");
                 if (base.getAdd().contains(con)) {
                     QuoteReply quoteReply = msg.get(QuoteReply.Key);
                     if (quoteReply != null) {
@@ -193,7 +195,6 @@ public class InstructionMsgEvent {
                         Api.sendMessage(group, "精华消息设置失败");
                     }
                 }
-                Va.getLogger().info("精华: " + con);
             }
         }
         // 解除禁言
@@ -203,30 +204,36 @@ public class InstructionMsgEvent {
                 return RETURN_BREAK_FALSE;
 
             //  loud <QQ>
-            RegUtils reg = RegUtils.start().groupNon(prefix).separator().groupIgByName("qq", RegUtils.REG_ATCODE).end();
+            RegUtils reg = RegUtils.start().groupNon(prefix).separator()
+                    .groupIgByName("qq", RegUtils.REG_ATCODE, "@全体成员").end();
             if (reg.matcher(ins).find()) {
                 StringBuilder rep = new StringBuilder();
                 String qqString = reg.getMatcher().group("qq");
                 if (qqString.equals(AtAll.INSTANCE.toString())) {
                     if (group.getSettings().isMuteAll()) {
                         group.getSettings().setMuteAll(false);
+                        Api.sendMessage(group, "已关闭全体禁言");
                     }
-                    rep.append("全体成员,");
                 } else {
                     for (long qq : VanillaUtils.getQQFromAt(qqString)) {
+                        rep.append(',');
                         NormalMember normalMember = group.get(qq);
                         if (normalMember != null) {
                             if (normalMember.isMuted()) {
                                 normalMember.unmute();
-                                rep.append(qq).append(',');
+                                rep.append(qq);
                             }
                         }
                     }
-                }
-                if (!StringUtils.isNullOrEmpty(rep.toString())) {
-                    Api.sendMessage(group, "已解除 " + rep.substring(0, rep.length() - 1) + " 的禁言");
-                } else {
-                    Api.sendMessage(group, "待操作对象为空或未被禁言");
+                    if (!StringUtils.isNullOrEmpty(rep.toString())) {
+                        if (rep.toString().equals(",")) {
+                            Api.sendMessage(group, "操作失败");
+                        } else {
+                            Api.sendMessage(group, "已解除 " + rep.delete(0, 1) + " 的禁言");
+                        }
+                    } else {
+                        Api.sendMessage(group, "待操作对象为空或未被禁言");
+                    }
                 }
             }
         }
@@ -241,39 +248,40 @@ public class InstructionMsgEvent {
                     .groupIgByName("qq", RegUtils.REG_ATCODE, "@全体成员").separator()
                     .groupIgByName("time", "\\d{1,5}(?:\\.\\d{1,2})?").end();
             if (reg.matcher(ins).find()) {
-                StringBuilder rep = new StringBuilder();
                 String qqString = reg.getMatcher().group("qq");
                 if (qqString.equals(AtAll.INSTANCE.toString()) || qqString.equals("@全体成员")) {
-                    if (group.getSettings().isMuteAll()) {
+                    if (!group.getSettings().isMuteAll()) {
                         group.getSettings().setMuteAll(true);
+                        Api.sendMessage(group, "已开启全体禁言");
                     }
-                    rep.append("全体成员,");
                 } else {
-                    int time = Math.round(Float.parseFloat(reg.getMatcher().group("time")) * 60);
+                    String time = reg.getMatcher().group("time");
                     NormalMember senderMember = group.get(sender.getId());
+                    StringBuilder successMsg = new StringBuilder();
                     for (long qq : VanillaUtils.getQQFromAt(qqString)) {
+                        successMsg.append(',');
                         NormalMember normalMember = group.get(qq);
                         if (normalMember != null && senderMember != null) {
                             // 比较操作者与被操作者权限
                             if (VanillaUtils.equalsLevel(senderMember, normalMember)) {
                                 try {
-                                    normalMember.mute(time);
-                                    rep.append(qq).append(',');
+                                    normalMember.mute(Math.round(Float.parseFloat(time)) * 60);
+                                    successMsg.append(qq);
                                 } catch (NumberFormatException ignored) {
                                 }
                             }
-                            // TODO 权限不足提示
                         }
                     }
-                }
-                if (!StringUtils.isNullOrEmpty(rep.toString())) {
-                    if (rep.toString().equals("全体成员,")) {
-                        Api.sendMessage(group, "已开启全体禁言");
+                    if (!StringUtils.isNullOrEmpty(successMsg.toString())) {
+                        successMsg.delete(0, 1);
+                        if (successMsg.toString().equals("")) {
+                            Api.sendMessage(group, "权限不足");
+                        } else {
+                            Api.sendMessage(group, "已禁言 " + successMsg + " " + time + "分钟");
+                        }
                     } else {
-                        Api.sendMessage(group, "已禁言 " + rep.substring(0, rep.length() - 1) + " " + reg.getMatcher().group("time") + "分钟");
+                        Api.sendMessage(group, "待操作对象为空");
                     }
-                } else {
-                    Api.sendMessage(group, "待操作对象为空");
                 }
             }
         }
@@ -282,6 +290,42 @@ public class InstructionMsgEvent {
             // 判断机器人是否群主
             if (!VanillaUtils.isGroupOwner(group)) return RETURN_BREAK_FALSE;
 
+            //  tag <QQ> [CONTENT]
+            //  tag [CONTENT]
+            RegUtils reg = RegUtils.start().groupNon(prefix).separator()
+                    .groupIgByName("qq", RegUtils.REG_ATCODE).append("?").separator("?")
+                    .groupIgByName("tag", "(.*?)").end();
+            if (reg.matcher(ins).find()) {
+                String qqString = reg.getMatcher().group("qq");
+                String tag = reg.getMatcher().group("tag");
+                if (StringUtils.isNullOrEmpty(qqString)) {
+                    NormalMember normalMember = group.get(sender.getId());
+                    if (normalMember != null) {
+                        normalMember.setSpecialTitle(tag);
+                        Api.sendMessage(group, "已将阁下的头衔修改为:\n" + tag);
+                    }
+                } else {
+                    StringBuilder successMsg = new StringBuilder();
+                    for (long qq : VanillaUtils.getQQFromAt(qqString)) {
+                        successMsg.append(',');
+                        NormalMember normalMember = group.get(qq);
+                        if (normalMember != null) {
+                            normalMember.setSpecialTitle(tag);
+                            successMsg.append(qq);
+                        }
+                    }
+                    if (!StringUtils.isNullOrEmpty(successMsg.toString())) {
+                        successMsg.delete(0, 1);
+                        if (successMsg.toString().equals("")) {
+                            Api.sendMessage(group, "操作失败");
+                        } else {
+                            Api.sendMessage(group, "已修改 " + successMsg + " 的头衔为:\n" + tag);
+                        }
+                    } else {
+                        Api.sendMessage(group, "待操作对象为空");
+                    }
+                }
+            }
         }
         // 戳一戳
         else if (kanri.getTap().contains(prefix)) {
