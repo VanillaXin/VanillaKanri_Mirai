@@ -3,6 +3,7 @@ package xin.vanilla.util.sqlite;
 
 import org.sqlite.JDBC;
 import xin.vanilla.util.StringUtils;
+import xin.vanilla.util.sqlite.statement.Parenthesize;
 import xin.vanilla.util.sqlite.statement.QueryStatement;
 import xin.vanilla.util.sqlite.statement.Statement;
 
@@ -145,15 +146,15 @@ public class SqliteUtil {
     /**
      * 执行SQL语句
      */
-    public boolean executeSql(String sql) {
+    public int executeSql(String sql) {
         Connection c = this.getConn();
         PreparedStatement ps = this.getStatement(c, sql);
         try {
-            if (ps == null) return false;
-            return ps.execute();
+            if (ps == null) return 0;
+            return ps.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
-            return false;
+            return 0;
         } finally {
             try {
                 c.commit();
@@ -304,6 +305,141 @@ public class SqliteUtil {
         } catch (Exception ignored) {
             return null;
         }
+    }
+
+    /**
+     * 查询对象列表
+     */
+    public <T> void getList(Statement statement, ArrayList<T> list, final Class<T> clazz) {
+        try (ResultSet resultSet = select(statement)) {
+            while (resultSet.next()) {
+                list.add(getEntity(resultSet, clazz));
+            }
+        } catch (Exception ignored) {
+        }
+    }
+
+    /**
+     * 分页获取对象列表, 并返回分页信息
+     * <p/>
+     * 首先执行 "SELECT count(*) FROM (sql)" 以获取数据条数
+     * <p/>
+     * 然后执行"(sql) LIMIT 10 OFFSET 20" 以获取分页数据并塞入集合
+     *
+     * @param pageNo        当前页数
+     * @param pageItemCount 每页条数
+     * @param clazz         实体类
+     */
+    public <T> PaginationList<T> getPaginationList(Statement sql, int pageNo, int pageItemCount, final Class<T> clazz) {
+        int totalItemCount = getInt(QueryStatement.rowCount().from(new Parenthesize(sql)));
+        if (totalItemCount > 0) {
+            PaginationList<T> records = new PaginationList<>();
+            getList(sql.copy().limit(pageItemCount, (pageNo - 1) * pageItemCount), records, clazz);
+            return records.setPagination(pageNo, pageItemCount, totalItemCount);
+        }
+        return new PaginationList<>(pageNo, pageItemCount, totalItemCount);
+    }
+
+    /**
+     * 执行查询并获取第一行第一列中的int值, 查询失败将返回默认值0
+     */
+    public int getInt(Object sql) {
+        return getInt(sql, 0);
+    }
+
+    /**
+     * 执行查询并获取第一行第一列中的int值, 查询失败将返回给定的默认值 def
+     *
+     * @param def 默认值
+     */
+    public int getInt(Object sql, int def) {
+        try {
+            return getInts(sql)[0];
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return def;
+    }
+
+    /**
+     * 执行查询并返回第一行中的所有列的int值数组
+     */
+    public int[] getInts(Object sql) {
+        Connection c = this.getConn();
+        PreparedStatement ps = this.getStatement(c, sql.toString());
+        try {
+            if (ps == null) return null;
+            ResultSet resultSet = ps.executeQuery();
+            if (resultSet.first()) {
+                int columnCount = resultSet.getMetaData().getColumnCount();
+                int[] result = new int[columnCount];
+                for (int i = 0; i < columnCount; i++) {
+                    result[i] = resultSet.getInt(i);
+                }
+                return result;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                c.commit();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            this.releaseConn(c);
+        }
+        return null;
+    }
+
+    /**
+     * 执行查询并获取第一行第一列中的String值, 查询失败将返回默认值null
+     */
+    public String getString(Object sql) {
+        return getString(sql, null);
+    }
+
+    /**
+     * 执行查询并获取第一行第一列中的String值, 查询失败将返回给定的默认值 def
+     *
+     * @param def 默认值
+     */
+    public String getString(Object sql, String def) {
+        try {
+            return getStrings(sql)[0];
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return def;
+    }
+
+    /**
+     * 执行查询并返回第一行中的所有列的String值数组
+     */
+    public String[] getStrings(Object sql) {
+        Connection c = this.getConn();
+        PreparedStatement ps = this.getStatement(c, sql.toString());
+        try {
+            if (ps == null) return null;
+            ResultSet resultSet = ps.executeQuery();
+            if (resultSet.first()) {
+                int columnCount = resultSet.getMetaData().getColumnCount();
+                String[] result = new String[columnCount];
+                for (int i = 0; i < columnCount; i++) {
+                    result[i] = resultSet.getString(i);
+                }
+                return result;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                c.commit();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            this.releaseConn(c);
+        }
+        return null;
     }
 
     /**
