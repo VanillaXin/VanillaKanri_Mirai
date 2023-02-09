@@ -1,6 +1,7 @@
 package xin.vanilla.entity.config.instruction
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import lombok.Data
 import lombok.experimental.Accessors
 import xin.vanilla.VanillaKanri
@@ -22,6 +23,7 @@ class Instructions {
     /**
      * 二级前缀列表
      */
+    @Transient
     private var secondaryPrefix: Set<String> = HashSet()
 
     /**
@@ -40,7 +42,8 @@ class Instructions {
     var kanri: KanriInstructions = KanriInstructions()
 
     fun getSecondaryPrefix(): Set<String> {
-        VanillaKanri.INSTANCE.globalConfig.refreshSecondaryPrefix()
+        if (secondaryPrefix.isEmpty())
+            VanillaKanri.INSTANCE.globalConfig.refreshSecondaryPrefix()
         return secondaryPrefix
     }
 
