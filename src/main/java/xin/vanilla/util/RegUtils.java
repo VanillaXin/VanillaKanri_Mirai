@@ -3,9 +3,10 @@ package xin.vanilla.util;
 import lombok.Getter;
 import net.mamoe.mirai.message.data.At;
 import net.mamoe.mirai.message.data.AtAll;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -39,6 +40,11 @@ public class RegUtils {
         return statement.toString();
     }
 
+    @Override
+    public String toString() {
+        return statement.toString();
+    }
+
     /**
      * () 捕获组
      * <p>
@@ -48,9 +54,7 @@ public class RegUtils {
      */
     public RegUtils group(Collection<?>... cols) {
         statement.append("(");
-        processGroup(Arrays.stream(cols).toArray());
-        statement.append(")");
-        return this;
+        return processGroup(cols);
     }
 
     /**
@@ -76,9 +80,7 @@ public class RegUtils {
      */
     public RegUtils groupByName(String name, Collection<?>... cols) {
         statement.append("(?<").append(name).append(">");
-        processGroup(Arrays.stream(cols).toArray());
-        statement.append(")");
-        return this;
+        return processGroup(cols);
     }
 
     /**
@@ -129,7 +131,16 @@ public class RegUtils {
      */
     public RegUtils groupNon(Collection<?>... cols) {
         statement.append("(?:");
-        processGroup(Arrays.stream(cols).toArray());
+        return processGroup(cols);
+    }
+
+    @NotNull
+    private RegUtils processGroup(Collection<?>[] cols) {
+        Collection<Object> collection = new HashSet<>();
+        for (Collection<?> col : cols) {
+            collection.addAll(col);
+        }
+        processGroup(collection.toArray());
         statement.append(")");
         return this;
     }
@@ -163,8 +174,10 @@ public class RegUtils {
      */
     public RegUtils characters(Collection<?>... cols) {
         statement.append("[");
-        for (Object col : Arrays.stream(cols).toArray()) {
-            statement.append(StringUtils.escapeExprSpecialWord(col.toString()));
+        for (Collection<?> col : cols) {
+            for (Object o : col) {
+                statement.append(StringUtils.escapeExprSpecialWord(o.toString()));
+            }
         }
         statement.append("]");
         return this;
@@ -187,8 +200,10 @@ public class RegUtils {
      */
     public RegUtils charactersNon(Collection<?>... cols) {
         statement.append("[^");
-        for (Object col : cols) {
-            statement.append(StringUtils.escapeExprSpecialWord(col.toString()));
+        for (Collection<?> col : cols) {
+            for (Object o : col) {
+                statement.append(StringUtils.escapeExprSpecialWord(o.toString()));
+            }
         }
         statement.append("]");
         return this;
