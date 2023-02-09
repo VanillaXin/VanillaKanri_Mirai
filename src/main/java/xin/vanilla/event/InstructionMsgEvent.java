@@ -234,7 +234,7 @@ public class InstructionMsgEvent {
             //  mute <QQ>/<全体成员> [时间]
             RegUtils reg = RegUtils.start().groupNon(kanri.getMute()).separator()
                     .groupIgByName("qq", RegUtils.REG_ATCODE, "@全体成员").separator()
-                    .groupIgByName("time", "\\d{1,}(?:\\.\\d{1,2})?").end();
+                    .groupIgByName("time", "\\d{1,5}(?:\\.\\d{1,2})?").end();
             if (reg.matcher(ins).find()) {
                 StringBuilder rep = new StringBuilder();
                 String qqString = reg.getMatcher().group("qq");
