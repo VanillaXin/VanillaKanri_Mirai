@@ -248,12 +248,10 @@ public class InstructionMsgEvent {
                     for (long qq : VanillaUtils.getQQFromAt(qqString)) {
                         NormalMember normalMember = group.get(qq);
                         if (normalMember != null) {
-                            if (normalMember.isMuted()) {
-                                try {
-                                    normalMember.mute(time);
-                                    rep.append(qq).append(',');
-                                } catch (NumberFormatException ignored) {
-                                }
+                            try {
+                                normalMember.mute(time);
+                                rep.append(qq).append(',');
+                            } catch (NumberFormatException ignored) {
                             }
                         }
                     }
@@ -265,7 +263,7 @@ public class InstructionMsgEvent {
                         Api.sendMessage(group, "已禁言 " + rep.substring(0, rep.length() - 1) + " " + reg.getMatcher().group("time") + "分钟");
                     }
                 } else {
-                    Api.sendMessage(group, "待操作对象为空或未被禁言");
+                    Api.sendMessage(group, "待操作对象为空");
                 }
             }
         }
