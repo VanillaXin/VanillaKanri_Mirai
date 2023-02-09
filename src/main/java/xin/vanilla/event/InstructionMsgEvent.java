@@ -213,7 +213,7 @@ public class InstructionMsgEvent {
                         NormalMember normalMember = group.get(qq);
                         if (normalMember != null) {
                             if (normalMember.isMuted()) {
-                                normalMember.mute(0);
+                                normalMember.unmute();
                                 rep.append(qq).append(',');
                             }
                         }
