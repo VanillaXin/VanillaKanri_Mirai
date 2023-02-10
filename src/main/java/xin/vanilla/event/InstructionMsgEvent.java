@@ -86,6 +86,8 @@ public class InstructionMsgEvent {
 
     /**
      * 解析执行群管指令
+     * <p>
+     * TODO 注解+反射优雅实现
      */
     public int kanriIns() {
         // 判断是否群管指令
