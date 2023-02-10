@@ -23,7 +23,7 @@ public class RegUtils {
     public static final String REG_ATCODE = "(?:(?:" +
             StringUtils.escapeExprSpecialWord(new At(2333333333L).toString()).replace("2333333333", "\\d{6,10}")
             + "|" + StringUtils.escapeExprSpecialWord(AtAll.INSTANCE.toString())
-            + "|\\d{6,10})" + REG_SEPARATOR + "?)";
+            + "|\\d{6,10})" + REG_SEPARATOR + "?)+";
 
     public static RegUtils start() {
         RegUtils regStmt = new RegUtils();
