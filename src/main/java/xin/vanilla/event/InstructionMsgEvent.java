@@ -103,7 +103,7 @@ public class InstructionMsgEvent {
             //  ad add <QQ>
             RegUtils reg = RegUtils.start().groupNon(prefix).separator()
                     .groupByName("operation", base.getAdd(), base.getDelete()).separator()
-                    .groupIgByName("qq", RegUtils.REG_ATCODE).end();
+                    .groupIgByName("qq", RegUtils.REG_ATCODE).append("+").end();
 
             if (reg.matcher(ins).find()) {
                 boolean operation = base.getAdd().contains(reg.getMatcher().group("operation"));
@@ -136,7 +136,7 @@ public class InstructionMsgEvent {
 
             //  card <QQ> [CONTENT]
             RegUtils reg = RegUtils.start().groupNon(prefix).separator()
-                    .groupIgByName("qq", RegUtils.REG_ATCODE).separator("?")
+                    .groupIgByName("qq", RegUtils.REG_ATCODE).append("+").separator("?")
                     .groupIgByName("card", "(.*?)").end();
 
             if (reg.matcher(ins).find()) {
@@ -210,7 +210,7 @@ public class InstructionMsgEvent {
                         add(RegUtils.REG_ATCODE);
                         for (String s : base.getAtAll())
                             add(StringUtils.escapeExprSpecialWord(s));
-                    }}).end();
+                    }}).append("+").end();
             if (reg.matcher(ins).find()) {
                 StringBuilder rep = new StringBuilder();
                 String qqString = reg.getMatcher().group("qq");
@@ -254,7 +254,7 @@ public class InstructionMsgEvent {
                         add(RegUtils.REG_ATCODE);
                         for (String s : base.getAtAll())
                             add(StringUtils.escapeExprSpecialWord(s));
-                    }}).separator("?")
+                    }}).append("+").separator("?")
                     .groupIgByName("time", "\\d{1,5}(?:\\.\\d{1,2})?").append("?").end();
             if (reg.matcher(ins).find()) {
                 String qqString = reg.getMatcher().group("qq");
@@ -310,7 +310,7 @@ public class InstructionMsgEvent {
             //  tag <QQ> [CONTENT]
             //  tag [CONTENT]
             RegUtils reg = RegUtils.start().groupNon(prefix).separator()
-                    .groupIgByName("qq", RegUtils.REG_ATCODE).append("?").separator("?")
+                    .groupIgByName("qq", RegUtils.REG_ATCODE).append("*?").separator("?")
                     .groupIgByName("tag", "(.*?)").end();
             if (reg.matcher(ins).find()) {
                 String qqString = reg.getMatcher().group("qq");
