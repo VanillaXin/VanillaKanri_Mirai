@@ -123,6 +123,23 @@ public class RegUtils {
     }
 
     /**
+     * (?&lt;name&gt;) 命名捕获组
+     * <p>
+     * 不进行特殊字符转义
+     */
+    public RegUtils groupIgByName(String name, Collection<String> collection) {
+        statement.append("(?<").append(name).append(">");
+        int i = 0;
+        for (String s : collection) {
+            if (i > 0) statement.append("|");
+            statement.append(s);
+            i++;
+        }
+        statement.append(")");
+        return this;
+    }
+
+    /**
      * (?:) 非捕获组
      * <p>
      * 自动转义正则特殊字符
@@ -164,8 +181,23 @@ public class RegUtils {
      * <p>
      * 不进行特殊字符转义
      */
-    public RegUtils groupNonIg(String str) {
+    public RegUtils groupNonIg(Object str) {
         statement.append("(?:").append(str).append(")");
+        return this;
+    }
+
+    /**
+     * (?:) 非捕获组
+     * <p>
+     * 不进行特殊字符转义
+     */
+    public RegUtils groupNonIg(Object... objects) {
+        statement.append("(?:");
+        for (int i = 0; i < objects.length; i++) {
+            if (i > 0) statement.append("|");
+            statement.append(objects[i]);
+        }
+        statement.append(")");
         return this;
     }
 

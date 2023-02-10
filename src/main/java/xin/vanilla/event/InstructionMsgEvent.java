@@ -18,11 +18,12 @@ import xin.vanilla.util.StringUtils;
 import xin.vanilla.util.VanillaUtils;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import static xin.vanilla.util.VanillaUtils.PERMISSION_LEVEL_DEPUTYADMIN;
-import static xin.vanilla.util.VanillaUtils.PERMISSION_LEVEL_GROUPOWNER;
+import static xin.vanilla.util.VanillaUtils.PERMISSION_LEVEL_SUPERADMIN;
 
 public class InstructionMsgEvent {
     private static final int RETURN_CONTINUE = 1;
@@ -96,12 +97,12 @@ public class InstructionMsgEvent {
         // 添加/取消管理员
         if (kanri.getAdmin().contains(prefix)) {
             // 判断发送者有无操作的权限
-            if (!VanillaUtils.hasPermissionOrMore(bot, group, sender.getId(), PERMISSION_LEVEL_GROUPOWNER))
+            if (!VanillaUtils.hasPermissionOrMore(bot, group, sender.getId(), PERMISSION_LEVEL_SUPERADMIN))
                 return RETURN_BREAK_FALSE;
 
             //  ad add <QQ>
             RegUtils reg = RegUtils.start().groupNon(prefix).separator()
-                    .groupByName("operation", base.getAdd(), base.getDelete())
+                    .groupByName("operation", base.getAdd(), base.getDelete()).separator()
                     .groupIgByName("qq", RegUtils.REG_ATCODE).end();
 
             if (reg.matcher(ins).find()) {
@@ -205,11 +206,15 @@ public class InstructionMsgEvent {
 
             //  loud <QQ>
             RegUtils reg = RegUtils.start().groupNon(prefix).separator()
-                    .groupIgByName("qq", RegUtils.REG_ATCODE, "@全体成员").end();
+                    .groupIgByName("qq", new HashSet<String>() {{
+                        add(RegUtils.REG_ATCODE);
+                        for (String s : base.getAtAll())
+                            add(StringUtils.escapeExprSpecialWord(s));
+                    }}).end();
             if (reg.matcher(ins).find()) {
                 StringBuilder rep = new StringBuilder();
                 String qqString = reg.getMatcher().group("qq");
-                if (qqString.equals(AtAll.INSTANCE.toString())) {
+                if (qqString.equals(AtAll.INSTANCE.toString()) || base.getAtAll().contains(qqString)) {
                     if (group.getSettings().isMuteAll()) {
                         group.getSettings().setMuteAll(false);
                         Api.sendMessage(group, "已关闭全体禁言");
@@ -245,17 +250,29 @@ public class InstructionMsgEvent {
 
             //  mute <QQ>/<全体成员> [时间]
             RegUtils reg = RegUtils.start().groupNon(prefix).separator()
-                    .groupIgByName("qq", RegUtils.REG_ATCODE, "@全体成员").separator()
-                    .groupIgByName("time", "\\d{1,5}(?:\\.\\d{1,2})?").end();
+                    .groupIgByName("qq", new HashSet<String>() {{
+                        add(RegUtils.REG_ATCODE);
+                        for (String s : base.getAtAll())
+                            add(StringUtils.escapeExprSpecialWord(s));
+                    }}).separator("?")
+                    .groupIgByName("time", "\\d{1,5}(?:\\.\\d{1,2})?").append("?").end();
             if (reg.matcher(ins).find()) {
                 String qqString = reg.getMatcher().group("qq");
-                if (qqString.equals(AtAll.INSTANCE.toString()) || qqString.equals("@全体成员")) {
+                String time = reg.getMatcher().group("time");
+                if (qqString.equals(AtAll.INSTANCE.toString()) || base.getAtAll().contains(qqString)) {
                     if (!group.getSettings().isMuteAll()) {
                         group.getSettings().setMuteAll(true);
                         Api.sendMessage(group, "已开启全体禁言");
+                        if (!StringUtils.isNullOrEmpty(time)) {
+                            Va.getScheduler().delayed(Math.round(Float.parseFloat(time)) * 60L * 1000L, () -> {
+                                if (group.getSettings().isMuteAll()) {
+                                    group.getSettings().setMuteAll(false);
+                                }
+                            });
+                            Api.sendMessage(group, "并将在 " + time + " 分钟后关闭全体禁言");
+                        }
                     }
-                } else {
-                    String time = reg.getMatcher().group("time");
+                } else if (!StringUtils.isNullOrEmpty(time)) {
                     NormalMember senderMember = group.get(sender.getId());
                     StringBuilder successMsg = new StringBuilder();
                     for (long qq : VanillaUtils.getQQFromAt(qqString)) {
@@ -263,7 +280,7 @@ public class InstructionMsgEvent {
                         NormalMember normalMember = group.get(qq);
                         if (normalMember != null && senderMember != null) {
                             // 比较操作者与被操作者权限
-                            if (VanillaUtils.equalsLevel(senderMember, normalMember)) {
+                            if (VanillaUtils.equalsPermission(bot, group, senderMember.getId(), normalMember.getId())) {
                                 try {
                                     normalMember.mute(Math.round(Float.parseFloat(time)) * 60);
                                     successMsg.append(qq);

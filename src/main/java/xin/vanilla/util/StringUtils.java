@@ -1,10 +1,6 @@
 package xin.vanilla.util;
 
-import net.mamoe.mirai.message.data.At;
-
 import java.util.Arrays;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class StringUtils {
 
