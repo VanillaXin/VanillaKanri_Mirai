@@ -58,7 +58,7 @@ public class StringUtils {
     public static String toString(int[] a) {
         if (a == null)
             return "null";
-        a = Arrays.stream(a).sorted().toArray();
+        // a = Arrays.stream(a).sorted().toArray();
         int iMax = a.length - 1;
         if (iMax == -1)
             return "";
@@ -75,7 +75,7 @@ public class StringUtils {
     public static String toString(long[] a) {
         if (a == null)
             return "null";
-        a = Arrays.stream(a).sorted().toArray();
+        // a = Arrays.stream(a).sorted().toArray();
         int iMax = a.length - 1;
         if (iMax == -1)
             return "";

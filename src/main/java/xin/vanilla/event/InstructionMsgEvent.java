@@ -12,6 +12,7 @@ import xin.vanilla.VanillaKanri;
 import xin.vanilla.entity.config.instruction.BaseInstructions;
 import xin.vanilla.entity.config.instruction.KanriInstructions;
 import xin.vanilla.entity.config.instruction.KeywordInstructions;
+import xin.vanilla.entity.data.MsgCache;
 import xin.vanilla.util.Api;
 import xin.vanilla.util.RegUtils;
 import xin.vanilla.util.StringUtils;
@@ -22,6 +23,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import static xin.vanilla.mapper.impl.MessageCacheImpl.MSG_TYPE_GROUP;
 import static xin.vanilla.util.VanillaUtils.PERMISSION_LEVEL_DEPUTYADMIN;
 import static xin.vanilla.util.VanillaUtils.PERMISSION_LEVEL_SUPERADMIN;
 
@@ -93,8 +95,9 @@ public class InstructionMsgEvent {
         // 判断是否群管指令
         if (delPrefix(kanri.getPrefix())) return RETURN_CONTINUE;
         int index = RegUtils.containsRegSeparator(ins);
-        if (index < 0) return RETURN_CONTINUE;
-        String prefix = ins.substring(0, index);
+        String prefix;
+        if (index >= 0) prefix = ins.substring(0, index);
+        else prefix = ins;
 
         // 添加/取消管理员
         if (kanri.getAdmin().contains(prefix)) {
@@ -173,12 +176,12 @@ public class InstructionMsgEvent {
                 return RETURN_BREAK_FALSE;
 
             //  essence add/del/[CONTENT]
-            RegUtils reg = RegUtils.start().groupNon(prefix).separator()
+            RegUtils reg = RegUtils.start().groupNon(prefix).separator("?")
                     .groupIgByName("text", "(.*?)").end();
 
             if (reg.matcher(ins).find()) {
-                String con = reg.getMatcher().group("text");
-                if (base.getAdd().contains(con)) {
+                String text = reg.getMatcher().group("text");
+                if (ins.equals(prefix) || base.getAdd().contains(text)) {
                     QuoteReply quoteReply = msg.get(QuoteReply.Key);
                     if (quoteReply != null) {
                         if (group.setEssenceMessage(quoteReply.getSource())) {
@@ -187,13 +190,13 @@ public class InstructionMsgEvent {
                             Api.sendMessage(group, "精华消息设置失败");
                         }
                     }
-                } else if (base.getDelete().contains(con)) {
+                } else if (base.getDelete().contains(text)) {
                     // 未发现取消精华消息接口
                     // QuoteReply quoteReply = msg.get(QuoteReply.Key);
                     // if (quoteReply != null) {
                     // }
                 } else {
-                    OnlineMessageSource.Outgoing source = Api.sendMessage(group, con).getSource();
+                    OnlineMessageSource.Outgoing source = Api.sendMessage(group, text).getSource();
                     if (!group.setEssenceMessage(source)) {
                         Api.sendMessage(group, "精华消息设置失败");
                     }
@@ -348,8 +351,33 @@ public class InstructionMsgEvent {
         }
         // 戳一戳
         else if (kanri.getTap().contains(prefix)) {
-
-
+            //  tap <QQ> [num]
+            RegUtils reg = RegUtils.start().groupNon(prefix).separator()
+                    .groupIgByName("qq", RegUtils.REG_ATCODE).separator("?")
+                    .groupIgByName("num", "\\d").append("?").end();
+            // TODO 次数限制
+            if (reg.matcher(ins).find()) {
+                String qqString = reg.getMatcher().group("qq");
+                String num = reg.getMatcher().group("num");
+                int i;
+                try {
+                    i = Integer.parseInt(num);
+                } catch (NumberFormatException ignored) {
+                    i = 1;
+                }
+                for (int j = 0; j < i; j++) {
+                    Va.getScheduler().delayed((i - 1) * 11L * 1000L, () -> {
+                        for (long qq : VanillaUtils.getQQFromAt(qqString)) {
+                            NormalMember normalMember = group.get(qq);
+                            if (normalMember != null) {
+                                normalMember.nudge().sendTo(group);
+                            }
+                        }
+                    });
+                }
+                if (VanillaUtils.getQQFromAt(qqString).length == 0)
+                    Api.sendMessage(group, "待操作对象为空");
+            }
         }
         // 撤回消息
         else if (kanri.getWithdraw().contains(prefix)) {
@@ -357,6 +385,66 @@ public class InstructionMsgEvent {
             if (!VanillaUtils.hasPermissionOrMore(bot, group, sender.getId(), PERMISSION_LEVEL_DEPUTYADMIN))
                 return RETURN_BREAK_FALSE;
 
+            // recall [num]
+            // recall [num-num]
+            // recall [num~num]
+            // recall [num] [num]
+            RegUtils reg = RegUtils.start().groupNon(prefix).separator("?")
+                    .groupIgByName("text", "(.*?)").end();
+
+            if (reg.matcher(ins).find()) {
+                MessageSource messageSource = msg.get(MessageSource.Key);
+                if (messageSource != null) try {
+                    MessageSource.recall(messageSource);
+                } catch (IllegalStateException ignored) {
+                    Va.getLogger().info("无权撤回或已被撤回");
+                }
+                String text = reg.getMatcher().group("text").trim();
+                QuoteReply quoteReply = msg.get(QuoteReply.Key);
+                int[] sourceIds;
+                if (quoteReply != null) {
+                    sourceIds = quoteReply.getSource().getIds();
+                    if (ins.equals(prefix)) {
+                        try {
+                            MessageSource.recall(quoteReply.getSource());
+                        } catch (IllegalStateException ignored) {
+                            Va.getLogger().info("无权撤回或已被撤回");
+                        }
+                    }
+                } else {
+                    assert messageSource != null;
+                    sourceIds = messageSource.getIds();
+                }
+                int sourceId = sourceIds[sourceIds.length - 1];
+                if (!StringUtils.isNullOrEmpty(text)) {
+                    try {
+                        int id = sourceId - Integer.parseInt(text);
+                        recall(id);
+                    } catch (NumberFormatException ignored) {
+                        if (text.contains("-") || text.contains("~")) {
+                            int[] ids = Arrays.stream(text.replaceAll("-", "~")
+                                            .split("~"))
+                                    .mapToInt(s -> sourceId - Integer.parseInt(s))
+                                    .toArray();
+                            if (ids.length == 2) {
+                                for (int id = ids[0]; id < ids[1]; id++) {
+                                    recall(id);
+                                }
+                            }
+                        } else if (RegUtils.containsRegSeparator(text) > 0) {
+                            int[] ids = Arrays.stream(text.replaceAll("\\s", " ")
+                                            .split(" "))
+                                    .mapToInt(s -> sourceId - Integer.parseInt(s))
+                                    .toArray();
+                            for (int id : ids) {
+                                recall(id);
+                            }
+                        } else {
+                            Api.sendMessage(group, "表达式『" + text + "』有误");
+                        }
+                    }
+                }
+            }
         }
         // 踢出群成员
         else if (kanri.getKick().equals(prefix)) {
@@ -431,5 +519,19 @@ public class InstructionMsgEvent {
                 .replace("\\n", "\n")
                 .replace("\\r", "\r")
                 .replace("\\t", "\t");
+    }
+
+    private void recall(int id) {
+        MsgCache msgCache = Va.messageCache.getMsgCache(id + "|", group.getId(), MSG_TYPE_GROUP);
+        try {
+            MessageSource.recall(new MessageSourceBuilder()
+                    .sender(msgCache.getSender())
+                    .target(msgCache.getTarget())
+                    .id(msgCache.getIds())
+                    .internalId(msgCache.getInternalIds())
+                    .build(bot.getId(), MessageSourceKind.GROUP));
+        } catch (IllegalStateException e) {
+            Va.getLogger().info("无权撤回或已被撤回");
+        }
     }
 }

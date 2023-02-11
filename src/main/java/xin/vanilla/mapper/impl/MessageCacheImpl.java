@@ -12,6 +12,7 @@ import xin.vanilla.util.sqlite.statement.QueryStatement;
 import xin.vanilla.util.sqlite.statement.Statement;
 
 import java.sql.SQLException;
+import java.util.Arrays;
 
 public class MessageCacheImpl implements MessageCache {
     public static String MSG_TYPE_GROUP = "group_";
@@ -219,24 +220,7 @@ public class MessageCacheImpl implements MessageCache {
 
     @Override
     public String getMsgMiraiCode(String no, long sender, long target, long time, String type) {
-        MsgCache msgCache = null;
-        if (StringUtils.isNullOrEmpty(type))
-            MSG_TYPES = new String[]{type};
-
-        for (String msgType : MSG_TYPES) {
-            Statement query = QueryStatement.produce()
-                    .from(msgType + getTableName())
-                    .where(TARGET).eq(target);
-
-            if (sender > 0) query.and(TARGET).eq(target);
-            if (time > 0) query.and(TIME).eq(time);
-            if (!no.contains("|"))
-                query.and(NOS).likeStartsWith(no);
-            else if (no.startsWith("|"))
-                query.and(NOS).likeEndsWith(no);
-            msgCache = sqliteUtil.getEntity(query, MsgCache.class);
-            if (msgCache != null && msgCache.getId() > 0) break;
-        }
+        MsgCache msgCache = getMsgCache(no, sender, target, time, type);
         if (msgCache == null) return null;
         return msgCache.getMsg();
     }
@@ -264,6 +248,69 @@ public class MessageCacheImpl implements MessageCache {
     @Override
     public String getMsgMiraiCode(String no, long target) {
         return getMsgMiraiCode(no, 0, target);
+    }
+
+    @Override
+    public int[] getInternalIds(int[] ids, long target, String type) {
+        String nos = getMsgCache(StringUtils.toString(ids), target, type).getNos();
+        String internalIds = nos.substring(nos.indexOf("|") + 1);
+        if (!internalIds.contains(",")) return new int[]{Integer.parseInt(internalIds)};
+        return Arrays.stream(internalIds.split(",")).mapToInt(Integer::parseInt).toArray();
+    }
+
+    @Override
+    public int[] getInternalIds(int id, long target, String type) {
+        return getInternalIds(new int[]{id}, target, type);
+    }
+
+    @Override
+    public MsgCache getMsgCache(String no, long sender, long target, long time, String type) {
+        MsgCache msgCache = null;
+        if (!StringUtils.isNullOrEmpty(type))
+            MSG_TYPES = new String[]{type};
+
+        for (String msgType : MSG_TYPES) {
+            Statement query = QueryStatement.produce()
+                    .from(msgType + getTableName())
+                    .where(TARGET).eq(target);
+
+            if (sender > 0) query.and(TARGET).eq(target);
+            if (time > 0) query.and(TIME).eq(time);
+            if (!no.contains("|"))
+                query.and(NOS).likeStartsWith(no);
+            else if (no.startsWith("|"))
+                query.and(NOS).likeEndsWith(no);
+            else
+                query.and(NOS).like("%" + no + "%|%");
+            msgCache = sqliteUtil.getEntity(query, MsgCache.class);
+            if (msgCache != null && msgCache.getId() > 0) break;
+        }
+        return msgCache;
+    }
+
+    @Override
+    public MsgCache getMsgCache(String no, long sender, long target, String type) {
+        return getMsgCache(no, sender, target, 0, type);
+    }
+
+    @Override
+    public MsgCache getMsgCache(String no, long sender, long target, long time) {
+        return getMsgCache(no, sender, target, time, null);
+    }
+
+    @Override
+    public MsgCache getMsgCache(String no, long sender, long target) {
+        return getMsgCache(no, sender, target, 0);
+    }
+
+    @Override
+    public MsgCache getMsgCache(String no, long target, String type) {
+        return getMsgCache(no, 0, target, 0, type);
+    }
+
+    @Override
+    public MsgCache getMsgCache(String no, long target) {
+        return getMsgCache(no, 0, target);
     }
 
 }

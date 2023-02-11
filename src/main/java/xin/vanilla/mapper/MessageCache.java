@@ -4,6 +4,7 @@ import net.mamoe.mirai.contact.*;
 import net.mamoe.mirai.message.data.Message;
 import net.mamoe.mirai.message.data.MessageChain;
 import net.mamoe.mirai.message.data.OnlineMessageSource;
+import xin.vanilla.entity.data.MsgCache;
 
 public interface MessageCache {
 
@@ -57,4 +58,20 @@ public interface MessageCache {
     String getMsgMiraiCode(String no, long target, String type);
 
     String getMsgMiraiCode(String no, long target);
+
+    int[] getInternalIds(int[] ids, long target, String type);
+
+    int[] getInternalIds(int id, long target, String type);
+
+    MsgCache getMsgCache(String no, long sender, long target, long time, String type);
+
+    MsgCache getMsgCache(String no, long sender, long target, String type);
+
+    MsgCache getMsgCache(String no, long sender, long target, long time);
+
+    MsgCache getMsgCache(String no, long sender, long target);
+
+    MsgCache getMsgCache(String no, long target, String type);
+
+    MsgCache getMsgCache(String no, long target);
 }
