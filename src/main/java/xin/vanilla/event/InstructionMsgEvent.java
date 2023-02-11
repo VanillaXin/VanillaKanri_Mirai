@@ -422,12 +422,12 @@ public class InstructionMsgEvent {
                         recall(id);
                     } catch (NumberFormatException ignored) {
                         if (text.contains("-") || text.contains("~")) {
-                            int[] ids = Arrays.stream(text.replaceAll("-", "~")
+                            int[] ids = Arrays.stream(text.replace("-", "~")
                                             .split("~"))
                                     .mapToInt(s -> sourceId - Integer.parseInt(s))
                                     .toArray();
                             if (ids.length == 2) {
-                                for (int id = ids[0]; id < ids[1]; id++) {
+                                for (int id = ids[0]; id >= ids[1]; id--) {
                                     recall(id);
                                 }
                             }
