@@ -142,7 +142,7 @@ public class InstructionMsgEvent {
             //  card <QQ> [CONTENT]
             RegUtils reg = RegUtils.start().groupNon(prefix).separator()
                     .groupIgByName("qq", RegUtils.REG_ATCODE).separator("?")
-                    .groupIgByName("card", "(.*?)").end();
+                    .groupIgByName("card", ".*?").end();
 
             if (reg.matcher(ins).find()) {
                 StringBuilder rep = new StringBuilder();
@@ -177,7 +177,7 @@ public class InstructionMsgEvent {
 
             //  essence add/del/[CONTENT]
             RegUtils reg = RegUtils.start().groupNon(prefix).separator("?")
-                    .groupIgByName("text", "(.*?)").end();
+                    .groupIgByName("text", ".*?").end();
 
             if (reg.matcher(ins).find()) {
                 String text = reg.getMatcher().group("text");
@@ -316,7 +316,7 @@ public class InstructionMsgEvent {
             //  tag [CONTENT]
             RegUtils reg = RegUtils.start().groupNon(prefix).separator()
                     .groupIgByName("qq", RegUtils.REG_ATCODE).append("?").separator("?")
-                    .groupIgByName("tag", "(.*?)").end();
+                    .groupIgByName("tag", ".*?").end();
             if (reg.matcher(ins).find()) {
                 String qqString = reg.getMatcher().group("qq");
                 String tag = reg.getMatcher().group("tag");
@@ -390,7 +390,7 @@ public class InstructionMsgEvent {
             // recall [num~num]
             // recall [num] [num]
             RegUtils reg = RegUtils.start().groupNon(prefix).separator("?")
-                    .groupIgByName("text", "(.*?)").end();
+                    .groupIgByName("text", ".*?").end();
 
             if (reg.matcher(ins).find()) {
                 MessageSource messageSource = msg.get(MessageSource.Key);
