@@ -366,7 +366,7 @@ public class InstructionMsgEvent {
                     i = 1;
                 }
                 for (int j = 0; j < i; j++) {
-                    Va.getScheduler().delayed((i - 1) * 11L * 1000L, () -> {
+                    Va.getScheduler().delayed(j * 5 * 1000L, () -> {
                         for (long qq : VanillaUtils.getQQFromAt(qqString)) {
                             NormalMember normalMember = group.get(qq);
                             if (normalMember != null) {
