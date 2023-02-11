@@ -277,11 +277,11 @@ public class MessageCacheImpl implements MessageCache {
             if (sender > 0) query.and(TARGET).eq(target);
             if (time > 0) query.and(TIME).eq(time);
             if (!no.contains("|"))
-                query.and(NOS).likeStartsWith(no);
+                query.and(NOS).like("%" + no + "%|%");
             else if (no.startsWith("|"))
                 query.and(NOS).likeEndsWith(no);
             else
-                query.and(NOS).like("%" + no + "%|%");
+                query.and(NOS).likeStartsWith(no);
             msgCache = sqliteUtil.getEntity(query, MsgCache.class);
             if (msgCache != null && msgCache.getId() > 0) break;
         }

@@ -523,15 +523,17 @@ public class InstructionMsgEvent {
 
     private void recall(int id) {
         MsgCache msgCache = Va.messageCache.getMsgCache(id + "|", group.getId(), MSG_TYPE_GROUP);
-        try {
-            MessageSource.recall(new MessageSourceBuilder()
-                    .sender(msgCache.getSender())
-                    .target(msgCache.getTarget())
-                    .id(msgCache.getIds())
-                    .internalId(msgCache.getInternalIds())
-                    .build(bot.getId(), MessageSourceKind.GROUP));
-        } catch (IllegalStateException e) {
-            Va.getLogger().info("无权撤回或已被撤回");
+        if (msgCache != null) {
+            try {
+                MessageSource.recall(new MessageSourceBuilder()
+                        .sender(msgCache.getSender())
+                        .target(msgCache.getTarget())
+                        .id(msgCache.getIds())
+                        .internalId(msgCache.getInternalIds())
+                        .build(bot.getId(), MessageSourceKind.GROUP));
+            } catch (IllegalStateException e) {
+                Va.getLogger().info("无权撤回或已被撤回");
+            }
         }
     }
 }
