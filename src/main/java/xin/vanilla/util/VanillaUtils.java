@@ -312,7 +312,8 @@ public class VanillaUtils {
 
     public static long[] getQQFromAt(String qq) {
         try {
-            if (qq.trim().contains(" ")) {
+            qq = qq.trim();
+            if (qq.contains(" ")) {
                 String[] s = qq.trim().split(" ");
                 return Arrays.stream(s).mapToLong(Long::parseLong).toArray();
             } else {

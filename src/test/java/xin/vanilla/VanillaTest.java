@@ -72,17 +72,7 @@ public class VanillaTest {
 
     @Test
     public void test() {
-        BaseInstructions base = new Instructions().getBase();
-        RegUtils regUtils = RegUtils.start().characters(new HashSet<String>() {{
-            add("abc");
-            add("def");
-            add("ghi");
-        }}, new HashSet<String>() {{
-            add("jkl");
-            add("mno");
-            add("pgr");
-        }});
-        System.out.println(regUtils.build());
+
     }
 
 }
