@@ -100,7 +100,7 @@ public class InstructionMsgEvent {
         else prefix = ins;
 
         // 判断机器人是否群管
-        if (!VanillaUtils.isGroupOwnerOrAdmin(group)) {
+        if (VanillaUtils.isGroupOwnerOrAdmin(group)) {
             // 添加/取消管理员
             if (kanri.getAdmin().contains(prefix)) {
                 // 判断发送者有无操作的权限
