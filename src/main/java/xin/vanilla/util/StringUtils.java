@@ -1,7 +1,5 @@
 package xin.vanilla.util;
 
-import java.util.Arrays;
-
 public class StringUtils {
 
     public static final String METHOD_SET_PREFIX = "set";
@@ -102,5 +100,41 @@ public class StringUtils {
             }
         }
         return keyword;
+    }
+
+    /**
+     * 获取tap指令限制时间key
+     *
+     * @param group  群号
+     * @param sender 发送者
+     * @return tap指令限制时间 key
+     */
+    public static String getTapTimeKey(long group, long sender) {
+        return group + "." + sender + ".tap";
+    }
+
+    /**
+     * 将字符串转为逻辑真假
+     *
+     * @param s 0|1|真|假|是|否|true|false|y|n|t|f
+     */
+    public static boolean stringToBoolean(String s) {
+        switch (s.toLowerCase().trim()) {
+            case "1":
+            case "真":
+            case "是":
+            case "true":
+            case "y":
+            case "t":
+                return true;
+            case "0":
+            case "假":
+            case "否":
+            case "false":
+            case "n":
+            case "f":
+            default:
+                return false;
+        }
     }
 }

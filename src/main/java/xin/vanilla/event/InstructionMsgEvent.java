@@ -18,10 +18,7 @@ import xin.vanilla.util.RegUtils;
 import xin.vanilla.util.StringUtils;
 import xin.vanilla.util.VanillaUtils;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static xin.vanilla.mapper.impl.MessageCacheImpl.MSG_TYPE_GROUP;
 import static xin.vanilla.util.VanillaUtils.PERMISSION_LEVEL_DEPUTYADMIN;
@@ -419,11 +416,43 @@ public class InstructionMsgEvent {
                 }
             }
             // 踢出群成员
-            else if (kanri.getKick().equals(prefix)) {
+            else if (kanri.getKick().startsWith(prefix)) {
                 // 判断发送者有无操作的权限
                 if (!VanillaUtils.hasPermissionOrMore(bot, group, sender.getId(), PERMISSION_LEVEL_DEPUTYADMIN))
                     return RETURN_BREAK_FALSE;
-                // TODO 判断踢出指令
+
+                //  kick <QQ> out
+                RegUtils reg = RegUtils.start().append("kick [VA_CODE.QQS] out".replaceAll("\\s", "\\\\s")
+                                .replace("[VA_CODE.QQS]", new RegUtils().groupIgByName("qq", RegUtils.REG_ATCODE).toString()))
+                        .separator("?").groupIgByName("bool", "(?:0|1|真|假|是|否|true|false|y|n|Y|N)").append("?")
+                        .end();
+                if (reg.matcher(ins).find()) {
+                    String qqString = reg.getMatcher().group("qq");
+                    NormalMember senderMember = group.get(sender.getId());
+                    StringBuilder successMsg = new StringBuilder();
+                    for (long qq : VanillaUtils.getQQFromAt(qqString)) {
+                        successMsg.append(',');
+                        NormalMember normalMember = group.get(qq);
+                        if (normalMember != null && senderMember != null) {
+                            // 比较操作者与被操作者权限
+                            if (VanillaUtils.equalsPermission(bot, group, senderMember.getId(), normalMember.getId())) {
+                                boolean bool = StringUtils.stringToBoolean(reg.getMatcher().group("bool"));
+                                normalMember.kick("被" + sender.getId() + "通过群管指令踢出", bool);
+                            }
+                        }
+                    }
+                    if (!StringUtils.isNullOrEmpty(successMsg.toString())) {
+                        successMsg.delete(0, 1);
+                        if (successMsg.toString().equals("")) {
+                            Api.sendMessage(group, "权限不足");
+                        } else {
+                            Api.sendMessage(group, "已将 " + successMsg + " 移除群聊");
+                        }
+                    } else {
+                        Api.sendMessage(group, "待操作对象为空");
+                    }
+
+                }
             }
         } else {
             // 戳一戳
@@ -432,7 +461,6 @@ public class InstructionMsgEvent {
                 RegUtils reg = RegUtils.start().groupNon(prefix).separator()
                         .groupIgByName("qq", RegUtils.REG_ATCODE).separator("?")
                         .groupIgByName("num", "\\d").append("?").end();
-                // TODO 次数限制
                 if (reg.matcher(ins).find()) {
                     String qqString = reg.getMatcher().group("qq");
                     String num = reg.getMatcher().group("num");
@@ -442,6 +470,16 @@ public class InstructionMsgEvent {
                     } catch (NumberFormatException ignored) {
                         i = 1;
                     }
+                    // 操作频率限制
+                    String tapTimeKey = StringUtils.getTapTimeKey(group.getId(), sender.getId());
+                    long last = VanillaUtils.getDataCacheAsLong(tapTimeKey);
+                    if (last > new Date().getTime()) {
+                        Api.sendMessage(group, "操作太快啦，休息一下吧。");
+                        return RETURN_CONTINUE;
+                    } else {
+                        VanillaUtils.setDateCache(tapTimeKey, i * 10L * 1000L + new Date().getTime());
+                    }
+
                     for (int j = 0; j < i; j++) {
                         Va.getScheduler().delayed(j * 5 * 1000L, () -> {
                             for (long qq : VanillaUtils.getQQFromAt(qqString)) {

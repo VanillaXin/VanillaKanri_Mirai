@@ -12,10 +12,19 @@ import xin.vanilla.mapper.MessageCache;
 import xin.vanilla.mapper.impl.MessageCacheImpl;
 import xin.vanilla.util.sqlite.SqliteUtil;
 
+import java.util.concurrent.ConcurrentHashMap;
+
 @SuppressWarnings("unused")
 public final class VanillaKanri extends JavaPlugin {
     public static final VanillaKanri INSTANCE = new VanillaKanri();
+    /**
+     * 消息缓存
+     */
     public final MessageCache messageCache = new MessageCacheImpl(getDataFolderPath().toString());
+    /**
+     * 数据缓存
+     */
+    public final ConcurrentHashMap<String, String> dataCache = new ConcurrentHashMap<>();
     /**
      * 全局设置
      */

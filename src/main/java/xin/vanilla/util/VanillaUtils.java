@@ -333,4 +333,48 @@ public class VanillaUtils {
             }
         }
     }
+
+    public static void setDateCache(String key, String value) {
+        Va.dataCache.put(key, value);
+    }
+
+    public static void setDateCache(String key, long value) {
+        Va.dataCache.put(key, String.valueOf(value));
+    }
+
+    public static void setDateCache(String key, double value) {
+        Va.dataCache.put(key, String.valueOf(value));
+    }
+
+    public static void setDateCache(String key, boolean value) {
+        Va.dataCache.put(key, String.valueOf(value));
+    }
+
+    public static String getDataCache(String key) {
+        if (Va.dataCache.contains(key)) {
+            return Va.dataCache.get(key);
+        }
+        return "";
+    }
+
+    public static long getDataCacheAsLong(String key) {
+        if (Va.dataCache.contains(key)) {
+            return Long.parseLong(Va.dataCache.get(key));
+        }
+        return 0;
+    }
+
+    public static double getDataCacheAsDouble(String key) {
+        if (Va.dataCache.contains(key)) {
+            return Double.parseDouble(Va.dataCache.get(key));
+        }
+        return 0;
+    }
+
+    public static boolean getDataCacheAsBoolean(String key) {
+        if (Va.dataCache.contains(key)) {
+            return "true".equals(Va.dataCache.get(key));
+        }
+        return false;
+    }
 }
