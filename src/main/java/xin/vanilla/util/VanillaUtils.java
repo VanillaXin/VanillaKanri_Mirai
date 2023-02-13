@@ -351,28 +351,28 @@ public class VanillaUtils {
     }
 
     public static String getDataCache(String key) {
-        if (Va.dataCache.contains(key)) {
+        if (Va.dataCache.containsKey(key)) {
             return Va.dataCache.get(key);
         }
         return "";
     }
 
     public static long getDataCacheAsLong(String key) {
-        if (Va.dataCache.contains(key)) {
+        if (Va.dataCache.containsKey(key)) {
             return Long.parseLong(Va.dataCache.get(key));
         }
         return 0;
     }
 
     public static double getDataCacheAsDouble(String key) {
-        if (Va.dataCache.contains(key)) {
+        if (Va.dataCache.containsKey(key)) {
             return Double.parseDouble(Va.dataCache.get(key));
         }
         return 0;
     }
 
     public static boolean getDataCacheAsBoolean(String key) {
-        if (Va.dataCache.contains(key)) {
+        if (Va.dataCache.containsKey(key)) {
             return "true".equals(Va.dataCache.get(key));
         }
         return false;

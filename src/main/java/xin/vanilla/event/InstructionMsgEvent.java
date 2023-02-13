@@ -454,47 +454,47 @@ public class InstructionMsgEvent {
 
                 }
             }
-        } else {
-            // 戳一戳
-            if (kanri.getTap().contains(prefix)) {
-                //  tap <QQ> [num]
-                RegUtils reg = RegUtils.start().groupNon(prefix).separator()
-                        .groupIgByName("qq", RegUtils.REG_ATCODE).separator("?")
-                        .groupIgByName("num", "\\d").append("?").end();
-                if (reg.matcher(ins).find()) {
-                    String qqString = reg.getMatcher().group("qq");
-                    String num = reg.getMatcher().group("num");
-                    int i;
-                    try {
-                        i = Integer.parseInt(num);
-                    } catch (NumberFormatException ignored) {
-                        i = 1;
-                    }
-                    // 操作频率限制
-                    String tapTimeKey = StringUtils.getTapTimeKey(group.getId(), sender.getId());
-                    long last = VanillaUtils.getDataCacheAsLong(tapTimeKey);
-                    if (last > new Date().getTime()) {
-                        Api.sendMessage(group, "操作太快啦，休息一下吧。");
-                        return RETURN_CONTINUE;
-                    } else {
-                        VanillaUtils.setDateCache(tapTimeKey, i * 10L * 1000L + new Date().getTime());
-                    }
-
-                    for (int j = 0; j < i; j++) {
-                        Va.getScheduler().delayed(j * 5 * 1000L, () -> {
-                            for (long qq : VanillaUtils.getQQFromAt(qqString)) {
-                                NormalMember normalMember = group.get(qq);
-                                if (normalMember != null) {
-                                    normalMember.nudge().sendTo(group);
-                                }
-                            }
-                        });
-                    }
-                    if (VanillaUtils.getQQFromAt(qqString).length == 0)
-                        Api.sendMessage(group, "待操作对象为空");
+        }
+        // 戳一戳
+        if (kanri.getTap().contains(prefix)) {
+            //  tap <QQ> [num]
+            RegUtils reg = RegUtils.start().groupNon(prefix).separator()
+                    .groupIgByName("qq", RegUtils.REG_ATCODE).separator("?")
+                    .groupIgByName("num", "\\d").append("?").end();
+            if (reg.matcher(ins).find()) {
+                String qqString = reg.getMatcher().group("qq");
+                String num = reg.getMatcher().group("num");
+                int i;
+                try {
+                    i = Integer.parseInt(num);
+                } catch (NumberFormatException ignored) {
+                    i = 1;
                 }
+                // 操作频率限制
+                String tapTimeKey = StringUtils.getTapTimeKey(group.getId(), sender.getId());
+                long last = VanillaUtils.getDataCacheAsLong(tapTimeKey);
+                if (last > new Date().getTime()) {
+                    Api.sendMessage(group, "操作太快啦，休息一下吧。");
+                    return RETURN_CONTINUE;
+                } else {
+                    VanillaUtils.setDateCache(tapTimeKey, i * 10L * 1000L + new Date().getTime());
+                }
+
+                for (int j = 0; j < i; j++) {
+                    Va.getScheduler().delayed(j * 5 * 1000L, () -> {
+                        for (long qq : VanillaUtils.getQQFromAt(qqString)) {
+                            NormalMember normalMember = group.get(qq);
+                            if (normalMember != null) {
+                                normalMember.nudge().sendTo(group);
+                            }
+                        }
+                    });
+                }
+                if (VanillaUtils.getQQFromAt(qqString).length == 0)
+                    Api.sendMessage(group, "待操作对象为空");
             }
         }
+
         return RETURN_CONTINUE;
     }
 
