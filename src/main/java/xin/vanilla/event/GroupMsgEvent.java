@@ -7,6 +7,7 @@ import net.mamoe.mirai.event.events.GroupMessageEvent;
 import net.mamoe.mirai.message.data.*;
 import xin.vanilla.rcon.Rcon;
 import xin.vanilla.util.Api;
+import xin.vanilla.util.StringUtils;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -64,7 +65,11 @@ public class GroupMsgEvent extends BaseMsgEvent {
                 if (back.contains(" players online:")) {
                     String num = back.substring("There are ".length(), back.indexOf(" of a max "));
                     String max = back.substring(back.indexOf(" of a max of ") + " of a max of ".length(), back.indexOf(" players online:"));
-                    back = "香草世界有" + num + "/" + max + "个玩家在线";
+                    String player = back.substring(back.indexOf(" players online:") + " players online:".length()).trim();
+                    if (StringUtils.isNullOrEmpty(player))
+                        back = "香草世界没有玩家在线";
+                    else
+                        back = "香草世界有" + num + "/" + max + "个玩家在线:\n" + player;
                 }
                 Api.sendMessage(group, back);
             } else {
