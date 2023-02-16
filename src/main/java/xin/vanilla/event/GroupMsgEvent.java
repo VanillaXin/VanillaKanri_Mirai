@@ -63,7 +63,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
                 String back = rcon.sendCommand(command);
                 if (back.contains(" players online:")) {
                     String num = back.substring("There are ".length(), back.indexOf(" of a max "));
-                    String max = back.substring(back.indexOf(" of a max "), back.indexOf(" players online:"));
+                    String max = back.substring(back.indexOf(" of a max ") + " of a max ".length(), back.indexOf(" players online:"));
                     back = "香草世界有" + num + "/" + max + "个玩家在线";
                 }
                 Api.sendMessage(group, back);
