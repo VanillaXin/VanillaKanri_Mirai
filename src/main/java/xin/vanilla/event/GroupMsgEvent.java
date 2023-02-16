@@ -59,7 +59,14 @@ public class GroupMsgEvent extends BaseMsgEvent {
 
         try (Rcon rcon = Rcon.open(Va.globalConfig.getMc_rcon_ip(), Va.globalConfig.getMc_rcon_port())) {
             if (rcon.authenticate(Va.globalConfig.getMc_rcon_psw())) {
-                Api.sendMessage(group, rcon.sendCommand(command));
+                //There are 0 of a max of 20 players online:
+                String back = rcon.sendCommand(command);
+                if (back.contains(" players online:")) {
+                    String num = back.substring("There are ".length(), back.indexOf(" of a max "));
+                    String max = back.substring(back.indexOf(" of a max "), back.indexOf(" players online:"));
+                    back = "香草世界有" + num + "/" + max + "个玩家在线";
+                }
+                Api.sendMessage(group, back);
             } else {
                 Api.sendMessage(group, "Failed to authenticate");
             }
