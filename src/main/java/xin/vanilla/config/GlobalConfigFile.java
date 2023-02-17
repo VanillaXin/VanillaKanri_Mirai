@@ -1,5 +1,7 @@
 package xin.vanilla.config;
 
+import lombok.Getter;
+import lombok.Setter;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.console.data.PluginDataHolder;
 import net.mamoe.mirai.console.data.PluginDataStorage;
@@ -28,6 +30,9 @@ public class GlobalConfigFile extends JavaAutoSavePluginConfig {
     public SerializerAwareValue<String> mc_rcon_ip = value("mc_rcon_ip", "127.0.0.1");
     public SerializerAwareValue<Integer> mc_rcon_port = value("mc_rcon_port", 25575);
     public SerializerAwareValue<String> mc_rcon_psw = value("mc_rcon_psw", "password");
+    @Getter
+    @Setter
+    public SerializerAwareValue<String> hentai_path = value("hentai_path", "");
 
     /**
      * 超人

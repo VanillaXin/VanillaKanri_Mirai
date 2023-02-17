@@ -24,7 +24,7 @@ public final class VanillaKanri extends JavaPlugin {
     /**
      * 数据缓存
      */
-    public final ConcurrentHashMap<String, String> dataCache = new ConcurrentHashMap<>();
+    public final ConcurrentHashMap<String, Object> dataCache = new ConcurrentHashMap<>();
     /**
      * 全局设置
      */

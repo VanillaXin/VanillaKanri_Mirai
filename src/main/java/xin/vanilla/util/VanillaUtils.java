@@ -334,46 +334,34 @@ public class VanillaUtils {
         }
     }
 
-    public static void setDateCache(String key, String value) {
+    public static void setDateCache(String key, Object value) {
         Va.dataCache.put(key, value);
     }
 
-    public static void setDateCache(String key, long value) {
-        Va.dataCache.put(key, String.valueOf(value));
-    }
-
-    public static void setDateCache(String key, double value) {
-        Va.dataCache.put(key, String.valueOf(value));
-    }
-
-    public static void setDateCache(String key, boolean value) {
-        Va.dataCache.put(key, String.valueOf(value));
-    }
-
-    public static String getDataCache(String key) {
+    public static String getDataCacheAsString(String key) {
         if (Va.dataCache.containsKey(key)) {
-            return Va.dataCache.get(key);
+            return (String) Va.dataCache.get(key);
         }
         return "";
     }
 
     public static long getDataCacheAsLong(String key) {
         if (Va.dataCache.containsKey(key)) {
-            return Long.parseLong(Va.dataCache.get(key));
+            return (long) Va.dataCache.get(key);
         }
         return 0;
     }
 
     public static double getDataCacheAsDouble(String key) {
         if (Va.dataCache.containsKey(key)) {
-            return Double.parseDouble(Va.dataCache.get(key));
+            return (double) Va.dataCache.get(key);
         }
         return 0;
     }
 
     public static boolean getDataCacheAsBoolean(String key) {
         if (Va.dataCache.containsKey(key)) {
-            return "true".equals(Va.dataCache.get(key));
+            return (boolean) Va.dataCache.get(key);
         }
         return false;
     }

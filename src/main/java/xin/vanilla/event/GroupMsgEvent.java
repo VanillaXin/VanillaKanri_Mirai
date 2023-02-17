@@ -5,14 +5,22 @@ import net.mamoe.mirai.contact.Group;
 import net.mamoe.mirai.contact.Member;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
 import net.mamoe.mirai.message.data.*;
+import net.mamoe.mirai.utils.ExternalResource;
 import xin.vanilla.rcon.Rcon;
 import xin.vanilla.util.Api;
 import xin.vanilla.util.StringUtils;
 import xin.vanilla.util.VanillaUtils;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.regex.Matcher;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static xin.vanilla.common.RegExp.RCON_RESULT_LIST;
 import static xin.vanilla.mapper.impl.MessageCacheImpl.MSG_TYPE_GROUP;
@@ -43,6 +51,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
         if (isBlock) return;
         logger.info("群聊: " + group.getId() + ":" + sender.getId() + " -> " + msg.serializeToMiraiCode());
         if (rcon()) return;
+        if (hentai()) return;
 
         test();
     }
@@ -85,6 +94,46 @@ public class GroupMsgEvent extends BaseMsgEvent {
             return true;
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * 涩图
+     *
+     * @return 是否不继续执行
+     */
+    private boolean hentai() {
+        if (msg.contentToString().matches(".*?(来图|不够([射蛇色涩瑟铯\uD83D\uDC0D])).*?")) {
+            String path = Va.globalConfig.getHentai_path().get();
+            if (!StringUtils.isNullOrEmpty(path)) {
+                List<Path> paths;
+                if (!Va.dataCache.containsKey(path)) {
+                    getHentaiList(path);
+                }
+                paths = (List<Path>) Va.dataCache.get(path);
+                long index = VanillaUtils.getDataCacheAsLong(path + "!index");
+                VanillaUtils.setDateCache(path + "!index", ++index);
+                if (paths.size() <= index) {
+                    getHentaiList(path);
+                } else {
+                    group.sendMessage(new MessageChainBuilder()
+                            .append(ExternalResource.uploadAsImage(paths.get((int) index).toFile(), group))
+                            .build());
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void getHentaiList(String path) {
+        List<Path> files;
+        try (Stream<Path> paths = Files.walk(Paths.get(path))) {
+            files = paths.filter(Files::isRegularFile).collect(Collectors.toList());
+            Collections.shuffle(files);
+            Va.dataCache.put(path, files);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
