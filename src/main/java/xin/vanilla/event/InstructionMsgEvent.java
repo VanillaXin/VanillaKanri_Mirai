@@ -438,6 +438,7 @@ public class InstructionMsgEvent {
                             if (VanillaUtils.equalsPermission(bot, group, senderMember.getId(), normalMember.getId())) {
                                 boolean bool = StringUtils.stringToBoolean(reg.getMatcher().group("bool"));
                                 normalMember.kick("被" + sender.getId() + "通过群管指令踢出", bool);
+                                successMsg.append(qq);
                             }
                         }
                     }
