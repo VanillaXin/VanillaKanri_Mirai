@@ -253,8 +253,21 @@ public class RegUtils {
         return this;
     }
 
-    public RegUtils append(Object o) {
+    /**
+     * 连接字符串
+     * <p>
+     * 不进行特殊字符转义
+     */
+    public RegUtils appendIg(Object o) {
         statement.append(o);
+        return this;
+    }
+
+    /**
+     * 连接字符串
+     */
+    public RegUtils append(Object o) {
+        statement.append(StringUtils.escapeExprSpecialWord(o.toString()));
         return this;
     }
 

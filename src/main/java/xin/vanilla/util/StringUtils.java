@@ -119,6 +119,7 @@ public class StringUtils {
      * @param s 0|1|真|假|是|否|true|false|y|n|t|f
      */
     public static boolean stringToBoolean(String s) {
+        if (null == s) return false;
         switch (s.toLowerCase().trim()) {
             case "1":
             case "真":

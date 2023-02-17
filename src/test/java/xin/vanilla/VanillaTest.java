@@ -16,6 +16,8 @@ import java.security.SecureRandom;
 import java.sql.SQLException;
 import java.util.HashSet;
 
+import static xin.vanilla.common.RegExp.RCON_RESULT_LIST;
+
 public class VanillaTest {
     @Test
     public void testGetByLine() {
@@ -72,7 +74,10 @@ public class VanillaTest {
 
     @Test
     public void test() {
-
+        System.out.println(RegUtils.start().appendIg("kick [VA_CODE.QQS] out".replaceAll("\\s", "\\\\s")
+                        .replace("[VA_CODE.QQS]", new RegUtils().groupIgByName("qq", RegUtils.REG_ATCODE).toString()))
+                .separator("?").groupIgByName("bool", "(?:0|1|真|假|是|否|true|false|y|n|Y|N)").appendIg("?")
+                .end().build());
     }
 
 }

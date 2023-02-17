@@ -259,7 +259,7 @@ public class InstructionMsgEvent {
                             for (String s : base.getAtAll())
                                 add(StringUtils.escapeExprSpecialWord(s));
                         }}).separator("?")
-                        .groupIgByName("time", "\\d{1,5}(?:\\.\\d{1,2})?").append("?").end();
+                        .groupIgByName("time", "\\d{1,5}(?:\\.\\d{1,2})?").appendIg("?").end();
                 if (reg.matcher(ins).find()) {
                     String qqString = reg.getMatcher().group("qq");
                     String time = reg.getMatcher().group("time");
@@ -314,7 +314,7 @@ public class InstructionMsgEvent {
                 //  tag <QQ> [CONTENT]
                 //  tag [CONTENT]
                 RegUtils reg = RegUtils.start().groupNon(prefix).separator()
-                        .groupIgByName("qq", RegUtils.REG_ATCODE).append("?").separator("?")
+                        .groupIgByName("qq", RegUtils.REG_ATCODE).appendIg("?").separator("?")
                         .groupIgByName("tag", ".*?").end();
                 if (reg.matcher(ins).find()) {
                     String qqString = reg.getMatcher().group("qq");
@@ -422,9 +422,9 @@ public class InstructionMsgEvent {
                     return RETURN_BREAK_FALSE;
 
                 //  kick <QQ> out
-                RegUtils reg = RegUtils.start().append("kick [VA_CODE.QQS] out".replaceAll("\\s", "\\\\s")
+                RegUtils reg = RegUtils.start().appendIg("kick [VA_CODE.QQS] out".replaceAll("\\s", "\\\\s")
                                 .replace("[VA_CODE.QQS]", new RegUtils().groupIgByName("qq", RegUtils.REG_ATCODE).toString()))
-                        .separator("?").groupIgByName("bool", "(?:0|1|真|假|是|否|true|false|y|n|Y|N)").append("?")
+                        .separator("?").groupIgByName("bool", "(?:0|1|真|假|是|否|true|false|y|n|Y|N)").appendIg("?")
                         .end();
                 if (reg.matcher(ins).find()) {
                     String qqString = reg.getMatcher().group("qq");
@@ -460,7 +460,7 @@ public class InstructionMsgEvent {
             //  tap <QQ> [num]
             RegUtils reg = RegUtils.start().groupNon(prefix).separator()
                     .groupIgByName("qq", RegUtils.REG_ATCODE).separator("?")
-                    .groupIgByName("num", "\\d").append("?").end();
+                    .groupIgByName("num", "\\d").appendIg("?").end();
             if (reg.matcher(ins).find()) {
                 String qqString = reg.getMatcher().group("qq");
                 String num = reg.getMatcher().group("num");

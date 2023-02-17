@@ -8,11 +8,15 @@ import net.mamoe.mirai.message.data.*;
 import xin.vanilla.rcon.Rcon;
 import xin.vanilla.util.Api;
 import xin.vanilla.util.StringUtils;
+import xin.vanilla.util.VanillaUtils;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.regex.Matcher;
 
+import static xin.vanilla.common.RegExp.RCON_RESULT_LIST;
 import static xin.vanilla.mapper.impl.MessageCacheImpl.MSG_TYPE_GROUP;
+import static xin.vanilla.util.VanillaUtils.PERMISSION_LEVEL_SUPERADMIN;
 
 public class GroupMsgEvent extends BaseMsgEvent {
     private final GroupMessageEvent event;
@@ -53,23 +57,26 @@ public class GroupMsgEvent extends BaseMsgEvent {
 
         String command;
         if (msg.contentToString().startsWith(prefix)) {
-            if (!(sender.getId() == 196468986L || sender.getId() == 3085477411L)) return false;
+            if (!VanillaUtils.hasPermissionOrMore(bot, group, sender.getId(), PERMISSION_LEVEL_SUPERADMIN))
+                return false;
             command = msg.contentToString().substring(prefix.length());
         } else if (msg.contentToString().equals("/list") || msg.contentToString().equals("/ls")) command = "list";
         else return false;
 
         try (Rcon rcon = Rcon.open(Va.globalConfig.getMc_rcon_ip(), Va.globalConfig.getMc_rcon_port())) {
             if (rcon.authenticate(Va.globalConfig.getMc_rcon_psw())) {
-                //There are 0 of a max of 20 players online:
                 String back = rcon.sendCommand(command);
-                if (back.contains(" players online:")) {
-                    String num = back.substring("There are ".length(), back.indexOf(" of a max "));
-                    String max = back.substring(back.indexOf(" of a max of ") + " of a max of ".length(), back.indexOf(" players online:"));
-                    String player = back.substring(back.indexOf(" players online:") + " players online:".length()).trim();
-                    if (StringUtils.isNullOrEmpty(player))
-                        back = "香草世界没有玩家在线";
-                    else
-                        back = "香草世界有" + num + "/" + max + "个玩家在线:\n" + player;
+                if (back.matches(RCON_RESULT_LIST.build())) {
+                    // There are 0 of a max of 20 players online:
+                    Matcher matcher = RCON_RESULT_LIST.matcher(back);
+                    String player = matcher.group("player").trim();
+                    if (StringUtils.isNullOrEmpty(player)) {
+                        back = "香草世界空无一人。";
+                    } else {
+                        String num = matcher.group("num");
+                        String max = matcher.group("max");
+                        back = "香草世界有" + num + "/" + max + "个玩家在线：\n" + player + "。";
+                    }
                 }
                 Api.sendMessage(group, back);
             } else {
