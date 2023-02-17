@@ -13,6 +13,6 @@ public class RegExp {
                     .groupIgByName("num", "\\d{1,2}").separator()
                     .append("of").separator().append("a").separator().append("max").separator().append("of").separator()
                     .groupIgByName("max", "\\d{1,2}").separator()
-                    .append("players").separator().append("online:").separator("?")
+                    .append("players").separator().append("online:").separator("?").separator("?")
                     .groupIgByName("player", ".*?").end();
 }
