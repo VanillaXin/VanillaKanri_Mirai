@@ -53,6 +53,10 @@ public class StringUtils {
         return null == s || s.equals("");
     }
 
+    public static boolean isNullOrEmptyEx(String s) {
+        return null == s || s.trim().equals("");
+    }
+
     public static String toString(int[] a) {
         if (a == null)
             return "null";
