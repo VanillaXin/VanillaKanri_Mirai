@@ -2,6 +2,7 @@ package xin.vanilla.event;
 
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.contact.Group;
+import net.mamoe.mirai.contact.MemberPermission;
 import net.mamoe.mirai.contact.NormalMember;
 import net.mamoe.mirai.contact.User;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
@@ -9,6 +10,7 @@ import net.mamoe.mirai.event.events.GroupTempMessageEvent;
 import net.mamoe.mirai.event.events.MessageEvent;
 import net.mamoe.mirai.message.data.*;
 import xin.vanilla.VanillaKanri;
+import xin.vanilla.common.annotation.KanriInsEvent;
 import xin.vanilla.entity.config.instruction.BaseInstructions;
 import xin.vanilla.entity.config.instruction.KanriInstructions;
 import xin.vanilla.entity.config.instruction.KeywordInstructions;
@@ -20,6 +22,8 @@ import xin.vanilla.util.VanillaUtils;
 
 import java.util.*;
 
+import static xin.vanilla.enumeration.PermissionLevel.PERMISSION_LEVEL_DEPUTY_ADMIN;
+import static xin.vanilla.enumeration.PermissionLevel.PERMISSION_LEVEL_SUPER_ADMIN;
 import static xin.vanilla.mapper.impl.MessageCacheImpl.MSG_TYPE_GROUP;
 import static xin.vanilla.util.VanillaUtils.PERMISSION_LEVEL_DEPUTYADMIN;
 import static xin.vanilla.util.VanillaUtils.PERMISSION_LEVEL_SUPERADMIN;
@@ -348,73 +352,6 @@ public class InstructionMsgEvent {
                     }
                 }
             }
-            // 撤回消息
-            else if (kanri.getWithdraw().contains(prefix)) {
-                // 判断发送者有无操作的权限
-                if (!VanillaUtils.hasPermissionOrMore(bot, group, sender.getId(), PERMISSION_LEVEL_DEPUTYADMIN))
-                    return RETURN_BREAK_FALSE;
-
-                // recall [num]
-                // recall [num-num]
-                // recall [num~num]
-                // recall [num] [num]
-                RegUtils reg = RegUtils.start().groupNon(prefix).separator("?")
-                        .groupIgByName("text", ".*?").end();
-
-                if (reg.matcher(ins).find()) {
-                    MessageSource messageSource = msg.get(MessageSource.Key);
-                    if (messageSource != null) try {
-                        MessageSource.recall(messageSource);
-                    } catch (IllegalStateException ignored) {
-                        Va.getLogger().info("无权撤回或已被撤回");
-                    }
-                    String text = reg.getMatcher().group("text").trim();
-                    QuoteReply quoteReply = msg.get(QuoteReply.Key);
-                    int[] sourceIds;
-                    if (quoteReply != null) {
-                        sourceIds = quoteReply.getSource().getIds();
-                        if (ins.equals(prefix)) {
-                            try {
-                                MessageSource.recall(quoteReply.getSource());
-                            } catch (IllegalStateException ignored) {
-                                Va.getLogger().info("无权撤回或已被撤回");
-                            }
-                        }
-                    } else {
-                        assert messageSource != null;
-                        sourceIds = messageSource.getIds();
-                    }
-                    int sourceId = sourceIds[sourceIds.length - 1];
-                    if (!StringUtils.isNullOrEmpty(text)) {
-                        try {
-                            int id = sourceId - Integer.parseInt(text);
-                            recall(id);
-                        } catch (NumberFormatException ignored) {
-                            if (text.contains("-") || text.contains("~")) {
-                                int[] ids = Arrays.stream(text.replace("-", "~")
-                                                .split("~"))
-                                        .mapToInt(s -> sourceId - Integer.parseInt(s))
-                                        .toArray();
-                                if (ids.length == 2) {
-                                    for (int id = ids[0]; id >= ids[1]; id--) {
-                                        recall(id);
-                                    }
-                                }
-                            } else if (RegUtils.containsRegSeparator(text) > 0) {
-                                int[] ids = Arrays.stream(text.replaceAll("\\s", " ")
-                                                .split(" "))
-                                        .mapToInt(s -> sourceId - Integer.parseInt(s))
-                                        .toArray();
-                                for (int id : ids) {
-                                    recall(id);
-                                }
-                            } else {
-                                Api.sendMessage(group, "表达式『" + text + "』有误");
-                            }
-                        }
-                    }
-                }
-            }
             // 踢出群成员
             else if (kanri.getKick().startsWith(prefix)) {
                 // 判断发送者有无操作的权限
@@ -495,8 +432,126 @@ public class InstructionMsgEvent {
                     Api.sendMessage(group, "待操作对象为空");
             }
         }
+        // 撤回消息
+        else if (kanri.getWithdraw().contains(prefix)) {
+            // 判断发送者有无操作的权限
+            if (!VanillaUtils.hasPermissionOrMore(bot, group, sender.getId(), PERMISSION_LEVEL_DEPUTYADMIN))
+                return RETURN_BREAK_FALSE;
+
+            // recall [num]
+            // recall [num-num]
+            // recall [num~num]
+            // recall [num] [num]
+            RegUtils reg = RegUtils.start().groupNon(prefix).separator("?")
+                    .groupIgByName("text", ".*?").end();
+
+            if (reg.matcher(ins).find()) {
+                MessageSource messageSource = msg.get(MessageSource.Key);
+                if (messageSource != null) try {
+                    MessageSource.recall(messageSource);
+                } catch (IllegalStateException ignored) {
+                    Va.getLogger().info("无权撤回或已被撤回");
+                }
+                String text = reg.getMatcher().group("text").trim();
+                QuoteReply quoteReply = msg.get(QuoteReply.Key);
+                int[] sourceIds;
+                if (quoteReply != null) {
+                    sourceIds = quoteReply.getSource().getIds();
+                    if (ins.equals(prefix)) {
+                        try {
+                            MessageSource.recall(quoteReply.getSource());
+                        } catch (IllegalStateException ignored) {
+                            Va.getLogger().info("无权撤回或已被撤回");
+                        }
+                    }
+                } else {
+                    assert messageSource != null;
+                    sourceIds = messageSource.getIds();
+                }
+                int sourceId = sourceIds[sourceIds.length - 1];
+                if (!StringUtils.isNullOrEmpty(text)) {
+                    try {
+                        int id = sourceId - Integer.parseInt(text);
+                        recall(id);
+                    } catch (NumberFormatException ignored) {
+                        if (text.contains("-") || text.contains("~")) {
+                            int[] ids = Arrays.stream(text.replace("-", "~")
+                                            .split("~"))
+                                    .mapToInt(s -> sourceId - Integer.parseInt(s))
+                                    .toArray();
+                            if (ids.length == 2) {
+                                for (int id = ids[0]; id >= ids[1]; id--) {
+                                    recall(id);
+                                }
+                            }
+                        } else if (RegUtils.containsRegSeparator(text) > 0) {
+                            int[] ids = Arrays.stream(text.replaceAll("\\s", " ")
+                                            .split(" "))
+                                    .mapToInt(s -> sourceId - Integer.parseInt(s))
+                                    .toArray();
+                            for (int id : ids) {
+                                recall(id);
+                            }
+                        } else {
+                            Api.sendMessage(group, "表达式『" + text + "』有误");
+                        }
+                    }
+                }
+            }
+        }
 
         return RETURN_CONTINUE;
+    }
+
+    @KanriInsEvent(prefix = "admin", sender = PERMISSION_LEVEL_SUPER_ADMIN, bot = MemberPermission.OWNER, regexp = "adminRegExp")
+    public int admin(long[] qqs, String text) {
+        boolean operation = base.getAdd().contains(text);
+        StringBuilder rep = new StringBuilder();
+        for (long qq : qqs) {
+            rep.append(',');
+            NormalMember normalMember = group.get(qq);
+            if (normalMember != null) {
+                normalMember.modifyAdmin(operation);
+                rep.append(qq);
+            }
+        }
+
+        if (!StringUtils.isNullOrEmpty(rep.toString())) {
+            rep.delete(0, 1);
+            if (operation)
+                Api.sendMessage(group, "已将 " + rep + " 添加为管理员");
+            else Api.sendMessage(group, "已取消 " + rep + " 的管理员");
+        } else {
+            Api.sendMessage(group, "待操作对象为空");
+        }
+        return RETURN_BREAK_TRUE;
+    }
+
+    @KanriInsEvent(prefix = "card", sender = PERMISSION_LEVEL_DEPUTY_ADMIN, bot = {MemberPermission.ADMINISTRATOR, MemberPermission.OWNER}, regexp = "cardRegExp")
+    public int card(long[] qqs, String text) {
+        StringBuilder rep = new StringBuilder();
+        for (long qq : qqs) {
+            rep.append(',');
+            NormalMember normalMember = group.get(qq);
+            if (normalMember != null) {
+                normalMember.setNameCard(text);
+                rep.append(qq);
+            }
+        }
+        if (!StringUtils.isNullOrEmpty(rep.toString())) {
+            rep.delete(0, 1);
+            if (rep.toString().equals("")) {
+                Api.sendMessage(group, "操作失败");
+            } else {
+                if (StringUtils.isNullOrEmpty(text))
+                    Api.sendMessage(group, "已清除 " + rep + " 的名片");
+                else
+                    Api.sendMessage(group, "已将 " + rep + " 的名片修改为:\n" + text);
+            }
+        } else {
+            Api.sendMessage(group, "待操作对象为空");
+        }
+        return RETURN_BREAK_TRUE;
     }
 
     /**

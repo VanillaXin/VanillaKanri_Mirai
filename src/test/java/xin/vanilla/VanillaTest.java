@@ -3,20 +3,14 @@ package xin.vanilla;
 import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
 import org.junit.Test;
 import xin.vanilla.entity.TestTable;
-import xin.vanilla.entity.config.instruction.BaseInstructions;
-import xin.vanilla.entity.config.instruction.Instructions;
-import xin.vanilla.util.RegUtils;
-import xin.vanilla.util.sqlite.SqliteUtil;
 import xin.vanilla.util.StringUtils;
+import xin.vanilla.util.sqlite.SqliteUtil;
 import xin.vanilla.util.sqlite.statement.InsertStatement;
 import xin.vanilla.util.sqlite.statement.QueryStatement;
 import xin.vanilla.util.sqlite.statement.Statement;
 
 import java.security.SecureRandom;
 import java.sql.SQLException;
-import java.util.HashSet;
-
-import static xin.vanilla.common.RegExp.RCON_RESULT_LIST;
 
 public class VanillaTest {
     @Test

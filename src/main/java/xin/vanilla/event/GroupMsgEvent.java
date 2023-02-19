@@ -22,7 +22,7 @@ import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static xin.vanilla.common.RegExp.RCON_RESULT_LIST;
+import static xin.vanilla.common.RegExpConfig.RCON_RESULT_LIST;
 import static xin.vanilla.mapper.impl.MessageCacheImpl.MSG_TYPE_GROUP;
 import static xin.vanilla.util.VanillaUtils.PERMISSION_LEVEL_SUPERADMIN;
 
@@ -89,7 +89,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
                     } else {
                         String num = matcher.group("num");
                         String max = matcher.group("max");
-                        back = "香草世界有" + num + "/" + max + "个玩家在线：\n" + player + "。";
+                        back = "香草世界有" + num + "/" + max + "个玩家在线：\n" + player.trim() + "。";
                     }
                 }
                 Api.sendMessage(group, back);
