@@ -9,9 +9,9 @@ import xin.vanilla.util.RegUtils;
 public class RegExpConfig {
     private final VanillaKanri Va = VanillaKanri.INSTANCE;
 
-    private final KanriInstructions kanri = Va.globalConfig.getInstructions().getKanri();
-    private final KeywordInstructions keyword = Va.globalConfig.getInstructions().getKeyword();
-    private final BaseInstructions base = Va.globalConfig.getInstructions().getBase();
+    private final KanriInstructions kanri = Va.getGlobalConfig().getInstructions().getKanri();
+    private final KeywordInstructions keyword = Va.getGlobalConfig().getInstructions().getKeyword();
+    private final BaseInstructions base = Va.getGlobalConfig().getInstructions().getBase();
 
 
     /**

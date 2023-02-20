@@ -20,7 +20,7 @@ public class FriendMsgEvent extends BaseMsgEvent {
         this.friend = this.event.getSender();
         this.bot = this.event.getBot();
         this.time = this.event.getTime();
-        Va.messageCache.addMsg(this.friend, this.msg);
+        Va.getMessageCache().addMsg(this.friend, this.msg);
     }
 
     public void run() {

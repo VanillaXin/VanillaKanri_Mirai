@@ -68,12 +68,12 @@ public class VanillaUtils {
      * @param secondary 若顶级前缀为空, 是否继续判断二级指令前缀
      */
     public static boolean isInstructionMsg(MessageChain msg, boolean secondary) {
-        String prefix = Va.globalConfig.getInstructions().getPrefix();
+        String prefix = Va.getGlobalConfig().getInstructions().getPrefix();
         if ("".equals(prefix)) {
             if (!secondary) return true;
 
             // 如果顶级前缀为空则遍历二级指令前缀
-            for (String prefix_ : Va.globalConfig.getInstructions().getSecondaryPrefix()) {
+            for (String prefix_ : Va.getGlobalConfig().getInstructions().getSecondaryPrefix()) {
                 if ("".equals(prefix_)) continue;
                 if (msg.contentToString().startsWith(prefix_ + " ")) return true;
             }
@@ -140,7 +140,7 @@ public class VanillaUtils {
      */
     public static boolean isSuperOwner(Bot bot, long qq) {
         try {
-            return Va.globalConfig.getSuperOwner() == qq;
+            return Va.getGlobalConfig().getSuperOwner() == qq;
         } catch (NullPointerException e) {
             return false;
         }
@@ -153,7 +153,7 @@ public class VanillaUtils {
      */
     public static boolean isBotOwner(Bot bot, long qq) {
         try {
-            return Va.globalConfig.getPermissions().get(bot.getId()).getBotOwner() == qq;
+            return Va.getGlobalConfig().getPermissions().get(bot.getId()).getBotOwner() == qq;
         } catch (NullPointerException e) {
             return false;
         }
@@ -166,7 +166,7 @@ public class VanillaUtils {
      */
     public static boolean isSuperAdmin(Bot bot, long qq) {
         try {
-            return Va.globalConfig.getPermissions().get(bot.getId()).getSuperAdmin().contains(qq);
+            return Va.getGlobalConfig().getPermissions().get(bot.getId()).getSuperAdmin().contains(qq);
         } catch (NullPointerException e) {
             return false;
         }
@@ -179,7 +179,7 @@ public class VanillaUtils {
      */
     public static boolean isBotAdmin(Bot bot, long qq) {
         try {
-            return Va.globalConfig.getPermissions().get(bot.getId()).getBotAdmin().contains(qq);
+            return Va.getGlobalConfig().getPermissions().get(bot.getId()).getBotAdmin().contains(qq);
         } catch (NullPointerException e) {
             return false;
         }
@@ -203,7 +203,7 @@ public class VanillaUtils {
      */
     public static boolean isDeputyAdmin(Bot bot, long qq) {
         try {
-            return Va.globalConfig.getPermissions().get(bot.getId()).getDeputyAdmin().contains(qq);
+            return Va.getGlobalConfig().getPermissions().get(bot.getId()).getDeputyAdmin().contains(qq);
         } catch (NullPointerException e) {
             return false;
         }
@@ -216,7 +216,7 @@ public class VanillaUtils {
      */
     public static boolean isDeputyAdmin(Group group, long qq) {
         try {
-            return Va.groupConfig.getDeputyAdmin().get(group.getId()).contains(qq);
+            return Va.getGroupConfig().getDeputyAdmin().get(group.getId()).contains(qq);
         } catch (NullPointerException e) {
             return false;
         }
@@ -335,33 +335,33 @@ public class VanillaUtils {
     }
 
     public static void setDateCache(String key, Object value) {
-        Va.dataCache.put(key, value);
+        Va.getDataCache().put(key, value);
     }
 
     public static String getDataCacheAsString(String key) {
-        if (Va.dataCache.containsKey(key)) {
-            return (String) Va.dataCache.get(key);
+        if (Va.getDataCache().containsKey(key)) {
+            return (String) Va.getDataCache().get(key);
         }
         return "";
     }
 
     public static long getDataCacheAsLong(String key) {
-        if (Va.dataCache.containsKey(key)) {
-            return (long) Va.dataCache.get(key);
+        if (Va.getDataCache().containsKey(key)) {
+            return (long) Va.getDataCache().get(key);
         }
         return 0;
     }
 
     public static double getDataCacheAsDouble(String key) {
-        if (Va.dataCache.containsKey(key)) {
-            return (double) Va.dataCache.get(key);
+        if (Va.getDataCache().containsKey(key)) {
+            return (double) Va.getDataCache().get(key);
         }
         return 0;
     }
 
     public static boolean getDataCacheAsBoolean(String key) {
-        if (Va.dataCache.containsKey(key)) {
-            return (boolean) Va.dataCache.get(key);
+        if (Va.getDataCache().containsKey(key)) {
+            return (boolean) Va.getDataCache().get(key);
         }
         return false;
     }

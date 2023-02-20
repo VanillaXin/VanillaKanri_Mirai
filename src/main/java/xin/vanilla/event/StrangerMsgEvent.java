@@ -18,7 +18,7 @@ public class StrangerMsgEvent extends BaseMsgEvent {
         this.sender = this.event.getSender();
         this.bot = this.event.getBot();
         this.time = this.event.getTime();
-        Va.messageCache.addMsg(this.sender, this.msg);
+        Va.getMessageCache().addMsg(this.sender, this.msg);
     }
 
     public void run() {

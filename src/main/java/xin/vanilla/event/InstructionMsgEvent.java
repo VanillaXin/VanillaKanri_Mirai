@@ -42,9 +42,9 @@ public class InstructionMsgEvent {
     private final long time;
 
 
-    private final KanriInstructions kanri = Va.globalConfig.getInstructions().getKanri();
-    private final KeywordInstructions keyword = Va.globalConfig.getInstructions().getKeyword();
-    private final BaseInstructions base = Va.globalConfig.getInstructions().getBase();
+    private final KanriInstructions kanri = Va.getGlobalConfig().getInstructions().getKanri();
+    private final KeywordInstructions keyword = Va.getGlobalConfig().getInstructions().getKeyword();
+    private final BaseInstructions base = Va.getGlobalConfig().getInstructions().getBase();
     private String ins = "";
 
     public InstructionMsgEvent(MessageEvent event) {
@@ -272,7 +272,7 @@ public class InstructionMsgEvent {
                             group.getSettings().setMuteAll(true);
                             Api.sendMessage(group, "已开启全体禁言");
                             if (!StringUtils.isNullOrEmpty(time)) {
-                                Va.getScheduler().delayed(Math.round(Float.parseFloat(time)) * 60L * 1000L, () -> {
+                                Va.delayed(Math.round(Float.parseFloat(time)) * 60L * 1000L, () -> {
                                     if (group.getSettings().isMuteAll()) {
                                         group.getSettings().setMuteAll(false);
                                     }
@@ -419,7 +419,7 @@ public class InstructionMsgEvent {
                 }
 
                 for (int j = 0; j < i; j++) {
-                    Va.getScheduler().delayed(j * 5 * 1000L, () -> {
+                    Va.delayed(j * 5 * 1000L, () -> {
                         for (long qq : VanillaUtils.getQQFromAt(qqString)) {
                             NormalMember normalMember = group.get(qq);
                             if (normalMember != null) {
@@ -568,7 +568,7 @@ public class InstructionMsgEvent {
     }
 
     private String delPrefix() {
-        String prefix = Va.globalConfig.getInstructions().getPrefix();
+        String prefix = Va.getGlobalConfig().getInstructions().getPrefix();
         if (StringUtils.isNullOrEmpty(prefix)) return msg.serializeToMiraiCode().trim();
         else return msg.serializeToMiraiCode().substring(prefix.length()).trim();
     }
@@ -620,7 +620,7 @@ public class InstructionMsgEvent {
     }
 
     private void recall(int id) {
-        MsgCache msgCache = Va.messageCache.getMsgCache(id + "|", group.getId(), MSG_TYPE_GROUP);
+        MsgCache msgCache = Va.getMessageCache().getMsgCache(id + "|", group.getId(), MSG_TYPE_GROUP);
         if (msgCache != null) {
             try {
                 MessageSource.recall(new MessageSourceBuilder()

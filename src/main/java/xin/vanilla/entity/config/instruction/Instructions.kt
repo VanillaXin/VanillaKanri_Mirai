@@ -43,7 +43,7 @@ class Instructions {
 
     fun getSecondaryPrefix(): Set<String> {
         if (secondaryPrefix.isEmpty())
-            VanillaKanri.INSTANCE.globalConfig.refreshSecondaryPrefix()
+            VanillaKanri.globalConfig.refreshSecondaryPrefix()
         return secondaryPrefix
     }
 
