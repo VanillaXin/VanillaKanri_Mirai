@@ -79,17 +79,19 @@ public class GroupMsgEvent extends BaseMsgEvent {
                     // There are 0 of a max of 20 players online:
                     Matcher matcher = RCON_RESULT_LIST.matcher(back);
                     String player;
-                    try {
-                        player = matcher.group("player");
-                    } catch (IllegalStateException e) {
-                        player = "";
-                    }
-                    if (StringUtils.isNullOrEmptyEx(player)) {
-                        back = "香草世界空无一人。";
-                    } else {
-                        String num = matcher.group("num");
-                        String max = matcher.group("max");
-                        back = "香草世界有" + num + "/" + max + "个玩家在线：\n" + player.trim() + "。";
+                    if (matcher.find()) {
+                        try {
+                            player = matcher.group("player");
+                        } catch (IllegalStateException e) {
+                            player = "";
+                        }
+                        if (StringUtils.isNullOrEmptyEx(player)) {
+                            back = "香草世界空无一人。";
+                        } else {
+                            String num = matcher.group("num");
+                            String max = matcher.group("max");
+                            back = "香草世界有" + num + "/" + max + "个玩家在线：\n" + player.trim() + "。";
+                        }
                     }
                 }
                 Api.sendMessage(group, back);

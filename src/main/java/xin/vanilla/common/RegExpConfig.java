@@ -22,8 +22,8 @@ public class RegExpConfig {
                     .groupIgByName("num", "\\d{1,2}").separator()
                     .append("of").separator().append("a").separator().append("max").separator().append("of").separator()
                     .groupIgByName("max", "\\d{1,2}").separator()
-                    .append("players").separator().append("online:").separator("{2}")
-                    .groupIgByName("player", ".*?").separator("?").end();
+                    .append("players").separator().append("online:").separator()
+                    .groupIgByName("player", "[\\S ]*?").separator();
 
     /**
      * 设置群管理员指令
