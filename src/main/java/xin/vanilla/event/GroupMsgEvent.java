@@ -122,7 +122,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
                 } else {
                     group.sendMessage(new MessageChainBuilder()
                             .append(ExternalResource.uploadAsImage(paths.get((int) index).toFile(), group))
-                            .build()).recallIn(100);
+                            .build()).recallIn(100 * 1000);
                 }
                 return true;
             }
