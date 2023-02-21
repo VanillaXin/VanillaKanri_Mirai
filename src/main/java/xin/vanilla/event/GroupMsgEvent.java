@@ -107,7 +107,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
      * @return 是否不继续执行
      */
     private boolean hentai() {
-        if (msg.contentToString().matches("(来.?[射蛇色涩瑟铯\uD83D\uDC0D]图|.*?不够([射蛇色涩瑟铯\uD83D\uDC0D])).*?")) {
+        if (msg.contentToString().matches("(来.?|.*?不够)[射蛇色涩瑟铯\uD83D\uDC0D].*?")) {
             String path = Va.getGlobalConfig().getHentai_path().get();
             if (!StringUtils.isNullOrEmpty(path)) {
                 List<Path> paths;
