@@ -1,5 +1,6 @@
 package xin.vanilla.event;
 
+import lombok.Getter;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.contact.Group;
 import net.mamoe.mirai.contact.MemberPermission;
@@ -14,6 +15,7 @@ import xin.vanilla.common.annotation.KanriInsEvent;
 import xin.vanilla.entity.config.instruction.BaseInstructions;
 import xin.vanilla.entity.config.instruction.KanriInstructions;
 import xin.vanilla.entity.config.instruction.KeywordInstructions;
+import xin.vanilla.entity.config.instruction.TimedTaskInstructions;
 import xin.vanilla.entity.data.MsgCache;
 import xin.vanilla.util.Api;
 import xin.vanilla.util.RegUtils;
@@ -25,8 +27,6 @@ import java.util.*;
 import static xin.vanilla.enumeration.PermissionLevel.PERMISSION_LEVEL_DEPUTY_ADMIN;
 import static xin.vanilla.enumeration.PermissionLevel.PERMISSION_LEVEL_SUPER_ADMIN;
 import static xin.vanilla.mapper.impl.MessageCacheImpl.MSG_TYPE_GROUP;
-import static xin.vanilla.util.VanillaUtils.PERMISSION_LEVEL_DEPUTYADMIN;
-import static xin.vanilla.util.VanillaUtils.PERMISSION_LEVEL_SUPERADMIN;
 
 public class InstructionMsgEvent {
     private static final int RETURN_CONTINUE = 1;
@@ -34,17 +34,28 @@ public class InstructionMsgEvent {
     private static final int RETURN_BREAK_FALSE = 3;
 
     private final VanillaKanri Va = VanillaKanri.INSTANCE;
+    @Getter
     private final MessageEvent event;
+    @Getter
     private final MessageChain msg;
+    @Getter
     private Group group;
+    @Getter
     private final User sender;
+    @Getter
     private final Bot bot;
+    @Getter
     private final long time;
 
-
+    @Getter
     private final KanriInstructions kanri = Va.getGlobalConfig().getInstructions().getKanri();
+    @Getter
     private final KeywordInstructions keyword = Va.getGlobalConfig().getInstructions().getKeyword();
+    @Getter
+    private final TimedTaskInstructions timed = Va.getGlobalConfig().getInstructions().getTimed();
+    @Getter
     private final BaseInstructions base = Va.getGlobalConfig().getInstructions().getBase();
+    @Getter
     private String ins = "";
 
     public InstructionMsgEvent(MessageEvent event) {
@@ -105,7 +116,7 @@ public class InstructionMsgEvent {
             // 添加/取消管理员
             if (kanri.getAdmin().contains(prefix)) {
                 // 判断发送者有无操作的权限
-                if (!VanillaUtils.hasPermissionOrMore(bot, group, sender.getId(), PERMISSION_LEVEL_SUPERADMIN))
+                if (!VanillaUtils.hasPermissionOrMore(bot, group, sender.getId(), PERMISSION_LEVEL_SUPER_ADMIN))
                     return RETURN_BREAK_FALSE;
 
                 //  ad add <QQ>
@@ -139,7 +150,7 @@ public class InstructionMsgEvent {
             // 设置群名片
             else if (kanri.getCard().contains(prefix)) {
                 // 判断发送者有无操作的权限
-                if (!VanillaUtils.hasPermissionOrMore(bot, group, sender.getId(), PERMISSION_LEVEL_DEPUTYADMIN))
+                if (!VanillaUtils.hasPermissionOrMore(bot, group, sender.getId(), PERMISSION_LEVEL_DEPUTY_ADMIN))
                     return RETURN_BREAK_FALSE;
 
                 //  card <QQ> [CONTENT]
@@ -175,7 +186,7 @@ public class InstructionMsgEvent {
             // 添加群精华
             else if (kanri.getEssence().contains(prefix)) {
                 // 判断发送者有无操作的权限
-                if (!VanillaUtils.hasPermissionOrMore(bot, group, sender.getId(), PERMISSION_LEVEL_DEPUTYADMIN))
+                if (!VanillaUtils.hasPermissionOrMore(bot, group, sender.getId(), PERMISSION_LEVEL_DEPUTY_ADMIN))
                     return RETURN_BREAK_FALSE;
 
                 //  essence add/del/[CONTENT]
@@ -209,7 +220,7 @@ public class InstructionMsgEvent {
             // 解除禁言
             else if (kanri.getLoud().contains(prefix)) {
                 // 判断发送者有无操作的权限
-                if (!VanillaUtils.hasPermissionOrMore(bot, group, sender.getId(), PERMISSION_LEVEL_DEPUTYADMIN))
+                if (!VanillaUtils.hasPermissionOrMore(bot, group, sender.getId(), PERMISSION_LEVEL_DEPUTY_ADMIN))
                     return RETURN_BREAK_FALSE;
 
                 //  loud <QQ>
@@ -253,7 +264,7 @@ public class InstructionMsgEvent {
             // 禁言
             else if (kanri.getMute().contains(prefix)) {
                 // 判断发送者有无操作的权限
-                if (!VanillaUtils.hasPermissionOrMore(bot, group, sender.getId(), PERMISSION_LEVEL_DEPUTYADMIN))
+                if (!VanillaUtils.hasPermissionOrMore(bot, group, sender.getId(), PERMISSION_LEVEL_DEPUTY_ADMIN))
                     return RETURN_BREAK_FALSE;
 
                 //  mute <QQ>/<全体成员> [时间]
@@ -355,7 +366,7 @@ public class InstructionMsgEvent {
             // 踢出群成员
             else if (kanri.getKick().startsWith(prefix)) {
                 // 判断发送者有无操作的权限
-                if (!VanillaUtils.hasPermissionOrMore(bot, group, sender.getId(), PERMISSION_LEVEL_DEPUTYADMIN))
+                if (!VanillaUtils.hasPermissionOrMore(bot, group, sender.getId(), PERMISSION_LEVEL_DEPUTY_ADMIN))
                     return RETURN_BREAK_FALSE;
 
                 //  kick <QQ> out
@@ -435,7 +446,7 @@ public class InstructionMsgEvent {
         // 撤回消息
         else if (kanri.getWithdraw().contains(prefix)) {
             // 判断发送者有无操作的权限
-            if (!VanillaUtils.hasPermissionOrMore(bot, group, sender.getId(), PERMISSION_LEVEL_DEPUTYADMIN))
+            if (!VanillaUtils.hasPermissionOrMore(bot, group, sender.getId(), PERMISSION_LEVEL_DEPUTY_ADMIN))
                 return RETURN_BREAK_FALSE;
 
             // recall [num]
@@ -504,7 +515,7 @@ public class InstructionMsgEvent {
     }
 
     @KanriInsEvent(prefix = "admin", sender = PERMISSION_LEVEL_SUPER_ADMIN, bot = MemberPermission.OWNER, regexp = "adminRegExp")
-    public int admin(long[] qqs, String text) {
+    private int admin(long[] qqs, String text) {
         boolean operation = base.getAdd().contains(text);
         StringBuilder rep = new StringBuilder();
         for (long qq : qqs) {
@@ -567,17 +578,24 @@ public class InstructionMsgEvent {
         return RETURN_CONTINUE;
     }
 
-    private String delPrefix() {
+    /**
+     * 删除顶级指令前缀
+     */
+    private String delTopPrefix() {
         String prefix = Va.getGlobalConfig().getInstructions().getPrefix();
         if (StringUtils.isNullOrEmpty(prefix)) return msg.serializeToMiraiCode().trim();
         else return msg.serializeToMiraiCode().substring(prefix.length()).trim();
     }
 
     /**
-     * 是否包含前缀, 并删除前缀
+     * 先删除顶级前缀, 再判断是否包含前缀prefix
+     * <p>
+     * 并将删除前缀prefix后的结果保存至ins
+     *
+     * @return 是否失败
      */
-    private boolean delPrefix(String prefix) {
-        String s = delPrefix();
+    public boolean delPrefix(String prefix) {
+        String s = delTopPrefix();
         if (StringUtils.isNullOrEmpty(prefix)) {
             setIns(s);
             return StringUtils.isNullOrEmpty(this.ins);

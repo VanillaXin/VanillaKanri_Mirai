@@ -15,6 +15,9 @@
  */
 package xin.vanilla.util.sqlite.statement;
 
+import xin.vanilla.util.lambda.LambdaUtils;
+import xin.vanilla.util.lambda.SerializedFunction;
+
 /**
  * A statement producer that use to producing <b>INSERT</b> command of SQL language.
  */
@@ -180,6 +183,16 @@ public class InsertStatement extends Statement {
             values.append(", ");
         }
         columns.append(column);
+        append(values, value);
+        return this;
+    }
+
+    public <T> InsertStatement put(SerializedFunction<T, ?> column, Object value) {
+        if (++columnCount > 1) {
+            columns.append(", ");
+            values.append(", ");
+        }
+        columns.append(LambdaUtils.getFiledName(column));
         append(values, value);
         return this;
     }

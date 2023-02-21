@@ -4,6 +4,7 @@ import xin.vanilla.VanillaKanri;
 import xin.vanilla.entity.config.instruction.BaseInstructions;
 import xin.vanilla.entity.config.instruction.KanriInstructions;
 import xin.vanilla.entity.config.instruction.KeywordInstructions;
+import xin.vanilla.entity.config.instruction.TimedTaskInstructions;
 import xin.vanilla.util.RegUtils;
 
 public class RegExpConfig {
@@ -11,6 +12,7 @@ public class RegExpConfig {
 
     private final KanriInstructions kanri = Va.getGlobalConfig().getInstructions().getKanri();
     private final KeywordInstructions keyword = Va.getGlobalConfig().getInstructions().getKeyword();
+    private final TimedTaskInstructions timed = Va.getGlobalConfig().getInstructions().getTimed();
     private final BaseInstructions base = Va.getGlobalConfig().getInstructions().getBase();
 
 

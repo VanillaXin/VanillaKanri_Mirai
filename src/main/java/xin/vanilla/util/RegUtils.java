@@ -314,6 +314,11 @@ public class RegUtils {
         }
     }
 
+    /**
+     * 是否包含空白字符
+     *
+     * @return 空白字符在字符串s中的位置
+     */
     public static int containsRegSeparator(String s) {
         Matcher matcher = Pattern.compile(RegUtils.REG_SEPARATOR).matcher(s);
         if (matcher.find()) {

@@ -16,6 +16,9 @@
 package xin.vanilla.util.sqlite.statement;
 
 
+import xin.vanilla.util.lambda.LambdaUtils;
+import xin.vanilla.util.lambda.SerializedFunction;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -69,6 +72,11 @@ public class Statement {
         return this;
     }
 
+    public <T> Statement where(SerializedFunction<T, ?> operand) {
+        statement.append(" WHERE ").append(LambdaUtils.getFiledName(operand));
+        return this;
+    }
+
     /**
      * Appending the AND clause.
      *
@@ -82,6 +90,11 @@ public class Statement {
         return this;
     }
 
+    public <T> Statement and(SerializedFunction<T, ?> operand) {
+        statement.append(" AND ").append(LambdaUtils.getFiledName(operand));
+        return this;
+    }
+
     /**
      * Appending the OR clause.
      *
@@ -92,6 +105,11 @@ public class Statement {
      */
     public Statement or(Object operand) {
         statement.append(" OR ").append(operand);
+        return this;
+    }
+
+    public <T> Statement or(SerializedFunction<T, ?> operand) {
+        statement.append(" OR ").append(LambdaUtils.getFiledName(operand));
         return this;
     }
 
@@ -203,6 +221,12 @@ public class Statement {
      */
     protected Statement compare(String op, Object value) {
         statement.append(' ').append(op).append(' ');
+        append(value);
+        return this;
+    }
+
+    protected <T> Statement compare(SerializedFunction<T, ?> op, Object value) {
+        statement.append(' ').append(LambdaUtils.getFiledName(op)).append(' ');
         append(value);
         return this;
     }

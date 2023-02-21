@@ -21,13 +21,6 @@ public class MessageCacheImpl implements MessageCache {
     public static String MSG_TYPE_STRANGER = "stranger_";
     public static String dbname = "\\msg_cache.db";
     public static String dbVersion = "1.0.0";
-    public static String ID = "id";
-    public static String NOS = "nos";
-    public static String BOT = "bot";
-    public static String SENDER = "sender";
-    public static String TARGET = "target";
-    public static String TIME = "time";
-    public static String MSG = "msg";
 
     private static String[] MSG_TYPES = {MSG_TYPE_GROUP, MSG_TYPE_FRIEND, MSG_TYPE_MEMBER, MSG_TYPE_STRANGER};
     private final SqliteUtil sqliteUtil;
@@ -140,12 +133,12 @@ public class MessageCacheImpl implements MessageCache {
         }
 
         InsertStatement insert = InsertStatement.produce(table)
-                .put("nos", nos)
-                .put("bot", botId)
-                .put("sender", sender)
-                .put("target", target)
-                .put("time", time)
-                .put("msg", msgString);
+                .put(MsgCache::getNos, nos)
+                .put(MsgCache::getBot, botId)
+                .put(MsgCache::getSender, sender)
+                .put(MsgCache::getTarget, target)
+                .put(MsgCache::getTime, time)
+                .put(MsgCache::getMsg, msgString);
 
         sqliteUtil.insert(insert);
     }
@@ -272,16 +265,16 @@ public class MessageCacheImpl implements MessageCache {
         for (String msgType : MSG_TYPES) {
             Statement query = QueryStatement.produce()
                     .from(msgType + getTableName())
-                    .where(TARGET).eq(target);
+                    .where(MsgCache::getTarget).eq(target);
 
-            if (sender > 0) query.and(TARGET).eq(target);
-            if (time > 0) query.and(TIME).eq(time);
+            if (sender > 0) query.and(MsgCache::getTarget).eq(target);
+            if (time > 0) query.and(MsgCache::getTime).eq(time);
             if (!no.contains("|"))
-                query.and(NOS).like("%" + no + "%|%");
+                query.and(MsgCache::getNos).like("%" + no + "%|%");
             else if (no.startsWith("|"))
-                query.and(NOS).likeEndsWith(no);
+                query.and(MsgCache::getNos).likeEndsWith(no);
             else
-                query.and(NOS).likeStartsWith(no);
+                query.and(MsgCache::getNos).likeStartsWith(no);
             msgCache = sqliteUtil.getEntity(query, MsgCache.class);
             if (msgCache != null && msgCache.getId() > 0) break;
         }

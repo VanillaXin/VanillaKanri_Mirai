@@ -6,6 +6,7 @@ import net.mamoe.mirai.contact.Member;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
 import net.mamoe.mirai.message.data.*;
 import net.mamoe.mirai.utils.ExternalResource;
+import xin.vanilla.enumeration.PermissionLevel;
 import xin.vanilla.rcon.Rcon;
 import xin.vanilla.util.Api;
 import xin.vanilla.util.StringUtils;
@@ -24,7 +25,6 @@ import java.util.stream.Stream;
 
 import static xin.vanilla.common.RegExpConfig.RCON_RESULT_LIST;
 import static xin.vanilla.mapper.impl.MessageCacheImpl.MSG_TYPE_GROUP;
-import static xin.vanilla.util.VanillaUtils.PERMISSION_LEVEL_SUPERADMIN;
 
 public class GroupMsgEvent extends BaseMsgEvent {
     private final GroupMessageEvent event;
@@ -33,11 +33,9 @@ public class GroupMsgEvent extends BaseMsgEvent {
     private final Member sender;
     private final Bot bot;
     private final long time;
-    private final boolean isBlock;
 
 
     public GroupMsgEvent(GroupMessageEvent event) {
-        this.isBlock = new InstructionMsgEvent(event).run();
         this.event = event;
         this.msg = this.event.getMessage();
         this.group = this.event.getGroup();
@@ -48,7 +46,6 @@ public class GroupMsgEvent extends BaseMsgEvent {
     }
 
     public void run() {
-        if (isBlock) return;
         logger.info("群聊: " + group.getId() + ":" + sender.getId() + " -> " + msg.serializeToMiraiCode());
         if (rcon()) return;
         if (hentai()) return;
@@ -66,7 +63,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
 
         String command;
         if (msg.contentToString().startsWith(prefix)) {
-            if (!VanillaUtils.hasPermissionOrMore(bot, group, sender.getId(), PERMISSION_LEVEL_SUPERADMIN))
+            if (!VanillaUtils.hasPermissionOrMore(bot, group, sender.getId(), PermissionLevel.PERMISSION_LEVEL_SUPER_ADMIN))
                 return false;
             command = msg.contentToString().substring(prefix.length());
         } else if (msg.contentToString().equals("/list") || msg.contentToString().equals("/ls")) command = "list";
@@ -110,7 +107,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
      * @return 是否不继续执行
      */
     private boolean hentai() {
-        if (msg.contentToString().matches(".*?(来图|不够([射蛇色涩瑟铯\uD83D\uDC0D])).*?")) {
+        if (msg.contentToString().matches("(来.?[射蛇色涩瑟铯\uD83D\uDC0D]图|.*?不够([射蛇色涩瑟铯\uD83D\uDC0D])).*?")) {
             String path = Va.getGlobalConfig().getHentai_path().get();
             if (!StringUtils.isNullOrEmpty(path)) {
                 List<Path> paths;
@@ -125,7 +122,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
                 } else {
                     group.sendMessage(new MessageChainBuilder()
                             .append(ExternalResource.uploadAsImage(paths.get((int) index).toFile(), group))
-                            .build());
+                            .build()).recallIn(100);
                 }
                 return true;
             }

@@ -11,10 +11,8 @@ public class FriendMsgEvent extends BaseMsgEvent {
     private final Friend friend;
     private final Bot bot;
     private final long time;
-    private final boolean isBlock;
 
     public FriendMsgEvent(FriendMessageEvent event) {
-        this.isBlock = new InstructionMsgEvent(event).run();
         this.event = event;
         this.msg = this.event.getMessage();
         this.friend = this.event.getSender();
@@ -24,7 +22,6 @@ public class FriendMsgEvent extends BaseMsgEvent {
     }
 
     public void run() {
-        if (isBlock) return;
         logger.info("好友: " + friend.getId() + " -> " + msg.serializeToMiraiCode());
     }
 }

@@ -41,6 +41,11 @@ class Instructions {
      */
     var kanri: KanriInstructions = KanriInstructions()
 
+    /**
+     * 定时任务指令
+     */
+    var timed: TimedTaskInstructions = TimedTaskInstructions()
+
     fun getSecondaryPrefix(): Set<String> {
         if (secondaryPrefix.isEmpty())
             VanillaKanri.globalConfig.refreshSecondaryPrefix()

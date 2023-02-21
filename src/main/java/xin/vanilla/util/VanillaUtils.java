@@ -10,47 +10,18 @@ import net.mamoe.mirai.message.data.At;
 import net.mamoe.mirai.message.data.MessageChain;
 import net.mamoe.mirai.message.data.SingleMessage;
 import xin.vanilla.VanillaKanri;
+import xin.vanilla.enumeration.PermissionLevel;
 
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+import static xin.vanilla.enumeration.PermissionLevel.*;
+
 @SuppressWarnings("unused")
 public class VanillaUtils {
     private static final VanillaKanri Va = VanillaKanri.INSTANCE;
     // 主人>超管>群主>主管>群管>副管=群副管
-    /**
-     * ?管理(?)
-     */
-    public static final int PERMISSION_LEVEL_SUPEROWNER = 100;
-    /**
-     * 机器人主人
-     */
-    public static final int PERMISSION_LEVEL_BOTOWNER = 6;
-    /**
-     * 机器人超管
-     */
-    public static final int PERMISSION_LEVEL_SUPERADMIN = 5;
-    /**
-     * 群主
-     */
-    public static final int PERMISSION_LEVEL_GROUPOWNER = 4;
-    /**
-     * 机器人主管
-     */
-    public static final int PERMISSION_LEVEL_BOTADMIN = 3;
-    /**
-     * 群管
-     */
-    public static final int PERMISSION_LEVEL_GROUPADMIN = 2;
-    /**
-     * 副管
-     */
-    public static final int PERMISSION_LEVEL_DEPUTYADMIN = 1;
-    /**
-     * 普通群员
-     */
-    public static final int PERMISSION_LEVEL_MEMBER = 0;
 
     // region 判断指令格式
 
@@ -228,17 +199,19 @@ public class VanillaUtils {
      * @return int, 参考 PERMISSION_LEVEL_*
      */
     public static int getPermissionLevel(Bot bot, Group group, long qq) {
-        int permission = PERMISSION_LEVEL_MEMBER;
+        int permission = PERMISSION_LEVEL_MEMBER.getLevel();
         if (bot != null) {
-            if (isBotOwner(bot, qq)) permission = PERMISSION_LEVEL_BOTOWNER;
-            else if (isSuperAdmin(bot, qq)) permission = PERMISSION_LEVEL_SUPERADMIN;
-            else if (isBotAdmin(bot, qq)) permission = PERMISSION_LEVEL_BOTADMIN;
-            else if (isDeputyAdmin(bot, qq)) permission = PERMISSION_LEVEL_DEPUTYADMIN;
+            if (isBotOwner(bot, qq)) permission = PERMISSION_LEVEL_BOT_OWNER.getLevel();
+            else if (isSuperAdmin(bot, qq)) permission = PERMISSION_LEVEL_SUPER_ADMIN.getLevel();
+            else if (isBotAdmin(bot, qq)) permission = PERMISSION_LEVEL_BOT_ADMIN.getLevel();
+            else if (isDeputyAdmin(bot, qq)) permission = PERMISSION_LEVEL_DEPUTY_ADMIN.getLevel();
         }
         if (group != null) {
-            if (isGroupOwner(group, qq)) permission = Math.max(permission, PERMISSION_LEVEL_GROUPOWNER);
-            else if (isGroupAdmin(group, qq)) permission = Math.max(permission, PERMISSION_LEVEL_GROUPADMIN);
-            else if (isDeputyAdmin(group, qq)) permission = Math.max(permission, PERMISSION_LEVEL_DEPUTYADMIN);
+            if (isGroupOwner(group, qq)) permission = Math.max(permission, PERMISSION_LEVEL_GROUP_OWNER.getLevel());
+            else if (isGroupAdmin(group, qq))
+                permission = Math.max(permission, PERMISSION_LEVEL_GROUP_ADMIN.getLevel());
+            else if (isDeputyAdmin(group, qq))
+                permission = Math.max(permission, PERMISSION_LEVEL_DEPUTY_ADMIN.getLevel());
         }
         return permission;
     }
@@ -302,10 +275,10 @@ public class VanillaUtils {
      *
      * @param level 权限等级 例: PERMISSION_LEVEL_BOTADMIN
      */
-    public static boolean hasPermissionOrMore(Bot bot, Group group, long qq, int level) {
-        if (level == PERMISSION_LEVEL_SUPEROWNER && bot != null)
+    public static boolean hasPermissionOrMore(Bot bot, Group group, long qq, PermissionLevel level) {
+        if (level == PermissionLevel.PERMISSION_LEVEL_SUPER_OWNER && bot != null)
             return isSuperOwner(bot, qq);
-        else return getPermissionLevel(bot, group, qq) >= level;
+        else return getPermissionLevel(bot, group, qq) >= level.getLevel();
     }
 
     // endregion 判断权限

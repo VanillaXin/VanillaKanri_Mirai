@@ -117,6 +117,27 @@ public class GlobalConfigFile extends JavaAutoSavePluginConfig {
                 }
             }
         }
+
+        if (!StringUtils.isNullOrEmpty(this.instructions.get().getTimed().getPrefix())) {
+            secondaryPrefix.add(this.instructions.get().getTimed().getPrefix());
+        } else {
+            for (Field field : this.instructions.get().getTimed().getClass().getFields()) {
+                try {
+                    if (field.getType() == String.class
+                            && !StringUtils.isNullOrEmpty((String) field.get(this.instructions.get().getTimed())))
+                        secondaryPrefix.add((String) field.get(this.instructions.get().getTimed()));
+                    else if (field.getType() == Set.class) {
+                        secondaryPrefix.addAll(
+                                ((Set<?>) field.get(this.instructions.get().getTimed())).stream()
+                                        .map(Object::toString)
+                                        .collect(Collectors.toList())
+                        );
+                    }
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
         this.instructions.get().setSecondaryPrefix(secondaryPrefix);
     }
 
