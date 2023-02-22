@@ -96,7 +96,7 @@ public class InstructionMsgEvent {
      */
     @KanriInsEvent(prefix = "tap"
             , regexp = "tapRegExp")
-    public int tap(int[] qqs, String num) {
+    public int tap(long[] qqs, String num) {
         int i;
         try {
             i = Integer.parseInt(num);
@@ -168,7 +168,7 @@ public class InstructionMsgEvent {
     @KanriInsEvent(prefix = "tag"
             , bot = {MemberPermission.OWNER}
             , regexp = "tagRegExp")
-    public int tag(int[] qqs, String tag) {
+    public int tag(long[] qqs, String tag) {
         if (StringUtils.isNullOrEmpty(tag)) {
             NormalMember normalMember = group.get(sender.getId());
             if (normalMember != null) {
@@ -330,7 +330,7 @@ public class InstructionMsgEvent {
     @KanriInsEvent(prefix = "withdraw"
             , sender = PERMISSION_LEVEL_DEPUTY_ADMIN
             , regexp = "withdrawRegExp")
-    public int withdraw(int[] qqs, String text) {
+    public int withdraw(long[] qqs, String text) {
         MessageSource messageSource = msg.get(MessageSource.Key);
         if (messageSource != null) try {
             MessageSource.recall(messageSource);
@@ -421,7 +421,7 @@ public class InstructionMsgEvent {
             , sender = PERMISSION_LEVEL_DEPUTY_ADMIN
             , bot = {MemberPermission.ADMINISTRATOR, MemberPermission.OWNER}
             , regexp = "kickRegExp")
-    public int kick(int[] qqs, String text) {
+    public int kick(long[] qqs, String text) {
         NormalMember senderMember = group.get(sender.getId());
         StringBuilder successMsg = new StringBuilder();
         for (long qq : qqs) {
