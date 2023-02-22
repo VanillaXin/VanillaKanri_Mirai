@@ -238,7 +238,7 @@ public class InstructionMsgEvent {
             , sender = PERMISSION_LEVEL_DEPUTY_ADMIN
             , bot = {MemberPermission.ADMINISTRATOR, MemberPermission.OWNER}
             , regexp = "loudRegExp")
-    public int loud(long[] qqs, String text) {
+    public int loud(@NotNull long[] qqs, String text) {
         StringBuilder rep = new StringBuilder();
         if (qqs.length == 1 && base.getAtAllId().contains(String.valueOf(qqs[0]))) {
             if (group.getSettings().isMuteAll()) {
@@ -276,7 +276,7 @@ public class InstructionMsgEvent {
             , sender = PERMISSION_LEVEL_DEPUTY_ADMIN
             , bot = {MemberPermission.ADMINISTRATOR, MemberPermission.OWNER}
             , regexp = "muteRegExp")
-    public int mute(long[] qqs, String time) {
+    public int mute(@NotNull long[] qqs, String time) {
         if (qqs.length == 1 && base.getAtAllId().contains(String.valueOf(qqs[0]))) {
             if (!group.getSettings().isMuteAll()) {
                 group.getSettings().setMuteAll(true);
@@ -418,7 +418,7 @@ public class InstructionMsgEvent {
             , sender = PERMISSION_LEVEL_DEPUTY_ADMIN
             , bot = {MemberPermission.ADMINISTRATOR, MemberPermission.OWNER}
             , regexp = "kickRegExp")
-    public int kick(long[] qqs, String text) {
+    public int kick(@NotNull long[] qqs, String text) {
         NormalMember senderMember = group.get(sender.getId());
         StringBuilder successMsg = new StringBuilder();
         for (long qq : qqs) {
