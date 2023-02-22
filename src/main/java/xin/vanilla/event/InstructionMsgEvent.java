@@ -133,8 +133,7 @@ public class InstructionMsgEvent {
      */
     @KanriInsEvent(prefix = "card"
             , sender = PERMISSION_LEVEL_DEPUTY_ADMIN
-            , bot = {MemberPermission.ADMINISTRATOR
-            , MemberPermission.OWNER}
+            , bot = {MemberPermission.ADMINISTRATOR, MemberPermission.OWNER}
             , regexp = "cardRegExp")
     public int card(@NotNull long[] qqs, String text) {
         StringBuilder rep = new StringBuilder();
@@ -237,8 +236,7 @@ public class InstructionMsgEvent {
      */
     @KanriInsEvent(prefix = "loud"
             , sender = PERMISSION_LEVEL_DEPUTY_ADMIN
-            , bot = {MemberPermission.ADMINISTRATOR
-            , MemberPermission.OWNER}
+            , bot = {MemberPermission.ADMINISTRATOR, MemberPermission.OWNER}
             , regexp = "loudRegExp")
     public int loud(long[] qqs, String text) {
         StringBuilder rep = new StringBuilder();
@@ -276,8 +274,7 @@ public class InstructionMsgEvent {
      */
     @KanriInsEvent(prefix = "mute"
             , sender = PERMISSION_LEVEL_DEPUTY_ADMIN
-            , bot = {MemberPermission.ADMINISTRATOR
-            , MemberPermission.OWNER}
+            , bot = {MemberPermission.ADMINISTRATOR, MemberPermission.OWNER}
             , regexp = "muteRegExp")
     public int mute(long[] qqs, String time) {
         if (qqs.length == 1 && base.getAtAllId().contains(String.valueOf(qqs[0]))) {
