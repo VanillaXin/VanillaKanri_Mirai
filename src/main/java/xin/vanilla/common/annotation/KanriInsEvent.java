@@ -10,7 +10,7 @@ import java.lang.annotation.*;
 /**
  * 标记一个群管指令方法
  * <p>
- * 参数列表必须为 int[] param1,String param2
+ * 参数列表必须为 long[] param1,String param2
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
