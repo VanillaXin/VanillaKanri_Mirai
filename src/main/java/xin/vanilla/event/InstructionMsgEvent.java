@@ -10,6 +10,7 @@ import net.mamoe.mirai.event.events.GroupMessageEvent;
 import net.mamoe.mirai.event.events.GroupTempMessageEvent;
 import net.mamoe.mirai.event.events.MessageEvent;
 import net.mamoe.mirai.message.data.*;
+import org.jetbrains.annotations.NotNull;
 import xin.vanilla.VanillaKanri;
 import xin.vanilla.common.annotation.KanriInsEvent;
 import xin.vanilla.entity.config.instruction.BaseInstructions;
@@ -88,29 +89,6 @@ public class InstructionMsgEvent {
      * @return 是否不继续执行事件监听, true: 不执行, false: 执行
      */
     public boolean run() {
-        int back;
-        // 判断是否指令消息(仅判断顶级前缀)
-        if (!VanillaUtils.isInstructionMsg(msg, false)) return false;
-
-        // 判断发送者有无操作机器人的权限
-        // if (!VanillaUtils.hasPermissionOrMore(bot, group, sender.getId(), PERMISSION_LEVEL_GROUPADMIN)) return false;
-
-        // 判断机器人是否群管
-        // if (!VanillaUtils.isGroupOwnerOrAdmin(group)) return false;
-
-        // 解析执行群管指令
-        if (event instanceof GroupMessageEvent) {
-            back = kanriIns();
-            if (back == RETURN_BREAK_TRUE) return true;
-            else if (back == RETURN_BREAK_FALSE) return false;
-        }
-
-        // 解析执行词库指令
-        back = keyIns();
-        if (back == RETURN_BREAK_TRUE) return true;
-        else if (back == RETURN_BREAK_FALSE) return false;
-
-
         return false;
     }
 
@@ -386,7 +364,7 @@ public class InstructionMsgEvent {
                     return RETURN_BREAK_FALSE;
 
                 //  kick <QQ> out
-                RegUtils reg = RegUtils.start().appendIg("kick [VA_CODE.QQS] out".replaceAll("\\s", "\\\\s")
+                RegUtils reg = RegUtils.start().appendIg(kanri.getKick().replaceAll("\\s", "\\\\s")
                                 .replace("[VA_CODE.QQS]", new RegUtils().groupIgByName("qq", RegUtils.REG_ATCODE).toString()))
                         .separator("?").groupIgByName("bool", "(?:0|1|真|假|是|否|true|false|y|n|Y|N)").appendIg("?")
                         .end();
@@ -530,8 +508,14 @@ public class InstructionMsgEvent {
         return RETURN_CONTINUE;
     }
 
-    @KanriInsEvent(prefix = "admin", sender = PERMISSION_LEVEL_SUPER_ADMIN, bot = MemberPermission.OWNER, regexp = "adminRegExp")
-    public int admin(long[] qqs, String text) {
+    /**
+     * 增删群管理员
+     */
+    @KanriInsEvent(prefix = "admin"
+            , sender = PERMISSION_LEVEL_SUPER_ADMIN
+            , bot = MemberPermission.OWNER
+            , regexp = "adminRegExp")
+    public int admin(@NotNull long[] qqs, String text) {
         boolean operation = base.getAdd().contains(text);
         StringBuilder rep = new StringBuilder();
         for (long qq : qqs) {
@@ -554,8 +538,15 @@ public class InstructionMsgEvent {
         return RETURN_BREAK_TRUE;
     }
 
-    @KanriInsEvent(prefix = "card", sender = PERMISSION_LEVEL_DEPUTY_ADMIN, bot = {MemberPermission.ADMINISTRATOR, MemberPermission.OWNER}, regexp = "cardRegExp")
-    public int card(long[] qqs, String text) {
+    /**
+     * 修改群名片
+     */
+    @KanriInsEvent(prefix = "card"
+            , sender = PERMISSION_LEVEL_DEPUTY_ADMIN
+            , bot = {MemberPermission.ADMINISTRATOR
+            , MemberPermission.OWNER}
+            , regexp = "cardRegExp")
+    public int card(@NotNull long[] qqs, String text) {
         StringBuilder rep = new StringBuilder();
         for (long qq : qqs) {
             rep.append(',');
@@ -582,17 +573,78 @@ public class InstructionMsgEvent {
     }
 
     /**
-     * 解析执行词库指令
+     * 解除禁言
      */
-    private int keyIns() {
-        // 判断是否词库管指令
-        if (delPrefix(keyword.getPrefix()))
-            return RETURN_CONTINUE;
-        String prefix = ins.substring(0, ins.indexOf(' '));
-        // TODO
-
-        return RETURN_CONTINUE;
+    @KanriInsEvent(prefix = "loud"
+            , sender = PERMISSION_LEVEL_DEPUTY_ADMIN
+            , bot = {MemberPermission.ADMINISTRATOR
+            , MemberPermission.OWNER}
+            , regexp = "loudRegExp")
+    public int loud(long[] qqs, String text) {
+        StringBuilder rep = new StringBuilder();
+        if (qqs.length == 1 && base.getAtAllId().contains(String.valueOf(qqs[0]))) {
+            if (group.getSettings().isMuteAll()) {
+                group.getSettings().setMuteAll(false);
+                Api.sendMessage(group, "已关闭全体禁言");
+            }
+        } else {
+            for (long qq : qqs) {
+                rep.append(',');
+                NormalMember normalMember = group.get(qq);
+                if (normalMember != null) {
+                    if (normalMember.isMuted()) {
+                        normalMember.unmute();
+                        rep.append(qq);
+                    }
+                }
+            }
+            if (!StringUtils.isNullOrEmpty(rep.toString())) {
+                if (rep.toString().equals(",")) {
+                    Api.sendMessage(group, "操作失败");
+                } else {
+                    Api.sendMessage(group, "已解除 " + rep.delete(0, 1) + " 的禁言");
+                }
+            } else {
+                Api.sendMessage(group, "待操作对象为空或未被禁言");
+            }
+        }
+        return RETURN_BREAK_TRUE;
     }
+
+    /**
+     * 设置群精华消息
+     */
+    @KanriInsEvent(prefix = "essence"
+            , sender = PERMISSION_LEVEL_DEPUTY_ADMIN
+            , bot = {MemberPermission.ADMINISTRATOR, MemberPermission.OWNER}
+            , regexp = "essenceRegExp")
+    public int essence(long[] qqs, String text) {
+        if (kanri.getEssence().contains(ins) || base.getAdd().contains(text)) {
+            QuoteReply quoteReply = msg.get(QuoteReply.Key);
+            if (quoteReply != null) {
+                if (group.setEssenceMessage(quoteReply.getSource())) {
+                    Api.sendMessage(group, new MessageChainBuilder().append(quoteReply).append("已将该消息设为精华").build());
+                } else {
+                    Api.sendMessage(group, "精华消息设置失败");
+                }
+            }
+        }
+        // else if (base.getDelete().contains(text)) {
+        // 未发现取消精华消息接口
+        // QuoteReply quoteReply = msg.get(QuoteReply.Key);
+        // if (quoteReply != null) {
+        // }
+        // }
+        else {
+            OnlineMessageSource.Outgoing source = Api.sendMessage(group, text).getSource();
+            if (!group.setEssenceMessage(source)) {
+                Api.sendMessage(group, "精华消息设置失败");
+            }
+        }
+        return RETURN_BREAK_TRUE;
+    }
+
+    // region 私有方法
 
     /**
      * 删除顶级指令前缀
@@ -658,6 +710,9 @@ public class InstructionMsgEvent {
                 .replace("\\t", "\t");
     }
 
+    /**
+     * 根据id撤回群消息
+     */
     private void recall(int id) {
         MsgCache msgCache = Va.getMessageCache().getMsgCache(id + "|", group.getId(), MSG_TYPE_GROUP);
         if (msgCache != null) {
@@ -673,4 +728,6 @@ public class InstructionMsgEvent {
             }
         }
     }
+
+    // endregion
 }

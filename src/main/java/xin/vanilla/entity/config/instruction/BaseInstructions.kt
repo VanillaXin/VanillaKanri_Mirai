@@ -22,4 +22,6 @@ class BaseInstructions {
     var global: Set<String> = mutableSetOf("all")
 
     var atAll: Set<String> = mutableSetOf("@全体成员", "@全体", "@所有人", AtAll.toString())
+
+    var atAllId: Set<String> = mutableSetOf("-2333")
 }

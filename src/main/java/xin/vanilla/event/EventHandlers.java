@@ -4,6 +4,7 @@ import kotlin.coroutines.CoroutineContext;
 import net.mamoe.mirai.contact.MemberPermission;
 import net.mamoe.mirai.event.*;
 import net.mamoe.mirai.event.events.*;
+import net.mamoe.mirai.message.data.AtAll;
 import org.jetbrains.annotations.NotNull;
 import xin.vanilla.common.RegExpConfig;
 import xin.vanilla.common.annotation.KanriInsEvent;
@@ -88,15 +89,22 @@ public class EventHandlers extends SimpleListenerHost {
                         if (kanriInsMethod.getName().equalsIgnoreCase(StringUtils.METHOD_GET_PREFIX + prefixName)) {
                             try {
                                 Object obj = kanriInsMethod.invoke(insEvent.getKanri());
-                                Set<String> values = new HashSet<>();
-                                if (obj instanceof Set) {
-                                    values.addAll((Set<String>) obj);
-                                } else if (obj instanceof String) {
-                                    values.add((String) obj);
-                                }
-                                if (values.contains(prefix)) {
-                                    success = true;
-                                    break;
+                                if (prefixName.equalsIgnoreCase("kick")) {
+                                    if (((String) obj).startsWith(prefix)) {
+                                        success = true;
+                                        break;
+                                    }
+                                } else {
+                                    Set<String> values = new HashSet<>();
+                                    if (obj instanceof Set) {
+                                        values.addAll((Set<String>) obj);
+                                    } else if (obj instanceof String) {
+                                        values.add((String) obj);
+                                    }
+                                    if (values.contains(prefix)) {
+                                        success = true;
+                                        break;
+                                    }
                                 }
                             } catch (IllegalAccessException | InvocationTargetException e) {
                                 throw new RuntimeException(e);
@@ -123,35 +131,36 @@ public class EventHandlers extends SimpleListenerHost {
 
                 // 解析正则表达式
                 String regexpName = annotation.regexp();
-                for (Method regMethod : RegExpConfig.class.getMethods()) {
-                    if (regMethod.getName().equalsIgnoreCase(regexpName)) {
+                try {
+                    Method regMethod = RegExpConfig.class.getMethod(regexpName, String.class);
+                    RegUtils reg = (RegUtils) regMethod.invoke(new RegExpConfig(), prefix);
+                    if (reg.matcher(insEvent.getIns()).find()) {
+                        String operation;
+                        long[] qqs;
                         try {
-                            RegUtils reg = (RegUtils) regMethod.invoke(new RegExpConfig(), prefix);
-                            if (reg.matcher(insEvent.getIns()).find()) {
-                                String operation;
-                                long[] qqs;
-                                try {
-                                    operation = reg.getMatcher().group("operation");
-                                } catch (IllegalStateException e) {
-                                    operation = "";
-                                }
-                                try {
-                                    qqs = VanillaUtils.getQQFromAt(reg.getMatcher().group("qq"));
-                                } catch (IllegalStateException e) {
-                                    qqs = new long[]{};
-                                }
-                                int back = (int) method.invoke(insEvent, qqs, operation);
-                                if (back == InstructionMsgEvent.RETURN_BREAK_TRUE) {
-                                    event.intercept();
-                                    return;
-                                } else if (back == InstructionMsgEvent.RETURN_BREAK_FALSE)
-                                    return;
-                                else break;
-                            }
-                        } catch (IllegalAccessException | InvocationTargetException e) {
-                            throw new RuntimeException(e);
+                            operation = reg.getMatcher().group("operation");
+                        } catch (IllegalStateException e) {
+                            operation = "";
                         }
+                        try {
+                            String qqString = reg.getMatcher().group("qq");
+                            if (qqString.equals(AtAll.INSTANCE.toString()) || insEvent.getBase().getAtAll().contains(qqString)) {
+                                qqs = insEvent.getBase().getAtAllId().stream().limit(1).mapToLong(Long::parseLong).toArray();
+                            } else {
+                                qqs = VanillaUtils.getQQFromAt(qqString);
+                            }
+                        } catch (IllegalStateException e) {
+                            qqs = new long[]{};
+                        }
+                        int back = (int) method.invoke(insEvent, qqs, operation);
+                        if (back == InstructionMsgEvent.RETURN_BREAK_TRUE) {
+                            event.intercept();
+                            return;
+                        } else if (back == InstructionMsgEvent.RETURN_BREAK_FALSE)
+                            return;
                     }
+                } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+                    throw new RuntimeException(e);
                 }
 
             } else if (method.isAnnotationPresent(KeywordInsEvent.class)) {

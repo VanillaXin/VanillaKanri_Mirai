@@ -33,5 +33,5 @@ public @interface KanriInsEvent {
      * <p>
      * 对应{@link RegExpConfig}中的方法名
      */
-    String regexp() default "";
+    String regexp() default "defaultRegExp";
 }

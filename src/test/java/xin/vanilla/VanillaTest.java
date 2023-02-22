@@ -1,6 +1,7 @@
 package xin.vanilla;
 
 import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
+import net.mamoe.mirai.message.data.ForwardMessageBuilder;
 import org.junit.Test;
 import xin.vanilla.entity.TestTable;
 import xin.vanilla.util.StringUtils;
