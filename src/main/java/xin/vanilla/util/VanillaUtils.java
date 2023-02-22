@@ -6,9 +6,7 @@ import net.mamoe.mirai.contact.Member;
 import net.mamoe.mirai.contact.MemberPermission;
 import net.mamoe.mirai.contact.NormalMember;
 import net.mamoe.mirai.message.code.MiraiCode;
-import net.mamoe.mirai.message.data.At;
-import net.mamoe.mirai.message.data.MessageChain;
-import net.mamoe.mirai.message.data.SingleMessage;
+import net.mamoe.mirai.message.data.*;
 import xin.vanilla.VanillaKanri;
 import xin.vanilla.enumeration.PermissionLevel;
 
@@ -304,6 +302,8 @@ public class VanillaUtils {
             } catch (Exception e) {
                 return new long[0];
             }
+        } catch (NullPointerException e) {
+            return new long[0];
         }
     }
 
@@ -337,5 +337,22 @@ public class VanillaUtils {
             return (boolean) Va.getDataCache().get(key);
         }
         return false;
+    }
+
+    /**
+     * 将消息转为Mirai码 <strong>慎用</strong>
+     * <p>
+     * 不转码文本消息中的特殊字符
+     */
+    public static String messageToString(MessageChain message) {
+        StringBuilder stringBuilder = new StringBuilder();
+        for (SingleMessage singleMessage : message) {
+            if (singleMessage instanceof PlainText) {
+                stringBuilder.append(singleMessage.contentToString());
+            } else {
+                stringBuilder.append(new MessageChainBuilder().append(singleMessage).build().serializeToMiraiCode());
+            }
+        }
+        return stringBuilder.toString();
     }
 }

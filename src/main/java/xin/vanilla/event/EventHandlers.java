@@ -5,6 +5,7 @@ import net.mamoe.mirai.contact.MemberPermission;
 import net.mamoe.mirai.event.*;
 import net.mamoe.mirai.event.events.*;
 import org.jetbrains.annotations.NotNull;
+import xin.vanilla.common.RegExpConfig;
 import xin.vanilla.common.annotation.KanriInsEvent;
 import xin.vanilla.common.annotation.KeywordInsEvent;
 import xin.vanilla.common.annotation.TimedInsEvent;
@@ -19,8 +20,10 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class EventHandlers extends SimpleListenerHost {
     @Override
@@ -47,85 +50,118 @@ public class EventHandlers extends SimpleListenerHost {
      * 监听指令消息
      */
     @EventHandler(priority = EventPriority.HIGH)
-    public ListeningStatus onMessage(@NotNull MessageEvent event) {
+    public void onMessage(@NotNull MessageEvent event) {
         InstructionMsgEvent insEvent = new InstructionMsgEvent(event);
 
-        // 未完成, 完成后再移除该判断语句
-        if (false) {
-            // 删除顶级前缀以及二级前缀
-            if (!StringUtils.isNullOrEmpty(insEvent.getKanri().getPrefix())
-                    && insEvent.getIns().startsWith(insEvent.getKanri().getPrefix())) {
-                if (insEvent.delPrefix(insEvent.getKanri().getPrefix())) return ListeningStatus.STOPPED;
-            } else if (!StringUtils.isNullOrEmpty(insEvent.getKeyword().getPrefix())
-                    && insEvent.getIns().startsWith(insEvent.getKeyword().getPrefix())) {
-                if (insEvent.delPrefix(insEvent.getKeyword().getPrefix())) return ListeningStatus.STOPPED;
-            } else if (!StringUtils.isNullOrEmpty(insEvent.getTimed().getPrefix())
-                    && insEvent.getIns().startsWith(insEvent.getTimed().getPrefix())) {
-                if (insEvent.delPrefix(insEvent.getTimed().getPrefix())) return ListeningStatus.STOPPED;
-            } else {
-                if (insEvent.delPrefix("")) return ListeningStatus.STOPPED;
-            }
+        // 判断是否群管指令
+        if (!insEvent.isKanriIns()) return;
 
-            // 三级前缀
-            String prefix;
-            int index = RegUtils.containsRegSeparator(insEvent.getIns());
-            if (index >= 0) prefix = insEvent.getIns().substring(0, index);
-            else prefix = insEvent.getIns();
-
-            for (Method method : insEvent.getClass().getMethods()) {
-                if (method.isAnnotationPresent(KanriInsEvent.class)) {
-                    System.out.println(method);
-                    KanriInsEvent annotation = method.getAnnotation(KanriInsEvent.class);
-
-                    // 判断三级前缀是否满足
-                    String prefixName = annotation.prefix();
-                    if (!StringUtils.isNullOrEmpty(prefixName)) {
-                        boolean success = false;
-                        for (Method method1 : KanriInstructions.class.getMethods()) {
-                            if (method1.getName().equalsIgnoreCase(StringUtils.METHOD_GET_PREFIX + prefixName)) {
-                                try {
-                                    Object obj = method1.invoke(insEvent.getKanri());
-                                    Set<String> values = new HashSet<>();
-                                    if (obj instanceof Set) {
-                                        values.addAll((Set<String>) obj);
-                                    } else if (obj instanceof String) {
-                                        values.add((String) obj);
-                                    }
-                                    if (values.contains(prefix)) {
-                                        success = true;
-                                        break;
-                                    }
-                                } catch (IllegalAccessException | InvocationTargetException e) {
-                                    throw new RuntimeException(e);
-                                }
-                            }
-                        }
-                        if (!success) return ListeningStatus.STOPPED;
-                    }
-
-                    // 判断发送者是否拥有权限
-                    PermissionLevel senderLevel = annotation.sender();
-                    if (!VanillaUtils.hasPermissionOrMore(insEvent.getBot(), insEvent.getGroup(), insEvent.getSender().getId(), senderLevel))
-                        return ListeningStatus.LISTENING;
-
-
-                    // TODO 解析注解值
-                    MemberPermission[] botLevel = annotation.bot();
-                    String regexpName = annotation.regexp();
-
-                } else if (method.isAnnotationPresent(KeywordInsEvent.class)) {
-
-                } else if (method.isAnnotationPresent(TimedInsEvent.class)) {
-
-                }
-            }
+        // 删除二级前缀
+        if (!StringUtils.isNullOrEmpty(insEvent.getKanri().getPrefix())
+                && insEvent.getIns().startsWith(insEvent.getKanri().getPrefix())) {
+            if (insEvent.delPrefix(insEvent.getKanri().getPrefix())) return;
+        } else if (!StringUtils.isNullOrEmpty(insEvent.getKeyword().getPrefix())
+                && insEvent.getIns().startsWith(insEvent.getKeyword().getPrefix())) {
+            if (insEvent.delPrefix(insEvent.getKeyword().getPrefix())) return;
+        } else if (!StringUtils.isNullOrEmpty(insEvent.getTimed().getPrefix())
+                && insEvent.getIns().startsWith(insEvent.getTimed().getPrefix())) {
+            if (insEvent.delPrefix(insEvent.getTimed().getPrefix())) return;
+        } else {
+            if (insEvent.delPrefix("")) return;
         }
 
+        // 三级前缀
+        String prefix;
+        int index = RegUtils.containsRegSeparator(insEvent.getIns());
+        if (index >= 0) prefix = insEvent.getIns().substring(0, index);
+        else prefix = insEvent.getIns();
 
-        if (insEvent.run()) {
-            return ListeningStatus.STOPPED;
-        } else {
-            return ListeningStatus.LISTENING;
+        for (Method method : insEvent.getClass().getMethods()) {
+            if (method.isAnnotationPresent(KanriInsEvent.class)) {
+                KanriInsEvent annotation = method.getAnnotation(KanriInsEvent.class);
+
+                // 判断三级前缀是否满足
+                String prefixName = annotation.prefix();
+                if (!StringUtils.isNullOrEmpty(prefixName)) {
+                    boolean success = false;
+                    for (Method kanriInsMethod : KanriInstructions.class.getMethods()) {
+                        if (kanriInsMethod.getName().equalsIgnoreCase(StringUtils.METHOD_GET_PREFIX + prefixName)) {
+                            try {
+                                Object obj = kanriInsMethod.invoke(insEvent.getKanri());
+                                Set<String> values = new HashSet<>();
+                                if (obj instanceof Set) {
+                                    values.addAll((Set<String>) obj);
+                                } else if (obj instanceof String) {
+                                    values.add((String) obj);
+                                }
+                                if (values.contains(prefix)) {
+                                    success = true;
+                                    break;
+                                }
+                            } catch (IllegalAccessException | InvocationTargetException e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
+                    }
+                    if (!success) continue;
+                }
+
+                // 判断发送者是否拥有权限
+                PermissionLevel senderLevel = annotation.sender();
+                if (!VanillaUtils.hasPermissionOrMore(insEvent.getBot(), insEvent.getGroup(), insEvent.getSender().getId(), senderLevel)) {
+                    continue;
+                }
+
+                // 判断机器人是否有对应权限
+                if (insEvent.getGroup() != null) {
+                    MemberPermission[] botLevel = annotation.bot();
+                    MemberPermission botPermission = insEvent.getGroup().getBotPermission();
+                    if (!Arrays.stream(botLevel).collect(Collectors.toList()).contains(botPermission)) {
+                        continue;
+                    }
+                }
+
+                // 解析正则表达式
+                String regexpName = annotation.regexp();
+                for (Method regMethod : RegExpConfig.class.getMethods()) {
+                    if (regMethod.getName().equalsIgnoreCase(regexpName)) {
+                        try {
+                            RegUtils reg = (RegUtils) regMethod.invoke(new RegExpConfig(), prefix);
+                            if (reg.matcher(insEvent.getIns()).find()) {
+                                String operation;
+                                long[] qqs;
+                                try {
+                                    operation = reg.getMatcher().group("operation");
+                                } catch (IllegalStateException e) {
+                                    operation = "";
+                                }
+                                try {
+                                    qqs = VanillaUtils.getQQFromAt(reg.getMatcher().group("qq"));
+                                } catch (IllegalStateException e) {
+                                    qqs = new long[]{};
+                                }
+                                int back = (int) method.invoke(insEvent, qqs, operation);
+                                if (back == InstructionMsgEvent.RETURN_BREAK_TRUE) {
+                                    event.intercept();
+                                    return;
+                                } else if (back == InstructionMsgEvent.RETURN_BREAK_FALSE)
+                                    return;
+                                else break;
+                            }
+                        } catch (IllegalAccessException | InvocationTargetException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                }
+
+            } else if (method.isAnnotationPresent(KeywordInsEvent.class)) {
+                // TODO 解析关键词指令
+
+            } else if (method.isAnnotationPresent(TimedInsEvent.class)) {
+                // TODO 解析定时任务指令
+
+            }
+
         }
     }
 

@@ -29,9 +29,22 @@ import static xin.vanilla.enumeration.PermissionLevel.PERMISSION_LEVEL_SUPER_ADM
 import static xin.vanilla.mapper.impl.MessageCacheImpl.MSG_TYPE_GROUP;
 
 public class InstructionMsgEvent {
-    private static final int RETURN_CONTINUE = 1;
-    private static final int RETURN_BREAK_TRUE = 2;
-    private static final int RETURN_BREAK_FALSE = 3;
+    /**
+     * 跳过本次消息事件
+     * <p>
+     * 并交给插件内其他事件解析器处理
+     */
+    public static final int RETURN_CONTINUE = 1;
+    /**
+     * 结束本次消息事件
+     */
+    public static final int RETURN_BREAK_TRUE = 2;
+    /**
+     * 跳过本次消息事件
+     * <p>
+     * 并交给其他插件处理
+     */
+    public static final int RETURN_BREAK_FALSE = 3;
 
     private final VanillaKanri Va = VanillaKanri.INSTANCE;
     @Getter
@@ -56,7 +69,9 @@ public class InstructionMsgEvent {
     @Getter
     private final BaseInstructions base = Va.getGlobalConfig().getInstructions().getBase();
     @Getter
-    private String ins = "";
+    private String ins;
+    @Getter
+    private boolean kanriIns = false;
 
     public InstructionMsgEvent(MessageEvent event) {
         this.event = event;
@@ -66,6 +81,7 @@ public class InstructionMsgEvent {
         this.sender = this.event.getSender();
         this.bot = this.event.getBot();
         this.time = this.event.getTime();
+        this.ins = delTopPrefix(VanillaUtils.messageToString(this.msg));
     }
 
     /**
@@ -515,7 +531,7 @@ public class InstructionMsgEvent {
     }
 
     @KanriInsEvent(prefix = "admin", sender = PERMISSION_LEVEL_SUPER_ADMIN, bot = MemberPermission.OWNER, regexp = "adminRegExp")
-    private int admin(long[] qqs, String text) {
+    public int admin(long[] qqs, String text) {
         boolean operation = base.getAdd().contains(text);
         StringBuilder rep = new StringBuilder();
         for (long qq : qqs) {
@@ -581,21 +597,26 @@ public class InstructionMsgEvent {
     /**
      * 删除顶级指令前缀
      */
-    private String delTopPrefix() {
+    private String delTopPrefix(String text) {
         String prefix = Va.getGlobalConfig().getInstructions().getPrefix();
-        if (StringUtils.isNullOrEmpty(prefix)) return msg.serializeToMiraiCode().trim();
-        else return msg.serializeToMiraiCode().substring(prefix.length()).trim();
+        if (StringUtils.isNullOrEmpty(prefix)) {
+            this.kanriIns = true;
+        } else if (text.startsWith(prefix)) {
+            this.kanriIns = true;
+            return text.substring(prefix.length()).trim();
+        }
+        return msg.serializeToMiraiCode().trim();
     }
 
     /**
-     * 先删除顶级前缀, 再判断是否包含前缀prefix
+     * 判断是否包含前缀prefix
      * <p>
      * 并将删除前缀prefix后的结果保存至ins
      *
      * @return 是否失败
      */
     public boolean delPrefix(String prefix) {
-        String s = delTopPrefix();
+        String s = this.ins;
         if (StringUtils.isNullOrEmpty(prefix)) {
             setIns(s);
             return StringUtils.isNullOrEmpty(this.ins);

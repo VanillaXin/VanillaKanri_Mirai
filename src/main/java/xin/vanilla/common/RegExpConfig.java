@@ -44,6 +44,6 @@ public class RegExpConfig {
         //  card <QQ> [CONTENT]
         return RegUtils.start().groupNon(prefix).separator()
                 .groupIgByName("qq", RegUtils.REG_ATCODE).separator("?")
-                .groupIgByName("card", ".*?").end();
+                .groupIgByName("operation", ".*?").end();
     }
 }
