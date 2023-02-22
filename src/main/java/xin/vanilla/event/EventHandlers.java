@@ -149,7 +149,7 @@ public class EventHandlers extends SimpleListenerHost {
                             } else {
                                 qqs = VanillaUtils.getQQFromAt(qqString);
                             }
-                        } catch (IllegalStateException e) {
+                        } catch (IllegalStateException | IllegalArgumentException e) {
                             qqs = new long[]{};
                         }
                         int back = (int) method.invoke(insEvent, qqs, operation);

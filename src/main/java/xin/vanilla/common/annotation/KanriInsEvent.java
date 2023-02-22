@@ -24,7 +24,7 @@ public @interface KanriInsEvent {
     /**
      * 机器人群内权限
      */
-    MemberPermission[] bot() default MemberPermission.MEMBER;
+    MemberPermission[] bot() default {MemberPermission.MEMBER, MemberPermission.ADMINISTRATOR, MemberPermission.OWNER};
 
     /**
      * 三级前缀 属性名
