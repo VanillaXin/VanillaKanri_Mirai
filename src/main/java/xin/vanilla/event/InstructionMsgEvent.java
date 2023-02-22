@@ -303,7 +303,7 @@ public class InstructionMsgEvent {
                     // 比较操作者与被操作者权限
                     if (VanillaUtils.equalsPermission(bot, group, senderMember.getId(), normalMember.getId())) {
                         try {
-                            normalMember.mute(Math.round(Float.parseFloat(time)) * 60);
+                            normalMember.mute(Math.round(Float.parseFloat(time) * 60));
                             successMsg.append(qq);
                         } catch (NumberFormatException ignored) {
                         }
