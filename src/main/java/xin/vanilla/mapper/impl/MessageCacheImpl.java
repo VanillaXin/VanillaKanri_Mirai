@@ -267,7 +267,7 @@ public class MessageCacheImpl implements MessageCache {
                     .from(msgType + getTableName())
                     .where(MsgCache::getTarget).eq(target);
 
-            if (sender > 0) query.and(MsgCache::getSender).eq(target);
+            if (sender > 0) query.and(MsgCache::getSender).eq(sender);
             if (time > 0) query.and(MsgCache::getTime).eq(time);
             if (!no.contains("|"))
                 query.and(MsgCache::getNos).like("%" + no + "%|%");
