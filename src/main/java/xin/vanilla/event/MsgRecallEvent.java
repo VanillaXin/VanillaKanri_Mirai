@@ -63,11 +63,11 @@ public class MsgRecallEvent extends BaseMsgEvent {
 
     public void run() {
         if (sender.getId() == bot.getId()) return;
-        // 获取该机器人账号下的某个群对象
         List<Long> groups = Va.getGlobalConfig().getBackGroup().get();
         // 后台管理群撤回的消息不进行转发
         if (this.group != null && groups.contains(this.group.getId())) return;
         for (Long groupId : groups) {
+            // 获取该机器人账号下的某个群对象
             Group backGroup = Bot.getInstance(bot.getId()).getGroup(groupId);
             assert backGroup != null;
             StringBuilder stringBuilder = new StringBuilder();
