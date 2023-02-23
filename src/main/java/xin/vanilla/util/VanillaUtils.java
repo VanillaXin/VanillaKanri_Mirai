@@ -355,4 +355,20 @@ public class VanillaUtils {
         }
         return stringBuilder.toString();
     }
+
+    /**
+     * TODO
+     * 将消息序列化为vanilla码
+     */
+    public static String serializeToVanillaCode(MessageChain msg) {
+        return "";
+    }
+
+    /**
+     * TODO
+     * 将vanilla码反序列化为消息
+     */
+    public static MessageChain deserializeVanillaCode(String msg) {
+        return null;
+    }
 }
