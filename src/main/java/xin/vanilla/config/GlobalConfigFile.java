@@ -14,10 +14,7 @@ import xin.vanilla.entity.config.instruction.Instructions;
 import xin.vanilla.util.StringUtils;
 
 import java.lang.reflect.Field;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -27,9 +24,23 @@ import java.util.stream.Collectors;
  * 请使用getter/setter
  */
 public class GlobalConfigFile extends JavaAutoSavePluginConfig {
+    /**
+     * MC RCON 配置
+     */
     public SerializerAwareValue<String> mc_rcon_ip = value("mc_rcon_ip", "127.0.0.1");
     public SerializerAwareValue<Integer> mc_rcon_port = value("mc_rcon_port", 25575);
     public SerializerAwareValue<String> mc_rcon_psw = value("mc_rcon_psw", "password");
+
+    /**
+     * 后台管理群
+     */
+    @Getter
+    @Setter
+    public SerializerAwareValue<List<Long>> backGroup = typedValue("backGroup", createKType(List.class, createKType(Long.class)));
+
+    /**
+     * 涩图路径
+     */
     @Getter
     @Setter
     public SerializerAwareValue<String> hentai_path = value("hentai_path", "");
