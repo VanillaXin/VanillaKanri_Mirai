@@ -450,7 +450,7 @@ public class VanillaUtils {
                 }
                 for (Node node : forwardMsg.getNodeList()) {
                     String messageChain = node.getMessageChain();
-                    if (messageChain.startsWith("{forward}")) {
+                    if (messageChain.startsWith("(:vacode:){forward}")) {
                         forwardMessageBuilder.add(node.getSenderId(), node.getSenderName(), deserializeVanillaCode(messageChain), node.getTime());
                     } else {
                         forwardMessageBuilder.add(node.getSenderId(), node.getSenderName(), MiraiCode.deserializeMiraiCode(messageChain), node.getTime());
