@@ -1,7 +1,10 @@
 package xin.vanilla;
 
+import com.alibaba.fastjson2.JSON;
 import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
 import org.junit.Test;
+import xin.vanilla.entity.TestEntities;
+import xin.vanilla.entity.TestEntity;
 import xin.vanilla.entity.TestTable;
 import xin.vanilla.util.StringUtils;
 import xin.vanilla.util.sqlite.SqliteUtil;
@@ -11,6 +14,7 @@ import xin.vanilla.util.sqlite.statement.Statement;
 
 import java.security.SecureRandom;
 import java.sql.SQLException;
+import java.util.ArrayList;
 
 public class VanillaTest {
     @Test
@@ -67,8 +71,31 @@ public class VanillaTest {
     }
 
     @Test
-    public void test() {
+    public void test01() {
+        TestEntity testEntity = new TestEntity();
+        testEntity.setName("TsukiMaaii");
+        testEntity.setAge(19);
+        String s = JSON.toJSONString(testEntity);
 
+        TestEntity testEntity1 = JSON.parseObject(s, TestEntity.class);
+        System.out.println(testEntity1);
+
+    }
+
+    @Test
+    public void test02() {
+        TestEntities testEntities = new TestEntities();
+        testEntities.setEntities(new ArrayList<TestEntity>() {{
+            add(new TestEntity("123", 456));
+            add(new TestEntity("789", 1));
+            add(new TestEntity("012", 2));
+        }});
+        testEntities.setPage(233);
+        testEntities.setTag("mmp");
+        String s = JSON.toJSONString(testEntities);
+
+        TestEntities testEntities1 = JSON.parseObject(s, TestEntities.class);
+        System.out.println(testEntities1);
     }
 
 }

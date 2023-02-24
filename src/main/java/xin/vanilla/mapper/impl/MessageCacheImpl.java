@@ -6,6 +6,7 @@ import net.mamoe.mirai.message.data.*;
 import xin.vanilla.entity.data.MsgCache;
 import xin.vanilla.mapper.MessageCache;
 import xin.vanilla.util.StringUtils;
+import xin.vanilla.util.VanillaUtils;
 import xin.vanilla.util.sqlite.SqliteUtil;
 import xin.vanilla.util.sqlite.statement.InsertStatement;
 import xin.vanilla.util.sqlite.statement.QueryStatement;
@@ -94,9 +95,11 @@ public class MessageCacheImpl implements MessageCache {
     @Override
     public void addMsg(Contact contact, OnlineMessageSource.Outgoing outgoing, Message msg) {
         String table;
-        if (contact instanceof Group)
+        int f = 1;
+        if (contact instanceof Group) {
             table = MSG_TYPE_GROUP + getTableName();
-        else if (contact instanceof Friend)
+            f = -1;
+        } else if (contact instanceof Friend)
             table = MSG_TYPE_FRIEND + getTableName();
         else if (contact instanceof Member)
             table = MSG_TYPE_MEMBER + getTableName();
@@ -105,7 +108,7 @@ public class MessageCacheImpl implements MessageCache {
         else return;
 
         long targetId = outgoing.getTargetId();
-        long sender = outgoing.getFromId();
+        long sender = outgoing.getFromId() * f;
         long botId = outgoing.getBot().getId();
         int[] ids = outgoing.getIds();
         int[] internalIds = outgoing.getInternalIds();
@@ -116,7 +119,7 @@ public class MessageCacheImpl implements MessageCache {
     private void addMsg(MessageChain msg, int time, String table, long target, long sender, int[] ids, int[] internalIds, long botId) {
         createTable(table);
         String nos = StringUtils.toString(ids) + "|" + StringUtils.toString(internalIds);
-        String msgString = msg.serializeToMiraiCode();
+        String msgString = VanillaUtils.serializeToVanillaCode(msg, botId, sender);
 
         if (msgString.equals("")) {
             MarketFace marketFace = msg.get(MarketFace.Key);
@@ -135,7 +138,7 @@ public class MessageCacheImpl implements MessageCache {
         InsertStatement insert = InsertStatement.produce(table)
                 .put(MsgCache::getNos, nos)
                 .put(MsgCache::getBot, botId)
-                .put(MsgCache::getSender, sender)
+                .put(MsgCache::getSender, Math.abs(sender))
                 .put(MsgCache::getTarget, target)
                 .put(MsgCache::getTime, time)
                 .put(MsgCache::getMsg, msgString);
@@ -145,6 +148,7 @@ public class MessageCacheImpl implements MessageCache {
 
     private void addMsg(MessageChain msg, MessageSource source, int time, String table, long target) {
         long sender = source.getFromId();
+        if (target != sender) sender = -sender;
         int[] ids = source.getIds();
         int[] internalIds = source.getInternalIds();
         long botId = source.getBotId();
@@ -183,7 +187,7 @@ public class MessageCacheImpl implements MessageCache {
 
     @Override
     public MessageChain getMsgChain(String no, long sender, long target, long time, String type) {
-        return MiraiCode.deserializeMiraiCode(getMsgMiraiCode(no, sender, target, time, type));
+        return VanillaUtils.deserializeVanillaCode(getMsgMiraiCode(no, sender, target, time, type));
     }
 
     @Override
