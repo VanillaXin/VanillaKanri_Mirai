@@ -98,4 +98,9 @@ public class VanillaTest {
         System.out.println(testEntities1);
     }
 
+    @Test
+    public void test03() {
+
+    }
+
 }

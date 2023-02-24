@@ -276,8 +276,7 @@ public class VanillaUtils {
      * @param level 权限等级 例: PERMISSION_LEVEL_BOTADMIN
      */
     public static boolean hasPermissionOrMore(Bot bot, Group group, long qq, PermissionLevel level) {
-        if (level == PermissionLevel.PERMISSION_LEVEL_SUPER_OWNER && bot != null)
-            return isSuperOwner(bot, qq);
+        if (level == PermissionLevel.PERMISSION_LEVEL_SUPER_OWNER && bot != null) return isSuperOwner(bot, qq);
         else return getPermissionLevel(bot, group, qq) >= level.getLevel();
     }
 
@@ -383,24 +382,25 @@ public class VanillaUtils {
                 node.setSenderId(o.getSenderId());
                 node.setSenderName(o.getSenderName());
                 node.setTime(o.getTime());
-                node.setMessageChain(o.getMessageChain().serializeToMiraiCode());
+                if (o.getMessageChain().get(ForwardMessage.Key) != null) {
+                    node.setMessageChain(serializeToVanillaCode(o.getMessageChain(), bot, sender, target));
+                } else {
+                    node.setMessageChain(o.getMessageChain().serializeToMiraiCode());
+                }
                 return node;
             }).collect(Collectors.toList()));
 
             forwardMsg.setBot(bot);
             forwardMsg.setUser(sender);
-            if (bot != target)
-                forwardMsg.setGroup(target);
+            if (bot != target) forwardMsg.setGroup(target);
             msgString = "(:vacode:){forward}" + JSON.toJSONString(forwardMsg);
 
         } else if (audio != null) {
             msgString = audio.toString();
         } else {
             msgString = msg.serializeToMiraiCode();
-            if (msgString.startsWith("(:vacode:)"))
-                msgString = msgString.replace("(:vacode:)", "\\(:vacode:\\)");
+            if (msgString.startsWith("(:vacode:)")) msgString = msgString.replace("(:vacode:)", "\\(:vacode:\\)");
         }
-        System.out.println(msgString);
         return msgString;
     }
 
@@ -449,7 +449,12 @@ public class VanillaUtils {
                     forwardMessageBuilder = new ForwardMessageBuilder(user);
                 }
                 for (Node node : forwardMsg.getNodeList()) {
-                    forwardMessageBuilder.add(node.getSenderId(), node.getSenderName(), MiraiCode.deserializeMiraiCode(node.getMessageChain()), node.getTime());
+                    String messageChain = node.getMessageChain();
+                    if (messageChain.startsWith("{forward}")) {
+                        forwardMessageBuilder.add(node.getSenderId(), node.getSenderName(), deserializeVanillaCode(messageChain), node.getTime());
+                    } else {
+                        forwardMessageBuilder.add(node.getSenderId(), node.getSenderName(), MiraiCode.deserializeMiraiCode(messageChain), node.getTime());
+                    }
                 }
                 forwardMessageBuilder.setDisplayStrategy(new ForwardMessage.DisplayStrategy() {
                     @NotNull
@@ -484,8 +489,7 @@ public class VanillaUtils {
                 });
                 return new MessageChainBuilder().append(forwardMessageBuilder.build()).build();
             }
-        } else if (msg.startsWith("\\(:vacode:\\)"))
-            msg = msg.replace("\\(:vacode:\\)", "(:vacode:)");
+        } else if (msg.startsWith("\\(:vacode:\\)")) msg = msg.replace("\\(:vacode:\\)", "(:vacode:)");
         return MiraiCode.deserializeMiraiCode(msg);
     }
 }
