@@ -1,6 +1,8 @@
 package xin.vanilla.util;
 
 import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONArray;
+import com.alibaba.fastjson2.JSONObject;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.contact.*;
 import net.mamoe.mirai.message.code.MiraiCode;
@@ -11,10 +13,7 @@ import xin.vanilla.entity.data.ForwardMsg;
 import xin.vanilla.entity.data.Node;
 import xin.vanilla.enumeration.PermissionLevel;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static xin.vanilla.enumeration.PermissionLevel.*;
@@ -361,10 +360,8 @@ public class VanillaUtils {
 
     /**
      * 将消息序列化为vanilla码
-     *
-     * @param sender 群号为负数
      */
-    public static String serializeToVanillaCode(MessageChain msg, long bot, long sender) {
+    public static String serializeToVanillaCode(MessageChain msg, long bot, long sender, long target) {
         String msgString;
 
         MarketFace marketFace = msg.get(MarketFace.Key);
@@ -386,15 +383,14 @@ public class VanillaUtils {
                 node.setSenderId(o.getSenderId());
                 node.setSenderName(o.getSenderName());
                 node.setTime(o.getTime());
-                node.setMessageChain(o.getMessageChain());
+                node.setMessageChain(o.getMessageChain().serializeToMiraiCode());
                 return node;
             }).collect(Collectors.toList()));
 
             forwardMsg.setBot(bot);
-            if (sender < 0)
-                forwardMsg.setGroup(-sender);
-            else
-                forwardMsg.setUser(sender);
+            forwardMsg.setUser(sender);
+            if (bot != target)
+                forwardMsg.setGroup(target);
             msgString = "(:vacode:){forward}" + JSON.toJSONString(forwardMsg);
 
         } else if (audio != null) {
@@ -416,9 +412,32 @@ public class VanillaUtils {
             msg = msg.substring("(:vacode:)".length());
             if (msg.startsWith("{forward}")) {
                 msg = msg.substring("{forward}".length());
-                ForwardMsg forwardMsg;
-                // TODO 反序列化
-                forwardMsg = JSON.parseObject(msg, ForwardMsg.class);
+                new ForwardMsg();
+                ForwardMsg forwardMsg = new ForwardMsg();
+                JSONObject jsonObject = JSON.parseObject(msg);
+                // forwardMsg = jsonObject.toJavaObject(ForwardMsg.class);
+                forwardMsg.setUser(jsonObject.getLongValue("user"));
+                forwardMsg.setGroup(jsonObject.getLongValue("group"));
+                forwardMsg.setBot(jsonObject.getLongValue("bot"));
+                forwardMsg.setTitle(jsonObject.getString("title"));
+                forwardMsg.setBrief(jsonObject.getString("brief"));
+                forwardMsg.setSource(jsonObject.getString("source"));
+                forwardMsg.setSummary(jsonObject.getString("summary"));
+
+                List<String> preview = jsonObject.getList("preview", String.class);
+                forwardMsg.setPreview(preview);
+                JSONArray jsonArray = jsonObject.getJSONArray("nodeList");
+                List<Node> nodeList = new ArrayList<>();
+                for (int i = 0; i < jsonArray.size(); i++) {
+                    JSONObject jsonObject1 = jsonArray.getJSONObject(i);
+                    Node node = new Node();
+                    node.setTime(jsonObject1.getIntValue("time"));
+                    node.setSenderName(jsonObject1.getString("senderName"));
+                    node.setSenderId(jsonObject1.getLongValue("senderId"));
+                    node.setMessageChain(jsonObject1.getString("messageChain"));
+                    nodeList.add(node);
+                }
+                forwardMsg.setNodeList(nodeList);
                 ForwardMessageBuilder forwardMessageBuilder;
                 if (forwardMsg.getGroup() > 0) {
                     Group group = Bot.getInstance(forwardMsg.getBot()).getGroup(forwardMsg.getGroup());
@@ -430,7 +449,7 @@ public class VanillaUtils {
                     forwardMessageBuilder = new ForwardMessageBuilder(user);
                 }
                 for (Node node : forwardMsg.getNodeList()) {
-                    forwardMessageBuilder.add(node.getSenderId(), node.getSenderName(), node.getMessageChain(), node.getTime());
+                    forwardMessageBuilder.add(node.getSenderId(), node.getSenderName(), MiraiCode.deserializeMiraiCode(node.getMessageChain()), node.getTime());
                 }
                 forwardMessageBuilder.setDisplayStrategy(new ForwardMessage.DisplayStrategy() {
                     @NotNull

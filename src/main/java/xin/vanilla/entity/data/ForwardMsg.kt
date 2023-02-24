@@ -1,14 +1,13 @@
 package xin.vanilla.entity.data
 
 import kotlinx.serialization.Serializable
-import lombok.Data
 import lombok.Getter
 import lombok.Setter
 import lombok.experimental.Accessors
 import net.mamoe.mirai.contact.User
-import net.mamoe.mirai.message.data.MessageChain
 
-@Data
+@Getter
+@Setter
 @Accessors(chain = true)
 @Serializable
 class ForwardMsg {
@@ -24,7 +23,8 @@ class ForwardMsg {
     var bot: Long = 0
 }
 
-@Data
+@Getter
+@Setter
 @Accessors(chain = true)
 @Serializable
 class Node {
@@ -46,5 +46,5 @@ class Node {
     /**
      * 消息内容
      */
-    var messageChain: MessageChain? = null
+    var messageChain: String = ""
 }

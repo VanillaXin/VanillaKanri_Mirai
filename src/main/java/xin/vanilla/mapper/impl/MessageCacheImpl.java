@@ -1,7 +1,8 @@
 package xin.vanilla.mapper.impl;
 
+import lombok.Getter;
+import lombok.Setter;
 import net.mamoe.mirai.contact.*;
-import net.mamoe.mirai.message.code.MiraiCode;
 import net.mamoe.mirai.message.data.*;
 import xin.vanilla.entity.data.MsgCache;
 import xin.vanilla.mapper.MessageCache;
@@ -25,6 +26,26 @@ public class MessageCacheImpl implements MessageCache {
 
     private static String[] MSG_TYPES = {MSG_TYPE_GROUP, MSG_TYPE_FRIEND, MSG_TYPE_MEMBER, MSG_TYPE_STRANGER};
     private final SqliteUtil sqliteUtil;
+
+    @Getter
+    @Setter
+    private static class Source {
+        private int time;
+        private long fromId;
+        private int[] ids;
+        private int[] internalIds;
+        private long botId;
+
+        public Source(MessageSource source) {
+            if (source != null) {
+                this.botId = source.getBotId();
+                this.time = source.getTime();
+                this.fromId = source.getFromId();
+                this.internalIds = source.getInternalIds();
+                this.ids = source.getIds();
+            }
+        }
+    }
 
     public MessageCacheImpl(String path) {
         try {
@@ -58,8 +79,7 @@ public class MessageCacheImpl implements MessageCache {
 
     @Override
     public void addMsg(Group group, MessageChain msg) {
-        MessageSource source = msg.get(MessageSource.Key);
-        if (null == source) return;
+        Source source = new Source(msg.get(MessageSource.Key));
         int time = source.getTime();
         String table = MSG_TYPE_GROUP + getTableName();
         addMsg(msg, source, time, table, group.getId());
@@ -67,8 +87,7 @@ public class MessageCacheImpl implements MessageCache {
 
     @Override
     public void addMsg(Friend friend, MessageChain msg) {
-        MessageSource source = msg.get(MessageSource.Key);
-        if (null == source) return;
+        Source source = new Source(msg.get(MessageSource.Key));
         int time = source.getTime();
         String table = MSG_TYPE_FRIEND + getTableName();
         addMsg(msg, source, time, table, friend.getId());
@@ -76,8 +95,7 @@ public class MessageCacheImpl implements MessageCache {
 
     @Override
     public void addMsg(Member member, MessageChain msg) {
-        MessageSource source = msg.get(MessageSource.Key);
-        if (null == source) return;
+        Source source = new Source(msg.get(MessageSource.Key));
         int time = source.getTime();
         String table = MSG_TYPE_MEMBER + getTableName();
         addMsg(msg, source, time, table, member.getId());
@@ -85,8 +103,7 @@ public class MessageCacheImpl implements MessageCache {
 
     @Override
     public void addMsg(Stranger stranger, MessageChain msg) {
-        MessageSource source = msg.get(MessageSource.Key);
-        if (null == source) return;
+        Source source = new Source(msg.get(MessageSource.Key));
         int time = source.getTime();
         String table = MSG_TYPE_STRANGER + getTableName();
         addMsg(msg, source, time, table, stranger.getId());
@@ -95,11 +112,9 @@ public class MessageCacheImpl implements MessageCache {
     @Override
     public void addMsg(Contact contact, OnlineMessageSource.Outgoing outgoing, Message msg) {
         String table;
-        int f = 1;
-        if (contact instanceof Group) {
+        if (contact instanceof Group)
             table = MSG_TYPE_GROUP + getTableName();
-            f = -1;
-        } else if (contact instanceof Friend)
+        else if (contact instanceof Friend)
             table = MSG_TYPE_FRIEND + getTableName();
         else if (contact instanceof Member)
             table = MSG_TYPE_MEMBER + getTableName();
@@ -108,7 +123,7 @@ public class MessageCacheImpl implements MessageCache {
         else return;
 
         long targetId = outgoing.getTargetId();
-        long sender = outgoing.getFromId() * f;
+        long sender = outgoing.getFromId();
         long botId = outgoing.getBot().getId();
         int[] ids = outgoing.getIds();
         int[] internalIds = outgoing.getInternalIds();
@@ -119,7 +134,7 @@ public class MessageCacheImpl implements MessageCache {
     private void addMsg(MessageChain msg, int time, String table, long target, long sender, int[] ids, int[] internalIds, long botId) {
         createTable(table);
         String nos = StringUtils.toString(ids) + "|" + StringUtils.toString(internalIds);
-        String msgString = VanillaUtils.serializeToVanillaCode(msg, botId, sender);
+        String msgString = VanillaUtils.serializeToVanillaCode(msg, botId, sender, target);
 
         if (msgString.equals("")) {
             MarketFace marketFace = msg.get(MarketFace.Key);
@@ -146,9 +161,8 @@ public class MessageCacheImpl implements MessageCache {
         sqliteUtil.insert(insert);
     }
 
-    private void addMsg(MessageChain msg, MessageSource source, int time, String table, long target) {
+    private void addMsg(MessageChain msg, Source source, int time, String table, long target) {
         long sender = source.getFromId();
-        if (target != sender) sender = -sender;
         int[] ids = source.getIds();
         int[] internalIds = source.getInternalIds();
         long botId = source.getBotId();
