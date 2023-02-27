@@ -20,10 +20,6 @@ public class RegUtils {
     private Matcher matcher;
 
     public static final String REG_SEPARATOR = "\\s";
-    public static final String REG_ATCODE = "(?:(?:" +
-            StringUtils.escapeExprSpecialWord(new At(2333333333L).toString()).replace("2333333333", "\\d{6,10}")
-            + "|" + StringUtils.escapeExprSpecialWord(AtAll.INSTANCE.toString())
-            + "|\\d{6,10})" + REG_SEPARATOR + "?)+";
 
     public static RegUtils start() {
         RegUtils regStmt = new RegUtils();
@@ -325,5 +321,18 @@ public class RegUtils {
             return matcher.start();
         }
         return -1;
+    }
+
+    public static String processGroup(Collection<?> values) {
+        StringBuilder stringBuilder = new StringBuilder();
+        if (values != null && values.size() > 0) {
+            int i = 0;
+            for (Object value : values) {
+                if (i > 0) stringBuilder.append("|");
+                stringBuilder.append(StringUtils.escapeExprSpecialWord(value.toString()));
+                i++;
+            }
+        }
+        return stringBuilder.toString();
     }
 }

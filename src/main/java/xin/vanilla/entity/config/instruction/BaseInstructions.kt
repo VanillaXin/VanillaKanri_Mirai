@@ -21,6 +21,9 @@ class BaseInstructions {
     // 全局+(如: 全局词库)
     var global: Set<String> = mutableSetOf("all")
 
+    // 当前+(如: 当前群)
+    var that: Set<String> = mutableSetOf("that", "this", "here")
+
     var atAll: Set<String> = mutableSetOf("@全体成员", "@全体", "@所有人", AtAll.toString())
 
     var atAllId: Set<String> = mutableSetOf("-2333")

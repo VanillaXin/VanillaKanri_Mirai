@@ -280,7 +280,7 @@ public class VanillaUtils {
 
     // endregion 判断权限
 
-    public static long[] getQQFromAt(String qq) {
+    public static long[] getQQFromString(String qq) {
         try {
             qq = qq.trim();
             if (qq.contains(" ")) {
@@ -298,18 +298,38 @@ public class VanillaUtils {
                     }
                 }
                 return qqs.stream().mapToLong(Long::longValue).toArray();
-            } catch (Exception e) {
-                return new long[0];
+            } catch (Exception ignored1) {
             }
-        } catch (NullPointerException e) {
-            return new long[0];
+        } catch (NullPointerException ignored) {
         }
+        return new long[0];
+    }
+
+    public static long[] getGroupFromString(String group) {
+        try {
+            group = group.trim().replace("<", "").replace(">", "");
+            if (group.contains(" ")) {
+                String[] s = group.trim().split(" ");
+                return Arrays.stream(s).mapToLong(Long::parseLong).toArray();
+            } else {
+                return new long[]{Long.parseLong(group)};
+            }
+        } catch (NumberFormatException ignored) {
+            if (Va.getGlobalConfig().getInstructions().getBase().getThat().contains(group)) {
+                return new long[]{-1};
+            }
+        } catch (NullPointerException ignored) {
+        }
+        return new long[0];
     }
 
     public static void setDateCache(String key, Object value) {
         Va.getDataCache().put(key, value);
     }
 
+    /**
+     * 获取数据缓存
+     */
     public static String getDataCacheAsString(String key) {
         if (Va.getDataCache().containsKey(key)) {
             return (String) Va.getDataCache().get(key);
@@ -317,6 +337,9 @@ public class VanillaUtils {
         return "";
     }
 
+    /**
+     * 获取数据缓存
+     */
     public static long getDataCacheAsLong(String key) {
         if (Va.getDataCache().containsKey(key)) {
             return (long) Va.getDataCache().get(key);
@@ -324,6 +347,9 @@ public class VanillaUtils {
         return 0;
     }
 
+    /**
+     * 获取数据缓存
+     */
     public static double getDataCacheAsDouble(String key) {
         if (Va.getDataCache().containsKey(key)) {
             return (double) Va.getDataCache().get(key);
@@ -331,6 +357,9 @@ public class VanillaUtils {
         return 0;
     }
 
+    /**
+     * 获取数据缓存
+     */
     public static boolean getDataCacheAsBoolean(String key) {
         if (Va.getDataCache().containsKey(key)) {
             return (boolean) Va.getDataCache().get(key);

@@ -136,6 +136,7 @@ public class EventHandlers extends SimpleListenerHost {
                     RegUtils reg = (RegUtils) regMethod.invoke(new RegExpConfig(), prefix);
                     if (reg.matcher(insEvent.getIns()).find()) {
                         String operation;
+                        long[] groups;
                         long[] qqs;
                         try {
                             operation = reg.getMatcher().group("operation");
@@ -143,16 +144,28 @@ public class EventHandlers extends SimpleListenerHost {
                             operation = "";
                         }
                         try {
+                            String groupString = reg.getMatcher().group("group");
+                            if (groupString.equals(AtAll.INSTANCE.toString()) || insEvent.getBase().getAtAll().contains(groupString)) {
+                                groups = insEvent.getBase().getAtAllId().stream().limit(1).mapToLong(Long::parseLong).toArray();
+                            } else {
+                                groups = VanillaUtils.getGroupFromString(groupString);
+                            }
+                        } catch (IllegalStateException | IllegalArgumentException e) {
+                            groups = new long[]{};
+                        }
+
+                        try {
                             String qqString = reg.getMatcher().group("qq");
                             if (qqString.equals(AtAll.INSTANCE.toString()) || insEvent.getBase().getAtAll().contains(qqString)) {
                                 qqs = insEvent.getBase().getAtAllId().stream().limit(1).mapToLong(Long::parseLong).toArray();
                             } else {
-                                qqs = VanillaUtils.getQQFromAt(qqString);
+                                qqs = VanillaUtils.getQQFromString(qqString);
                             }
                         } catch (IllegalStateException | IllegalArgumentException e) {
                             qqs = new long[]{};
                         }
-                        int back = (int) method.invoke(insEvent, qqs, operation);
+
+                        int back = (int) method.invoke(insEvent, groups, qqs, operation);
                         if (back == InstructionMsgEvent.RETURN_BREAK_TRUE) {
                             event.intercept();
                             return;
