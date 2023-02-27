@@ -12,7 +12,9 @@ import net.mamoe.mirai.event.GlobalEventChannel
 import xin.vanilla.config.GlobalConfigFile
 import xin.vanilla.config.GroupConfigFile
 import xin.vanilla.event.EventHandlers
+import xin.vanilla.mapper.KeywordData
 import xin.vanilla.mapper.MessageCache
+import xin.vanilla.mapper.impl.KeywordDataImpl
 import xin.vanilla.mapper.impl.MessageCacheImpl
 import xin.vanilla.util.sqlite.SqliteUtil
 import java.util.concurrent.Callable
@@ -27,6 +29,11 @@ object VanillaKanri : KotlinPlugin(
      * 消息缓存
      */
     var messageCache: MessageCache = MessageCacheImpl(dataFolderPath.toString())
+
+    /**
+     * 关键词数据
+     */
+    var keywordData: KeywordData = KeywordDataImpl(dataFolderPath.toString())
 
     /**
      * 数据缓存

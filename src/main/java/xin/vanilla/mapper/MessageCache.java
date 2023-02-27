@@ -9,7 +9,7 @@ import xin.vanilla.entity.data.MsgCache;
 public interface MessageCache {
 
     /**
-     * 根据日期创建表, 若有则不重新创建
+     * 创建表, 若有则不重新创建
      */
     void createTable(String table);
 

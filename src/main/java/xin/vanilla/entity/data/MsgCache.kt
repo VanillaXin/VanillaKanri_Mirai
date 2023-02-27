@@ -8,7 +8,7 @@ import java.util.*
 @Data
 @Accessors(chain = true)
 @Serializable
-class MsgCache {
+object MsgCache {
     var id: Int = 0
     var nos = ""
         set(value) {

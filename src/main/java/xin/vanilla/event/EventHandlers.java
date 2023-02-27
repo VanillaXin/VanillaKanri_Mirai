@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@SuppressWarnings("unused")
 public class EventHandlers extends SimpleListenerHost {
     @Override
     public void handleException(@NotNull CoroutineContext context, @NotNull Throwable exception) {
@@ -97,7 +98,7 @@ public class EventHandlers extends SimpleListenerHost {
                                 } else {
                                     Set<String> values = new HashSet<>();
                                     if (obj instanceof Set) {
-                                        values.addAll((Set<String>) obj);
+                                        values.addAll(((Set<?>) obj).stream().map(String::valueOf).collect(Collectors.toSet()));
                                     } else if (obj instanceof String) {
                                         values.add((String) obj);
                                     }
@@ -134,7 +135,7 @@ public class EventHandlers extends SimpleListenerHost {
                 String regexpName = annotation.regexp();
                 try {
                     Method regMethod = RegExpConfig.class.getMethod(regexpName, String.class);
-                    RegUtils reg = (RegUtils) regMethod.invoke(new RegExpConfig(), prefix);
+                    RegUtils reg = (RegUtils) regMethod.invoke(null, prefix);
                     if (reg.matcher(insEvent.getIns()).find()) {
                         String operation;
                         long[] groups;
@@ -189,8 +190,12 @@ public class EventHandlers extends SimpleListenerHost {
                 }
 
             } else if (method.isAnnotationPresent(KeywordInsEvent.class)) {
-                // TODO 解析关键词指令
+                try {
+                    int back = (int) method.invoke(insEvent, prefix);
 
+                } catch (IllegalAccessException | InvocationTargetException e) {
+                    throw new RuntimeException(e);
+                }
             } else if (method.isAnnotationPresent(TimedInsEvent.class)) {
                 // TODO 解析定时任务指令
 

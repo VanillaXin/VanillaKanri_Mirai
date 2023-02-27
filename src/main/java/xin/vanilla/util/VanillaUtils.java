@@ -196,6 +196,31 @@ public class VanillaUtils {
      *
      * @return int, 参考 PERMISSION_LEVEL_*
      */
+    public static int getPermissionLevel(long botId, long groupId, long qq) {
+        if (botId > 0) {
+            Bot bot = Bot.getInstance(botId);
+            return getPermissionLevel(bot, bot.getGroup(groupId), qq);
+        }
+        return PERMISSION_LEVEL_MEMBER.getLevel();
+    }
+
+    /**
+     * 获取某人机器人权限
+     *
+     * @return int, 参考 PERMISSION_LEVEL_*
+     */
+    public static int getPermissionLevel(Bot bot, long groupId, long qq) {
+        if (bot != null) {
+            return getPermissionLevel(bot, Bot.getInstance(bot.getId()).getGroup(groupId), qq);
+        }
+        return PERMISSION_LEVEL_MEMBER.getLevel();
+    }
+
+    /**
+     * 获取某人机器人权限
+     *
+     * @return int, 参考 PERMISSION_LEVEL_*
+     */
     public static int getPermissionLevel(Bot bot, Group group, long qq) {
         int permission = PERMISSION_LEVEL_MEMBER.getLevel();
         if (bot != null) {
@@ -316,7 +341,7 @@ public class VanillaUtils {
             }
         } catch (NumberFormatException ignored) {
             if (Va.getGlobalConfig().getInstructions().getBase().getThat().contains(group)) {
-                return new long[]{-1};
+                return new long[]{0};
             }
         } catch (NullPointerException ignored) {
         }

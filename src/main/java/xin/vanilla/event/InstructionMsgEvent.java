@@ -12,7 +12,10 @@ import net.mamoe.mirai.event.events.MessageEvent;
 import net.mamoe.mirai.message.data.*;
 import org.jetbrains.annotations.NotNull;
 import xin.vanilla.VanillaKanri;
+import xin.vanilla.common.RegExpConfig;
 import xin.vanilla.common.annotation.KanriInsEvent;
+import xin.vanilla.common.annotation.KeywordInsEvent;
+import xin.vanilla.common.annotation.TimedInsEvent;
 import xin.vanilla.entity.config.instruction.BaseInstructions;
 import xin.vanilla.entity.config.instruction.KanriInstructions;
 import xin.vanilla.entity.config.instruction.KeywordInstructions;
@@ -100,7 +103,7 @@ public class InstructionMsgEvent {
     @KanriInsEvent(prefix = "tap"
             , regexp = "tapRegExp")
     public int tap(@NotNull long[] groups, long[] qqs, String num) {
-        if (groups.length == 0) groups = new long[]{-1};
+        if (groups.length == 0) groups = new long[]{0};
         for (long groupId : groups) {
             Group thatGroup;
             if (groupId <= 0) thatGroup = this.group;
@@ -149,7 +152,7 @@ public class InstructionMsgEvent {
             , bot = {MemberPermission.ADMINISTRATOR, MemberPermission.OWNER}
             , regexp = "cardRegExp")
     public int card(@NotNull long[] groups, @NotNull long[] qqs, String text) {
-        if (groups.length == 0) groups = new long[]{-1};
+        if (groups.length == 0) groups = new long[]{0};
         for (long groupId : groups) {
             Group thatGroup;
             if (groupId <= 0) thatGroup = this.group;
@@ -191,7 +194,7 @@ public class InstructionMsgEvent {
             , bot = {MemberPermission.OWNER}
             , regexp = "tagRegExp")
     public int tag(@NotNull long[] groups, long[] qqs, String tag) {
-        if (groups.length == 0) groups = new long[]{-1};
+        if (groups.length == 0) groups = new long[]{0};
         for (long groupId : groups) {
             Group thatGroup;
             if (groupId <= 0) thatGroup = this.group;
@@ -239,7 +242,7 @@ public class InstructionMsgEvent {
             , bot = {MemberPermission.ADMINISTRATOR, MemberPermission.OWNER}
             , regexp = "essenceRegExp")
     public int essence(@NotNull long[] groups, long[] qqs, String text) {
-        if (groups.length == 0) groups = new long[]{-1};
+        if (groups.length == 0) groups = new long[]{0};
         for (long groupId : groups) {
             Group thatGroup;
             if (groupId <= 0) thatGroup = this.group;
@@ -282,7 +285,7 @@ public class InstructionMsgEvent {
             , bot = {MemberPermission.ADMINISTRATOR, MemberPermission.OWNER}
             , regexp = "loudRegExp")
     public int loud(@NotNull long[] groups, @NotNull long[] qqs, String text) {
-        if (groups.length == 0) groups = new long[]{-1};
+        if (groups.length == 0) groups = new long[]{0};
         for (long groupId : groups) {
             Group thatGroup;
             if (groupId <= 0) thatGroup = this.group;
@@ -330,7 +333,7 @@ public class InstructionMsgEvent {
             , bot = {MemberPermission.ADMINISTRATOR, MemberPermission.OWNER}
             , regexp = "muteRegExp")
     public int mute(@NotNull long[] groups, @NotNull long[] qqs, String time) {
-        if (groups.length == 0) groups = new long[]{-1};
+        if (groups.length == 0) groups = new long[]{0};
         for (long groupId : groups) {
             Group thatGroup;
             if (groupId <= 0) thatGroup = this.group;
@@ -452,7 +455,7 @@ public class InstructionMsgEvent {
             , bot = MemberPermission.OWNER
             , regexp = "adminRegExp")
     public int admin(@NotNull long[] groups, @NotNull long[] qqs, String text) {
-        if (groups.length == 0) groups = new long[]{-1};
+        if (groups.length == 0) groups = new long[]{0};
         for (long groupId : groups) {
             Group thatGroup;
             if (groupId <= 0) thatGroup = this.group;
@@ -492,7 +495,7 @@ public class InstructionMsgEvent {
             , bot = {MemberPermission.ADMINISTRATOR, MemberPermission.OWNER}
             , regexp = "kickRegExp")
     public int kick(@NotNull long[] groups, @NotNull long[] qqs, String text) {
-        if (groups.length == 0) groups = new long[]{-1};
+        if (groups.length == 0) groups = new long[]{0};
         for (long groupId : groups) {
             Group thatGroup;
             if (groupId <= 0) thatGroup = this.group;
@@ -533,8 +536,61 @@ public class InstructionMsgEvent {
 
 
     // region 关键词指令
-    // TODO 定义关键词指令
 
+    /**
+     * 添加关键词回复
+     */
+    @KeywordInsEvent
+    public int keyAdd(String prefix) {
+        if (!base.getAdd().contains(prefix)) return RETURN_CONTINUE;
+        RegUtils reg = RegExpConfig.keyAddRegExp(prefix);
+        if (reg.matcher(this.ins).find()) {
+            long[] groups;
+            String type, key, rep;
+            try {
+                String groupString = reg.getMatcher().group("group");
+                if (groupString.startsWith("<") && groupString.endsWith(">")) {
+                    groupString = groupString.substring(1, groupString.length() - 1);
+                }
+                if (base.getGlobal().contains(groupString)) {
+                    groups = new long[]{-1};
+                } else {
+                    groups = VanillaUtils.getGroupFromString(groupString);
+                    if (groups.length == 1 && groups[0] == 0) {
+                        groups[0] = this.group.getId();
+                    }
+                }
+
+            } catch (IllegalStateException | IllegalArgumentException e) {
+                groups = new long[]{this.group.getId()};
+            }
+
+            type = reg.getMatcher().group("type");
+            key = reg.getMatcher().group("key");
+            rep = reg.getMatcher().group("rep");
+
+            for (long groupId : groups) {
+                Va.getKeywordData().addKeyword(key, rep, bot.getId(), groupId, type, time, VanillaUtils.getPermissionLevel(bot, groupId, sender.getId()));
+            }
+
+            return RETURN_BREAK_TRUE;
+        }
+        return RETURN_CONTINUE;
+    }
+
+    /**
+     * 删除关键词回复
+     */
+    @KeywordInsEvent
+    public int keyDel(String prefix) {
+        if (!base.getDelete().contains(prefix)) return RETURN_CONTINUE;
+        RegUtils reg = RegExpConfig.keyDelRegExp(prefix);
+        if (reg.matcher(this.ins).find()) {
+
+            return RETURN_BREAK_TRUE;
+        }
+        return RETURN_CONTINUE;
+    }
 
     // endregion
 
@@ -542,6 +598,17 @@ public class InstructionMsgEvent {
     // region 定时任务指令
     // TODO 定义定时任务指令
 
+    @TimedInsEvent
+    public int timedAdd() {
+
+        return RETURN_BREAK_TRUE;
+    }
+
+    @TimedInsEvent
+    public int timedDel() {
+
+        return RETURN_BREAK_TRUE;
+    }
 
     // endregion
 

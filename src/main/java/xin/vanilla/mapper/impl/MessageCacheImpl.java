@@ -5,6 +5,7 @@ import lombok.Setter;
 import net.mamoe.mirai.contact.*;
 import net.mamoe.mirai.message.data.*;
 import xin.vanilla.entity.data.MsgCache;
+import xin.vanilla.mapper.Base;
 import xin.vanilla.mapper.MessageCache;
 import xin.vanilla.util.StringUtils;
 import xin.vanilla.util.VanillaUtils;
@@ -16,15 +17,16 @@ import xin.vanilla.util.sqlite.statement.Statement;
 import java.sql.SQLException;
 import java.util.Arrays;
 
-public class MessageCacheImpl implements MessageCache {
-    public static String MSG_TYPE_GROUP = "group_";
-    public static String MSG_TYPE_FRIEND = "friend_";
-    public static String MSG_TYPE_MEMBER = "member_";
-    public static String MSG_TYPE_STRANGER = "stranger_";
+public class MessageCacheImpl extends Base implements MessageCache {
     public static String dbname = "\\msg_cache.db";
-    public static String dbVersion = "1.0.1";
+
+    public static String MSG_TYPE_GROUP = "group";
+    public static String MSG_TYPE_FRIEND = "friend";
+    public static String MSG_TYPE_MEMBER = "member";
+    public static String MSG_TYPE_STRANGER = "stranger";
 
     private static String[] MSG_TYPES = {MSG_TYPE_GROUP, MSG_TYPE_FRIEND, MSG_TYPE_MEMBER, MSG_TYPE_STRANGER};
+
     private final SqliteUtil sqliteUtil;
 
     @Getter
@@ -55,12 +57,6 @@ public class MessageCacheImpl implements MessageCache {
         }
     }
 
-    private String getTableName() {
-        // Date date = new Date(time * 1000);
-        // return DateUtils.getYearOfDate(date) + "." + DateUtils.getMonthOfDateWithZero(date);
-        return dbVersion;
-    }
-
     @Override
     public void createTable(String table) {
         if (!sqliteUtil.containsTable(table)) {
@@ -81,7 +77,7 @@ public class MessageCacheImpl implements MessageCache {
     public void addMsg(Group group, MessageChain msg) {
         Source source = new Source(msg.get(MessageSource.Key));
         int time = source.getTime();
-        String table = MSG_TYPE_GROUP + getTableName();
+        String table = getTableName(MSG_TYPE_GROUP);
         addMsg(msg, source, time, table, group.getId());
     }
 
@@ -89,7 +85,7 @@ public class MessageCacheImpl implements MessageCache {
     public void addMsg(Friend friend, MessageChain msg) {
         Source source = new Source(msg.get(MessageSource.Key));
         int time = source.getTime();
-        String table = MSG_TYPE_FRIEND + getTableName();
+        String table = getTableName(MSG_TYPE_FRIEND);
         addMsg(msg, source, time, table, friend.getId());
     }
 
@@ -97,7 +93,7 @@ public class MessageCacheImpl implements MessageCache {
     public void addMsg(Member member, MessageChain msg) {
         Source source = new Source(msg.get(MessageSource.Key));
         int time = source.getTime();
-        String table = MSG_TYPE_MEMBER + getTableName();
+        String table = getTableName(MSG_TYPE_MEMBER);
         addMsg(msg, source, time, table, member.getId());
     }
 
@@ -105,7 +101,7 @@ public class MessageCacheImpl implements MessageCache {
     public void addMsg(Stranger stranger, MessageChain msg) {
         Source source = new Source(msg.get(MessageSource.Key));
         int time = source.getTime();
-        String table = MSG_TYPE_STRANGER + getTableName();
+        String table = getTableName(MSG_TYPE_STRANGER);
         addMsg(msg, source, time, table, stranger.getId());
     }
 
@@ -113,13 +109,13 @@ public class MessageCacheImpl implements MessageCache {
     public void addMsg(Contact contact, OnlineMessageSource.Outgoing outgoing, Message msg) {
         String table;
         if (contact instanceof Group)
-            table = MSG_TYPE_GROUP + getTableName();
+            table = getTableName(MSG_TYPE_GROUP);
         else if (contact instanceof Friend)
-            table = MSG_TYPE_FRIEND + getTableName();
+            table = getTableName(MSG_TYPE_FRIEND);
         else if (contact instanceof Member)
-            table = MSG_TYPE_MEMBER + getTableName();
+            table = getTableName(MSG_TYPE_MEMBER);
         else if (contact instanceof Stranger)
-            table = MSG_TYPE_STRANGER + getTableName();
+            table = getTableName(MSG_TYPE_STRANGER);
         else return;
 
         long targetId = outgoing.getTargetId();
@@ -312,7 +308,7 @@ public class MessageCacheImpl implements MessageCache {
 
         for (String msgType : MSG_TYPES) {
             Statement query = QueryStatement.produce()
-                    .from(msgType + getTableName())
+                    .from(getTableName(msgType))
                     .where(MsgCache::getTarget).eq(target);
 
             if (sender > 0) query.and(MsgCache::getSender).eq(sender);

@@ -11,6 +11,36 @@ import lombok.experimental.Accessors
 @Accessors(chain = true)
 @Serializable
 class KeywordInstructions {
-    // 关键词指令前缀*
+    // /va key add [<group>] 精准|包含|拼音|正则 [key] rep [content]
+    // /va key del [<group>] 精准|包含|拼音|正则 [key]
+
+    /**
+     * 关键词指令前缀*
+     */
     var prefix: String = "key"
+
+    /**
+     * 关键词指令后缀*
+     */
+    var suffix: String = "rep"
+
+    /**
+     * 精准匹配+
+     */
+    var exactly: Set<String> = mutableSetOf("exactly", "perfect")
+
+    /**
+     * 包含匹配+
+     */
+    var contain: Set<String> = mutableSetOf("contain", "include")
+
+    /**
+     * 拼音包含匹配+
+     */
+    var pinyin: Set<String> = mutableSetOf("pinyin")
+
+    /**
+     * 正则匹配+
+     */
+    var regex: Set<String> = mutableSetOf("regex", "reg", "regexp")
 }
