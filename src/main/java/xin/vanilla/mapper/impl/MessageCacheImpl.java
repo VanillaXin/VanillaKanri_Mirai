@@ -22,7 +22,7 @@ public class MessageCacheImpl implements MessageCache {
     public static String MSG_TYPE_MEMBER = "member_";
     public static String MSG_TYPE_STRANGER = "stranger_";
     public static String dbname = "\\msg_cache.db";
-    public static String dbVersion = "1.0.0";
+    public static String dbVersion = "1.0.1";
 
     private static String[] MSG_TYPES = {MSG_TYPE_GROUP, MSG_TYPE_FRIEND, MSG_TYPE_MEMBER, MSG_TYPE_STRANGER};
     private final SqliteUtil sqliteUtil;
