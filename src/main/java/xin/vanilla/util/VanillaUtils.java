@@ -1,20 +1,18 @@
 package xin.vanilla.util;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONArray;
-import com.alibaba.fastjson2.JSONObject;
 import net.mamoe.mirai.Bot;
-import net.mamoe.mirai.contact.*;
+import net.mamoe.mirai.contact.Group;
+import net.mamoe.mirai.contact.Member;
+import net.mamoe.mirai.contact.MemberPermission;
+import net.mamoe.mirai.contact.NormalMember;
 import net.mamoe.mirai.message.code.MiraiCode;
 import net.mamoe.mirai.message.data.*;
-import org.jetbrains.annotations.NotNull;
 import xin.vanilla.VanillaKanri;
-import xin.vanilla.entity.data.ForwardMsg;
-import xin.vanilla.entity.data.Node;
 import xin.vanilla.enumeration.PermissionLevel;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 import static xin.vanilla.enumeration.PermissionLevel.*;
 
@@ -358,138 +356,16 @@ public class VanillaUtils {
     }
 
     /**
-     * 将消息序列化为vanilla码
+     * 将消息序列化为Json
      */
-    public static String serializeToVanillaCode(MessageChain msg, long bot, long sender, long target) {
-        String msgString;
-
-        MarketFace marketFace = msg.get(MarketFace.Key);
-        ForwardMessage forwardMessage = msg.get(ForwardMessage.Key);
-        Audio audio = msg.get(Audio.Key);
-
-        if (marketFace != null) {
-            msgString = marketFace.toString();
-        } else if (forwardMessage != null) {
-            // ForwardMsg forwardMsg = BeanCopyUtils.copyBean(forwardMessage, ForwardMsg.class);
-            ForwardMsg forwardMsg = new ForwardMsg();
-            forwardMsg.setPreview(forwardMessage.getPreview());
-            forwardMsg.setTitle(forwardMessage.getTitle());
-            forwardMsg.setBrief(forwardMessage.getBrief());
-            forwardMsg.setSource(forwardMessage.getSource());
-            forwardMsg.setSummary(forwardMessage.getSummary());
-            forwardMsg.setNodeList(forwardMessage.getNodeList().stream().map(o -> {
-                Node node = new Node();
-                node.setSenderId(o.getSenderId());
-                node.setSenderName(o.getSenderName());
-                node.setTime(o.getTime());
-                if (o.getMessageChain().get(ForwardMessage.Key) != null) {
-                    node.setMessageChain(serializeToVanillaCode(o.getMessageChain(), bot, sender, target));
-                } else {
-                    node.setMessageChain(o.getMessageChain().serializeToMiraiCode());
-                }
-                return node;
-            }).collect(Collectors.toList()));
-
-            forwardMsg.setBot(bot);
-            forwardMsg.setUser(sender);
-            if (bot != target) forwardMsg.setGroup(target);
-            msgString = "(:vacode:){forward}" + JSON.toJSONString(forwardMsg);
-
-        } else if (audio != null) {
-            msgString = audio.toString();
-        } else {
-            msgString = msg.serializeToMiraiCode();
-            if (msgString.startsWith("(:vacode:)")) msgString = msgString.replace("(:vacode:)", "\\(:vacode:\\)");
-        }
-        return msgString;
+    public static String serializeToVanillaCode(MessageChain msg) {
+        return MessageChain.serializeToJsonString(msg);
     }
 
     /**
-     * 将vanilla码反序列化为消息
+     * 将Json反序列化为消息
      */
     public static MessageChain deserializeVanillaCode(String msg) {
-        if (msg.startsWith("(:vacode:)")) {
-            msg = msg.substring("(:vacode:)".length());
-            if (msg.startsWith("{forward}")) {
-                msg = msg.substring("{forward}".length());
-                new ForwardMsg();
-                ForwardMsg forwardMsg = new ForwardMsg();
-                JSONObject jsonObject = JSON.parseObject(msg);
-                // forwardMsg = jsonObject.toJavaObject(ForwardMsg.class);
-                forwardMsg.setUser(jsonObject.getLongValue("user"));
-                forwardMsg.setGroup(jsonObject.getLongValue("group"));
-                forwardMsg.setBot(jsonObject.getLongValue("bot"));
-                forwardMsg.setTitle(jsonObject.getString("title"));
-                forwardMsg.setBrief(jsonObject.getString("brief"));
-                forwardMsg.setSource(jsonObject.getString("source"));
-                forwardMsg.setSummary(jsonObject.getString("summary"));
-
-                List<String> preview = jsonObject.getList("preview", String.class);
-                forwardMsg.setPreview(preview);
-                JSONArray jsonArray = jsonObject.getJSONArray("nodeList");
-                List<Node> nodeList = new ArrayList<>();
-                for (int i = 0; i < jsonArray.size(); i++) {
-                    JSONObject jsonObject1 = jsonArray.getJSONObject(i);
-                    Node node = new Node();
-                    node.setTime(jsonObject1.getIntValue("time"));
-                    node.setSenderName(jsonObject1.getString("senderName"));
-                    node.setSenderId(jsonObject1.getLongValue("senderId"));
-                    node.setMessageChain(jsonObject1.getString("messageChain"));
-                    nodeList.add(node);
-                }
-                forwardMsg.setNodeList(nodeList);
-                ForwardMessageBuilder forwardMessageBuilder;
-                if (forwardMsg.getGroup() > 0) {
-                    Group group = Bot.getInstance(forwardMsg.getBot()).getGroup(forwardMsg.getGroup());
-                    assert group != null;
-                    forwardMessageBuilder = new ForwardMessageBuilder(group);
-                } else {
-                    User user = Bot.getInstance(forwardMsg.getBot()).getFriend(forwardMsg.getUser());
-                    assert user != null;
-                    forwardMessageBuilder = new ForwardMessageBuilder(user);
-                }
-                for (Node node : forwardMsg.getNodeList()) {
-                    String messageChain = node.getMessageChain();
-                    if (messageChain.startsWith("(:vacode:){forward}")) {
-                        forwardMessageBuilder.add(node.getSenderId(), node.getSenderName(), deserializeVanillaCode(messageChain), node.getTime());
-                    } else {
-                        forwardMessageBuilder.add(node.getSenderId(), node.getSenderName(), MiraiCode.deserializeMiraiCode(messageChain), node.getTime());
-                    }
-                }
-                forwardMessageBuilder.setDisplayStrategy(new ForwardMessage.DisplayStrategy() {
-                    @NotNull
-                    @Override
-                    public String generateBrief(@NotNull RawForwardMessage forward) {
-                        return forwardMsg.getBrief();
-                    }
-
-                    @NotNull
-                    @Override
-                    public List<String> generatePreview(@NotNull RawForwardMessage forward) {
-                        return forwardMsg.getPreview();
-                    }
-
-                    @NotNull
-                    @Override
-                    public String generateSource(@NotNull RawForwardMessage forward) {
-                        return forwardMsg.getSource();
-                    }
-
-                    @NotNull
-                    @Override
-                    public String generateSummary(@NotNull RawForwardMessage forward) {
-                        return forwardMsg.getSummary();
-                    }
-
-                    @NotNull
-                    @Override
-                    public String generateTitle(@NotNull RawForwardMessage forward) {
-                        return forwardMsg.getTitle();
-                    }
-                });
-                return new MessageChainBuilder().append(forwardMessageBuilder.build()).build();
-            }
-        } else if (msg.startsWith("\\(:vacode:\\)")) msg = msg.replace("\\(:vacode:\\)", "(:vacode:)");
-        return MiraiCode.deserializeMiraiCode(msg);
+        return MessageChain.deserializeFromJsonString(msg);
     }
 }

@@ -47,6 +47,18 @@ public interface MessageCache {
 
     MessageChain getMsgChain(String no, long target);
 
+    String getMsgJsonCode(String no, long sender, long target, long time, String type);
+
+    String getMsgJsonCode(String no, long sender, long target, String type);
+
+    String getMsgJsonCode(String no, long sender, long target, long time);
+
+    String getMsgJsonCode(String no, long sender, long target);
+
+    String getMsgJsonCode(String no, long target, String type);
+
+    String getMsgJsonCode(String no, long target);
+
     String getMsgMiraiCode(String no, long sender, long target, long time, String type);
 
     String getMsgMiraiCode(String no, long sender, long target, String type);

@@ -134,7 +134,7 @@ public class MessageCacheImpl implements MessageCache {
     private void addMsg(MessageChain msg, int time, String table, long target, long sender, int[] ids, int[] internalIds, long botId) {
         createTable(table);
         String nos = StringUtils.toString(ids) + "|" + StringUtils.toString(internalIds);
-        String msgString = VanillaUtils.serializeToVanillaCode(msg, botId, sender, target);
+        String msgString = VanillaUtils.serializeToVanillaCode(msg);
 
         if (msgString.equals("")) {
             MarketFace marketFace = msg.get(MarketFace.Key);
@@ -201,7 +201,7 @@ public class MessageCacheImpl implements MessageCache {
 
     @Override
     public MessageChain getMsgChain(String no, long sender, long target, long time, String type) {
-        return VanillaUtils.deserializeVanillaCode(getMsgMiraiCode(no, sender, target, time, type));
+        return VanillaUtils.deserializeVanillaCode(getMsgJsonCode(no, sender, target, time, type));
     }
 
     @Override
@@ -230,10 +230,40 @@ public class MessageCacheImpl implements MessageCache {
     }
 
     @Override
-    public String getMsgMiraiCode(String no, long sender, long target, long time, String type) {
+    public String getMsgJsonCode(String no, long sender, long target, long time, String type) {
         MsgCache msgCache = getMsgCache(no, sender, target, time, type);
         if (msgCache == null) return null;
         return msgCache.getMsg();
+    }
+
+    @Override
+    public String getMsgJsonCode(String no, long sender, long target, String type) {
+        return getMsgJsonCode(no, sender, target, 0, type);
+    }
+
+    @Override
+    public String getMsgJsonCode(String no, long sender, long target, long time) {
+        return getMsgJsonCode(no, sender, target, time, null);
+    }
+
+    @Override
+    public String getMsgJsonCode(String no, long sender, long target) {
+        return getMsgJsonCode(no, sender, target, 0);
+    }
+
+    @Override
+    public String getMsgJsonCode(String no, long target, String type) {
+        return getMsgJsonCode(no, 0, target, 0, type);
+    }
+
+    @Override
+    public String getMsgJsonCode(String no, long target) {
+        return getMsgJsonCode(no, 0, target);
+    }
+
+    @Override
+    public String getMsgMiraiCode(String no, long sender, long target, long time, String type) {
+        return getMsgChain(no, sender, target, time, type).serializeToMiraiCode();
     }
 
     @Override

@@ -189,7 +189,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
             int no = Integer.parseInt(msg.contentToString().substring("/va get msgcache ".length()));
             MessageSource source = msg.get(MessageSource.Key);
             no = source.getIds()[0] - no;
-            String msgCache = Va.getMessageCache().getMsgMiraiCode(String.valueOf(no), group.getId(), MSG_TYPE_GROUP);
+            String msgCache = Va.getMessageCache().getMsgJsonCode(String.valueOf(no), group.getId(), MSG_TYPE_GROUP);
             Api.sendMessage(group, msgCache);
         }
 
