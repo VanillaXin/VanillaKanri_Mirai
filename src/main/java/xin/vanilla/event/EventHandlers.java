@@ -120,6 +120,7 @@ public class EventHandlers extends SimpleListenerHost {
                     continue;
                 }
 
+                // TODO 应该修改为判断所有待操作的群是否有权限
                 // 判断机器人是否有对应权限
                 if (insEvent.getGroup() != null) {
                     MemberPermission[] botLevel = annotation.bot();
@@ -152,6 +153,17 @@ public class EventHandlers extends SimpleListenerHost {
                             }
                         } catch (IllegalStateException | IllegalArgumentException e) {
                             groups = new long[]{};
+                        }
+
+                        // TODO 合理的做法应该修改为判断所有操作的群是否有对应权限
+                        // 非超管及以上权限不允许同时操作多群
+                        if (groups.length > 0) {
+                            if (groups.length > 1 || groups[0] > 0) {
+                                if (!VanillaUtils.hasPermissionOrMore(insEvent.getBot(), null, insEvent.getSender().getId(), PermissionLevel.PERMISSION_LEVEL_SUPER_ADMIN)) {
+                                    Api.sendMessage(insEvent.getGroup(), "权限不足");
+                                    return;
+                                }
+                            }
                         }
 
                         try {
