@@ -66,8 +66,8 @@ public class RegExpConfig {
         //  dad add <QQ>
         return RegUtils.start().groupNon(prefix).separator()
                 .groupIgByName("group", GROUP_CODE).appendIg("?").separator("?")
-                .groupByName("operation", base.getAdd(), base.getDelete(), base.getSelect()).separator()
-                .groupIgByName("qq", QQ_CODE).end();
+                .groupByName("operation", base.getAdd(), base.getDelete(), base.getSelect()).separator("?")
+                .groupIgByName("qq", QQ_CODE).appendIg("?").end();
     }
 
     /**
@@ -76,8 +76,8 @@ public class RegExpConfig {
     public static RegUtils botAdminRegExp(String prefix) {
         //  bad add <QQ>
         return RegUtils.start().groupNon(prefix).separator()
-                .groupByName("operation", base.getAdd(), base.getDelete(), base.getSelect()).separator()
-                .groupIgByName("qq", QQ_CODE).end();
+                .groupByName("operation", base.getAdd(), base.getDelete(), base.getSelect()).separator("?")
+                .groupIgByName("qq", QQ_CODE).appendIg("?").end();
     }
 
     /**

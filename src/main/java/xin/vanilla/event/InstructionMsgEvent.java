@@ -491,7 +491,7 @@ public class InstructionMsgEvent {
      */
     @KanriInsEvent(prefix = "deputyAdmin"
             , sender = PERMISSION_LEVEL_SUPER_ADMIN
-            , bot = MemberPermission.MEMBER
+            , bot = {MemberPermission.ADMINISTRATOR, MemberPermission.OWNER, MemberPermission.MEMBER}
             , regexp = "deputyAdminRegExp")
     public int deputyAdmin(@NotNull long[] groups, @NotNull long[] qqs, String text) {
         if (groups.length == 0) groups = new long[]{-1};
@@ -502,12 +502,11 @@ public class InstructionMsgEvent {
                 if (groupId < 0) {
                     rep.append("全局:\r\n");
                     rep.append(StringUtils.toString(Va.getGlobalConfig().getPermissions(bot.getId()).getDeputyAdmin()));
-                } else {
-                    rep.append(groupId).append(":\r\n");
-                    rep.append(StringUtils.toString(Va.getGroupConfig().getDeputyAdmin(groupId)));
                 }
+                rep.append(groupId).append(":\r\n");
+                rep.append(StringUtils.toString(Va.getGroupConfig().getDeputyAdmin(groupId)));
             }
-            Api.sendMessage(group, "副管列表:\r\n" + rep);
+            Api.sendMessage(group, "副管列表:" + rep);
             return RETURN_BREAK_TRUE;
         }
         for (long qq : qqs) {
@@ -518,12 +517,16 @@ public class InstructionMsgEvent {
 
                 if (base.getAdd().contains(text)) {
                     if (groupId > 0) {
-                        Va.getGroupConfig().getDeputyAdmin(groupId).add(qq);
+                        Set<Long> deputyAdmin = Va.getGroupConfig().getDeputyAdmin(group.getId());
+                        deputyAdmin.add(qq);
+                        Va.getGroupConfig().getDeputyAdmin().put(group.getId(), deputyAdmin);
                     } else {
                         Va.getGlobalConfig().getPermissions(bot.getId()).getDeputyAdmin().add(qq);
                     }
                 } else if (base.getDelete().contains(text)) {
-                    Va.getGroupConfig().getDeputyAdmin(groupId).remove(qq);
+                    Set<Long> deputyAdmin = Va.getGroupConfig().getDeputyAdmin(group.getId());
+                    deputyAdmin.remove(qq);
+                    Va.getGroupConfig().getDeputyAdmin().put(group.getId(), deputyAdmin);
                     if (groupId <= 0)
                         Va.getGlobalConfig().getPermissions(bot.getId()).getDeputyAdmin().remove(qq);
                 }
@@ -550,7 +553,7 @@ public class InstructionMsgEvent {
      */
     @KanriInsEvent(prefix = "deputyAdmin"
             , sender = PERMISSION_LEVEL_GROUP_OWNER
-            , bot = MemberPermission.MEMBER
+            , bot = {MemberPermission.ADMINISTRATOR, MemberPermission.OWNER, MemberPermission.MEMBER}
             , regexp = "deputyAdminRegExp")
     public int groupDeputyAdmin(@NotNull long[] groups, @NotNull long[] qqs, String text) {
         if (groups.length == 0) groups = new long[]{0};
@@ -561,21 +564,18 @@ public class InstructionMsgEvent {
         if (qqs.length == 0 && base.getSelect().contains(text)) {
             for (long groupId : groups) {
                 rep.append("\r\n");
-                if (groupId < 0) {
-                    rep.append("全局:\r\n");
-                    rep.append(StringUtils.toString(Va.getGlobalConfig().getPermissions(bot.getId()).getDeputyAdmin()));
-                } else {
-                    rep.append(groupId).append(":\r\n");
-                    rep.append(StringUtils.toString(Va.getGroupConfig().getDeputyAdmin(groupId)));
-                }
+                rep.append(groupId).append(":\r\n");
+                rep.append(StringUtils.toString(Va.getGroupConfig().getDeputyAdmin(groupId)));
             }
-            Api.sendMessage(group, "副管列表:\r\n" + rep);
+            Api.sendMessage(group, "副管列表:" + rep);
             return RETURN_BREAK_TRUE;
         }
         for (long qq : qqs) {
             rep.append(',');
             if (base.getAdd().contains(text)) {
-                Va.getGroupConfig().getDeputyAdmin(group.getId()).add(qq);
+                Set<Long> deputyAdmin = Va.getGroupConfig().getDeputyAdmin(group.getId());
+                deputyAdmin.add(qq);
+                Va.getGroupConfig().getDeputyAdmin().put(group.getId(), deputyAdmin);
             } else if (base.getDelete().contains(text)) {
                 Va.getGroupConfig().getDeputyAdmin(group.getId()).remove(qq);
             }
@@ -600,7 +600,7 @@ public class InstructionMsgEvent {
      */
     @KanriInsEvent(prefix = "botAdmin"
             , sender = PERMISSION_LEVEL_SUPER_ADMIN
-            , bot = MemberPermission.MEMBER
+            , bot = {MemberPermission.ADMINISTRATOR, MemberPermission.OWNER, MemberPermission.MEMBER}
             , regexp = "botAdminRegExp")
     public int botAdmin(long[] groups, @NotNull long[] qqs, String text) {
         StringBuilder rep = new StringBuilder();
@@ -617,6 +617,7 @@ public class InstructionMsgEvent {
             } else if (base.getDelete().contains(text)) {
                 Va.getGlobalConfig().getPermissions(bot.getId()).getBotAdmin().remove(qq);
             }
+            rep.append(qq);
         }
         if (!StringUtils.isNullOrEmpty(rep.toString())) {
             rep.delete(0, 1);
@@ -636,7 +637,7 @@ public class InstructionMsgEvent {
      */
     @KanriInsEvent(prefix = "superAdmin"
             , sender = PERMISSION_LEVEL_BOT_OWNER
-            , bot = MemberPermission.MEMBER
+            , bot = {MemberPermission.ADMINISTRATOR, MemberPermission.OWNER, MemberPermission.MEMBER}
             , regexp = "superAdminRegExp")
     public int superAdmin(long[] groups, @NotNull long[] qqs, String text) {
         StringBuilder rep = new StringBuilder();
@@ -673,7 +674,7 @@ public class InstructionMsgEvent {
      */
     @KanriInsEvent(prefix = "botOwner"
             , sender = PERMISSION_LEVEL_SUPER_OWNER
-            , bot = MemberPermission.MEMBER
+            , bot = {MemberPermission.ADMINISTRATOR, MemberPermission.OWNER, MemberPermission.MEMBER}
             , regexp = "botOwnerRegExp")
     public int botOwner(long[] groups, @NotNull long[] qqs, String text) {
         if (qqs.length == 1) {

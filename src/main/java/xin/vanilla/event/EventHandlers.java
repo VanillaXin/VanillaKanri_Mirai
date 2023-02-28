@@ -152,7 +152,7 @@ public class EventHandlers extends SimpleListenerHost {
                             } else {
                                 groups = VanillaUtils.getGroupFromString(groupString);
                             }
-                        } catch (IllegalStateException | IllegalArgumentException e) {
+                        } catch (IllegalStateException | IllegalArgumentException | NullPointerException e) {
                             groups = new long[]{};
                         }
 
@@ -174,7 +174,7 @@ public class EventHandlers extends SimpleListenerHost {
                             } else {
                                 qqs = VanillaUtils.getQQFromString(qqString);
                             }
-                        } catch (IllegalStateException | IllegalArgumentException e) {
+                        } catch (IllegalStateException | IllegalArgumentException | NullPointerException e) {
                             qqs = new long[]{};
                         }
 
