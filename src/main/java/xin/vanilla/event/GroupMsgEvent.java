@@ -1,5 +1,6 @@
 package xin.vanilla.event;
 
+import cn.hutool.core.util.RandomUtil;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.contact.Group;
 import net.mamoe.mirai.contact.Member;
@@ -116,13 +117,20 @@ public class GroupMsgEvent extends BaseMsgEvent {
                 }
                 paths = (List<Path>) Va.getDataCache().get(path);
                 long index = VanillaUtils.getDataCacheAsLong(path + "!index");
-                VanillaUtils.setDateCache(path + "!index", ++index);
+                int i1 = RandomUtil.randomInt(1, 5);
+                index += i1;
+                VanillaUtils.setDateCache(path + "!index", index);
                 if (paths.size() <= index) {
                     getHentaiList(path);
                 } else {
-                    group.sendMessage(new MessageChainBuilder()
-                            .append(ExternalResource.uploadAsImage(paths.get((int) index).toFile(), group))
-                            .build()).recallIn(100 * 1000);
+                    ForwardMessageBuilder forwardMessageBuilder = new ForwardMessageBuilder(group)
+                            .add(sender, msg);
+                    for (int i = 0; i < i1; i++) {
+                        forwardMessageBuilder.add(sender, new MessageChainBuilder()
+                                .append(ExternalResource.uploadAsImage(paths.get((int) index - i1).toFile(), group))
+                                .build());
+                    }
+                    group.sendMessage(forwardMessageBuilder.build()).recallIn(100 * 1000);
                 }
                 return true;
             }
