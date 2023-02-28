@@ -127,7 +127,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
                             .add(sender, msg);
                     for (int i = 0; i < i1; i++) {
                         forwardMessageBuilder.add(sender, new MessageChainBuilder()
-                                .append(ExternalResource.uploadAsImage(paths.get((int) index - i1).toFile(), group))
+                                .append(ExternalResource.uploadAsImage(paths.get((int) index - i).toFile(), group))
                                 .build());
                     }
                     group.sendMessage(forwardMessageBuilder.build()).recallIn(100 * 1000);
