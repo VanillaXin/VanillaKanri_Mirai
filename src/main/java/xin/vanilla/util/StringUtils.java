@@ -1,5 +1,7 @@
 package xin.vanilla.util;
 
+import java.util.Collection;
+
 public class StringUtils {
 
     public static final String METHOD_SET_PREFIX = "set";
@@ -89,6 +91,25 @@ public class StringUtils {
                 return b.toString();
             b.append(",");
         }
+    }
+
+    public static String toString(Collection<?> a) {
+        if (a == null)
+            return "null";
+        // a = Arrays.stream(a).sorted().toArray();
+        int iMax = a.size() - 1;
+        if (iMax == -1)
+            return "";
+
+        StringBuilder b = new StringBuilder();
+        int i = 0;
+        for (Object o : a) {
+            b.append(o);
+            i++;
+            if (i <= iMax)
+                b.append(",");
+        }
+        return b.toString();
     }
 
     /**

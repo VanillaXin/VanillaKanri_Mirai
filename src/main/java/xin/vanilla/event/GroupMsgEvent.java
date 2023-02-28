@@ -46,7 +46,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
     }
 
     public void run() {
-        logger.info("群聊: " + group.getId() + ":" + sender.getId() + " -> " + msg.serializeToMiraiCode());
+        // logger.info("群聊: " + group.getId() + ":" + sender.getId() + " -> " + msg.serializeToMiraiCode());
         if (rcon()) return;
         if (hentai()) return;
 

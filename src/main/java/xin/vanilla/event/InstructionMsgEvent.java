@@ -31,8 +31,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
-import static xin.vanilla.enumeration.PermissionLevel.PERMISSION_LEVEL_DEPUTY_ADMIN;
-import static xin.vanilla.enumeration.PermissionLevel.PERMISSION_LEVEL_SUPER_ADMIN;
+import static xin.vanilla.enumeration.PermissionLevel.*;
 import static xin.vanilla.mapper.impl.MessageCacheImpl.MSG_TYPE_GROUP;
 
 @SuppressWarnings("unused")
@@ -488,6 +487,215 @@ public class InstructionMsgEvent {
     }
 
     /**
+     * 增删副管
+     */
+    @KanriInsEvent(prefix = "deputyAdmin"
+            , sender = PERMISSION_LEVEL_SUPER_ADMIN
+            , bot = MemberPermission.MEMBER
+            , regexp = "deputyAdminRegExp")
+    public int deputyAdmin(@NotNull long[] groups, @NotNull long[] qqs, String text) {
+        if (groups.length == 0) groups = new long[]{-1};
+        StringBuilder rep = new StringBuilder();
+        if (qqs.length == 0 && base.getSelect().contains(text)) {
+            for (long groupId : groups) {
+                rep.append("\r\n");
+                if (groupId < 0) {
+                    rep.append("全局:\r\n");
+                    rep.append(StringUtils.toString(Va.getGlobalConfig().getPermissions(bot.getId()).getDeputyAdmin()));
+                } else {
+                    rep.append(groupId).append(":\r\n");
+                    rep.append(StringUtils.toString(Va.getGroupConfig().getDeputyAdmin(groupId)));
+                }
+            }
+            Api.sendMessage(group, "副管列表:\r\n" + rep);
+            return RETURN_BREAK_TRUE;
+        }
+        for (long qq : qqs) {
+            rep.append(',');
+            for (long groupId : groups) {
+                if (groupId == 0) groupId = group.getId();
+                else if (groupId < 0) groupId = -1;
+
+                if (base.getAdd().contains(text)) {
+                    if (groupId > 0) {
+                        Va.getGroupConfig().getDeputyAdmin(groupId).add(qq);
+                    } else {
+                        Va.getGlobalConfig().getPermissions(bot.getId()).getDeputyAdmin().add(qq);
+                    }
+                } else if (base.getDelete().contains(text)) {
+                    Va.getGroupConfig().getDeputyAdmin(groupId).remove(qq);
+                    if (groupId <= 0)
+                        Va.getGlobalConfig().getPermissions(bot.getId()).getDeputyAdmin().remove(qq);
+                }
+            }
+            rep.append(qq);
+        }
+        if (!StringUtils.isNullOrEmpty(rep.toString())) {
+            rep.delete(0, 1);
+            String flag = "全局副管";
+            if (groups[0] >= 0) flag = "群副管";
+
+            if (base.getAdd().contains(text))
+                Api.sendMessage(group, "已将 " + rep + " 添加为" + flag);
+            else if (base.getDelete().contains(text))
+                Api.sendMessage(group, "已取消 " + rep + " 的" + flag + "权限");
+        } else {
+            Api.sendMessage(group, "待操作对象为空");
+        }
+        return RETURN_BREAK_TRUE;
+    }
+
+    /**
+     * 增删群副管
+     */
+    @KanriInsEvent(prefix = "deputyAdmin"
+            , sender = PERMISSION_LEVEL_GROUP_OWNER
+            , bot = MemberPermission.MEMBER
+            , regexp = "deputyAdminRegExp")
+    public int groupDeputyAdmin(@NotNull long[] groups, @NotNull long[] qqs, String text) {
+        if (groups.length == 0) groups = new long[]{0};
+        if (groups.length > 1) return RETURN_BREAK_TRUE;
+        if (groups[0] != 0 || groups[0] != this.group.getId()) return RETURN_BREAK_TRUE;
+
+        StringBuilder rep = new StringBuilder();
+        if (qqs.length == 0 && base.getSelect().contains(text)) {
+            for (long groupId : groups) {
+                rep.append("\r\n");
+                if (groupId < 0) {
+                    rep.append("全局:\r\n");
+                    rep.append(StringUtils.toString(Va.getGlobalConfig().getPermissions(bot.getId()).getDeputyAdmin()));
+                } else {
+                    rep.append(groupId).append(":\r\n");
+                    rep.append(StringUtils.toString(Va.getGroupConfig().getDeputyAdmin(groupId)));
+                }
+            }
+            Api.sendMessage(group, "副管列表:\r\n" + rep);
+            return RETURN_BREAK_TRUE;
+        }
+        for (long qq : qqs) {
+            rep.append(',');
+            if (base.getAdd().contains(text)) {
+                Va.getGroupConfig().getDeputyAdmin(group.getId()).add(qq);
+            } else if (base.getDelete().contains(text)) {
+                Va.getGroupConfig().getDeputyAdmin(group.getId()).remove(qq);
+            }
+            rep.append(qq);
+        }
+
+        if (!StringUtils.isNullOrEmpty(rep.toString())) {
+            rep.delete(0, 1);
+            if (base.getAdd().contains(text))
+                Api.sendMessage(group, "已将 " + rep + " 添加为群副管");
+            else if (base.getDelete().contains(text))
+                Api.sendMessage(group, "已取消 " + rep + " 的群副管权限");
+        } else {
+            Api.sendMessage(group, "待操作对象为空");
+        }
+
+        return RETURN_BREAK_TRUE;
+    }
+
+    /**
+     * 增删主管
+     */
+    @KanriInsEvent(prefix = "botAdmin"
+            , sender = PERMISSION_LEVEL_SUPER_ADMIN
+            , bot = MemberPermission.MEMBER
+            , regexp = "botAdminRegExp")
+    public int botAdmin(long[] groups, @NotNull long[] qqs, String text) {
+        StringBuilder rep = new StringBuilder();
+        if (qqs.length == 0 && base.getSelect().contains(text)) {
+            rep.append("主管列表:\r\n");
+            rep.append(StringUtils.toString(Va.getGlobalConfig().getPermissions(bot.getId()).getBotAdmin()));
+            Api.sendMessage(group, rep.toString());
+            return RETURN_BREAK_TRUE;
+        }
+        for (long qq : qqs) {
+            rep.append(',');
+            if (base.getAdd().contains(text)) {
+                Va.getGlobalConfig().getPermissions(bot.getId()).getBotAdmin().add(qq);
+            } else if (base.getDelete().contains(text)) {
+                Va.getGlobalConfig().getPermissions(bot.getId()).getBotAdmin().remove(qq);
+            }
+        }
+        if (!StringUtils.isNullOrEmpty(rep.toString())) {
+            rep.delete(0, 1);
+
+            if (base.getAdd().contains(text))
+                Api.sendMessage(group, "已将 " + rep + " 添加为主管");
+            else if (base.getDelete().contains(text))
+                Api.sendMessage(group, "已取消 " + rep + " 的主管权限");
+        } else {
+            Api.sendMessage(group, "待操作对象为空");
+        }
+        return RETURN_BREAK_TRUE;
+    }
+
+    /**
+     * 增删超管
+     */
+    @KanriInsEvent(prefix = "superAdmin"
+            , sender = PERMISSION_LEVEL_BOT_OWNER
+            , bot = MemberPermission.MEMBER
+            , regexp = "superAdminRegExp")
+    public int superAdmin(long[] groups, @NotNull long[] qqs, String text) {
+        StringBuilder rep = new StringBuilder();
+        if (qqs.length == 0 && base.getSelect().contains(text)) {
+            rep.append("超管列表:\r\n");
+            rep.append(StringUtils.toString(Va.getGlobalConfig().getPermissions(bot.getId()).getSuperAdmin()));
+            Api.sendMessage(group, rep.toString());
+            return RETURN_BREAK_TRUE;
+        }
+        for (long qq : qqs) {
+            rep.append(',');
+            if (base.getAdd().contains(text)) {
+                Va.getGlobalConfig().getPermissions(bot.getId()).getSuperAdmin().add(qq);
+            } else if (base.getDelete().contains(text)) {
+                Va.getGlobalConfig().getPermissions(bot.getId()).getSuperAdmin().remove(qq);
+            }
+            rep.append(qq);
+        }
+        if (!StringUtils.isNullOrEmpty(rep.toString())) {
+            rep.delete(0, 1);
+
+            if (base.getAdd().contains(text))
+                Api.sendMessage(group, "已将 " + rep + " 添加为超管");
+            else if (base.getDelete().contains(text))
+                Api.sendMessage(group, "已取消 " + rep + " 的超管权限");
+        } else {
+            Api.sendMessage(group, "待操作对象为空");
+        }
+        return RETURN_BREAK_TRUE;
+    }
+
+    /**
+     * 增删主人
+     */
+    @KanriInsEvent(prefix = "botOwner"
+            , sender = PERMISSION_LEVEL_SUPER_OWNER
+            , bot = MemberPermission.MEMBER
+            , regexp = "botOwnerRegExp")
+    public int botOwner(long[] groups, @NotNull long[] qqs, String text) {
+        if (qqs.length == 1) {
+            long qq = qqs[0];
+            if (base.getAdd().contains(text)) {
+                Va.getGlobalConfig().getPermissions(bot.getId()).setBotOwner(qq);
+                Api.sendMessage(group, "已将 " + qq + "设置为主人");
+            } else if (base.getDelete().contains(text)) {
+                if (Va.getGlobalConfig().getPermissions(bot.getId()).getBotOwner() == qq) {
+                    Va.getGlobalConfig().getPermissions(bot.getId()).setBotOwner(0);
+                    Api.sendMessage(group, "已删除主人 " + qq);
+                } else {
+                    Api.sendMessage(group, qq + "并不是我的主人");
+                }
+            }
+            return RETURN_BREAK_TRUE;
+        }
+        Api.sendMessage(group, "待操作对象为空");
+        return RETURN_BREAK_TRUE;
+    }
+
+    /**
      * 踢出群成员
      */
     @KanriInsEvent(prefix = "kick"
@@ -580,6 +788,8 @@ public class InstructionMsgEvent {
 
     /**
      * 删除关键词回复
+     * <p>
+     * 通过keyword删除或通过id删除
      */
     @KeywordInsEvent
     public int keyDel(String prefix) {

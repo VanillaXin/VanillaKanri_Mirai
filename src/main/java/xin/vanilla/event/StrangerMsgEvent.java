@@ -22,6 +22,6 @@ public class StrangerMsgEvent extends BaseMsgEvent {
     }
 
     public void run() {
-        logger.info("陌生人: " + sender.getId() + " -> " + msg.serializeToMiraiCode());
+        // logger.info("陌生人: " + sender.getId() + " -> " + msg.serializeToMiraiCode());
     }
 }

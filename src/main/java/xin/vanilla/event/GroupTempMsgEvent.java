@@ -25,6 +25,6 @@ public class GroupTempMsgEvent extends BaseMsgEvent {
     }
 
     public void run() {
-        logger.info("临时: " + group.getId() + ":" + sender.getId() + " -> " + msg.serializeToMiraiCode());
+        // logger.info("临时: " + group.getId() + ":" + sender.getId() + " -> " + msg.serializeToMiraiCode());
     }
 }

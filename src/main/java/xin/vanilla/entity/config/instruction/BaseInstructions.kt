@@ -12,19 +12,38 @@ import net.mamoe.mirai.message.data.AtAll
 @Accessors(chain = true)
 @Serializable
 class BaseInstructions {
-    // 添加+(如: 加入黑名单)
+    /**
+     * 添加+(如: 加入黑名单)
+     */
     var add: Set<String> = mutableSetOf("add")
 
-    // 删除+(如: 删除群管理)
+    /**
+     * 删除+(如: 删除群管理)
+     */
     var delete: Set<String> = mutableSetOf("del")
 
-    // 全局+(如: 全局词库)
+    /**
+     * 查询+(如: 查询黑名单)
+     */
+    var select: Set<String> = mutableSetOf("select", "list", "ls", "sel")
+
+    /**
+     * 全局+(如: 全局词库)
+     */
     var global: Set<String> = mutableSetOf("all")
 
-    // 当前+(如: 当前群)
+    /**
+     * 当前+(如: 当前群)
+     */
     var that: Set<String> = mutableSetOf("that", "this", "here")
 
+    /**
+     * 艾特全体+
+     */
     var atAll: Set<String> = mutableSetOf("@全体成员", "@全体", "@所有人", AtAll.toString())
 
+    /**
+     * 艾特全体对应的数字账号+
+     */
     var atAllId: Set<String> = mutableSetOf("-2333")
 }

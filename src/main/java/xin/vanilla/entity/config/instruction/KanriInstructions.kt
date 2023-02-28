@@ -17,11 +17,6 @@ class KanriInstructions {
     var prefix: String = ""
 
     /**
-     * 群管理+
-     */
-    var admin: Set<String> = mutableSetOf("ad")
-
-    /**
      * 头衔+
      */
     var tag: Set<String> = mutableSetOf("tag")
@@ -60,4 +55,29 @@ class KanriInstructions {
      * 精华消息+
      */
     var essence: Set<String> = mutableSetOf("essence", "fine")
+
+    /**
+     * 群管理+
+     */
+    var admin: Set<String> = mutableSetOf("groupAdmin", "gad", "admin", "ad")
+
+    /**
+     * 副管+
+     */
+    var deputyAdmin: Set<String> = mutableSetOf("deputyAdmin", "deputyAd", "dad")
+
+    /**
+     * 主管+
+     */
+    var botAdmin: Set<String> = mutableSetOf("botAdmin", "botAd", "bad")
+
+    /**
+     * 超管+
+     */
+    var superAdmin: Set<String> = mutableSetOf("superAdmin", "superAd", "sad")
+
+    /**
+     * 主人+
+     */
+    var botOwner: Set<String> = mutableSetOf("botOwner", "owner")
 }

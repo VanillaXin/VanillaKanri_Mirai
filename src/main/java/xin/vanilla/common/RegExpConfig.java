@@ -60,6 +60,43 @@ public class RegExpConfig {
     }
 
     /**
+     * 设置副管指令
+     */
+    public static RegUtils deputyAdminRegExp(String prefix) {
+        //  dad add <QQ>
+        return RegUtils.start().groupNon(prefix).separator()
+                .groupIgByName("group", GROUP_CODE).appendIg("?").separator("?")
+                .groupByName("operation", base.getAdd(), base.getDelete(), base.getSelect()).separator()
+                .groupIgByName("qq", QQ_CODE).end();
+    }
+
+    /**
+     * 设置主管指令
+     */
+    public static RegUtils botAdminRegExp(String prefix) {
+        //  bad add <QQ>
+        return RegUtils.start().groupNon(prefix).separator()
+                .groupByName("operation", base.getAdd(), base.getDelete(), base.getSelect()).separator()
+                .groupIgByName("qq", QQ_CODE).end();
+    }
+
+    /**
+     * 设置超管指令
+     */
+    public static RegUtils superAdminRegExp(String prefix) {
+        //  sad add <QQ>
+        return botAdminRegExp(prefix);
+    }
+
+    /**
+     * 设置主人指令
+     */
+    public static RegUtils botOwnerRegExp(String prefix) {
+        //  owner add <QQ>
+        return botAdminRegExp(prefix);
+    }
+
+    /**
      * 设置群名片指令
      */
     public static RegUtils cardRegExp(String prefix) {

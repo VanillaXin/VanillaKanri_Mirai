@@ -3,9 +3,11 @@ package xin.vanilla.mapper.impl;
 import cn.hutool.core.date.DateUtil;
 import xin.vanilla.VanillaKanri;
 import xin.vanilla.entity.config.instruction.KeywordInstructions;
+import xin.vanilla.entity.data.KeyData;
 import xin.vanilla.mapper.Base;
 import xin.vanilla.mapper.KeywordData;
 import xin.vanilla.util.sqlite.SqliteUtil;
+import xin.vanilla.util.sqlite.statement.InsertStatement;
 
 import java.sql.SQLException;
 
@@ -42,7 +44,7 @@ public class KeywordDataImpl extends Base implements KeywordData {
                             " time   INTEGER(10)                           NOT NULL," +
                             " level  INTEGER(2)                            NOT NULL" +
                             ")");
-            sqliteUtil.executeSql("CREATE UNIQUE INDEX 'word_group_unique'" + " ON '" + table + "' ('word', 'group')");
+            sqliteUtil.executeSql("CREATE UNIQUE INDEX 'word_msg_group_unique'" + " ON '" + table + "' ('word', 'group', 'msg')");
         }
     }
 
@@ -61,14 +63,14 @@ public class KeywordDataImpl extends Base implements KeywordData {
         } else return;
         createTable(table);
         // TODO 定义特殊码, 转义特殊码
-        // InsertStatement insert = InsertStatement.produce(table)
-        //         .put(KeyData::getWord, word)
-        //         .put(KeyData::getMsg, rep)
-        //         .put(KeyData::getBot, bot)
-        //         .put(KeyData::getGroup, group)
-        //         .put(KeyData::getTime, time)
-        //         .put(KeyData::getLevel, level);
-        // sqliteUtil.insert(insert);
+        InsertStatement insert = InsertStatement.produce(table)
+                .put(KeyData::getWord, word)
+                .put(KeyData::getMsg, rep)
+                .put(KeyData::getBot, bot)
+                .put(KeyData::getGroup, group)
+                .put(KeyData::getTime, time)
+                .put(KeyData::getLevel, level);
+        sqliteUtil.insert(insert);
     }
 
     @Override

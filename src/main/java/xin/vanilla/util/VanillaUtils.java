@@ -296,7 +296,7 @@ public class VanillaUtils {
     /**
      * 是否有或(有大于)给定的权限等级
      *
-     * @param level 权限等级 例: PERMISSION_LEVEL_BOTADMIN
+     * @param level 权限等级 例: PERMISSION_LEVEL_BOT_ADMIN
      */
     public static boolean hasPermissionOrMore(Bot bot, Group group, long qq, PermissionLevel level) {
         if (level == PermissionLevel.PERMISSION_LEVEL_SUPER_OWNER && bot != null) return isSuperOwner(bot, qq);
