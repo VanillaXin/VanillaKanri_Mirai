@@ -18,6 +18,7 @@ public class Api {
      */
     public static MessageReceipt<Contact> sendMessage(Contact contact, String message) {
         MessageReceipt<Contact> contactMessageReceipt = contact.sendMessage(message);
+        Va.addMsgSendCount();
         Va.getMessageCache().addMsg(contact, contactMessageReceipt.getSource(), MessageUtils.newChain(new PlainText(message)));
         return contactMessageReceipt;
     }
@@ -27,6 +28,7 @@ public class Api {
      */
     public static MessageReceipt<Contact> sendMessage(Contact contact, Message message) {
         MessageReceipt<Contact> contactMessageReceipt = contact.sendMessage(message);
+        Va.addMsgSendCount();
         Va.getMessageCache().addMsg(contact, contactMessageReceipt.getSource(), message);
         return contactMessageReceipt;
     }

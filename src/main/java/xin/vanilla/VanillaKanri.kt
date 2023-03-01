@@ -1,5 +1,6 @@
 package xin.vanilla
 
+import cn.hutool.core.date.DateUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.future.future
@@ -17,6 +18,7 @@ import xin.vanilla.mapper.MessageCache
 import xin.vanilla.mapper.impl.KeywordDataImpl
 import xin.vanilla.mapper.impl.MessageCacheImpl
 import xin.vanilla.util.sqlite.SqliteUtil
+import java.util.*
 import java.util.concurrent.Callable
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
@@ -67,6 +69,8 @@ object VanillaKanri : KotlinPlugin(
             logger.info("Plugin loaded a second ago!")
         }
 
+        dataCache["plugin.enableTime"] = System.currentTimeMillis()
+
         // 注册事件监听
         GlobalEventChannel.registerListenerHost(EventHandlers())
 
@@ -95,10 +99,75 @@ object VanillaKanri : KotlinPlugin(
         }
     }
 
+    /**
+     * 创建延时任务
+     */
     fun <R> delayed(delayMillis: Long, callable: Callable<R>): CompletableFuture<R> {
         return future {
             delay(delayMillis)
             runInterruptible(Dispatchers.IO) { callable.call() }
         }
+    }
+
+    /**
+     * 消息发送计数++
+     */
+    fun addMsgSendCount(): Long {
+        val count = getMsgSendCount() + 1
+        this.dataCache["plugin.msgSendCount"] = count
+        return count
+    }
+
+    /**
+     * 获取消息发送计数
+     */
+    fun getMsgSendCount(): Long {
+        val count = this.dataCache["plugin.msgSendCount"] ?: return 0
+        return count as Long
+    }
+
+    /**
+     * 获取消息接收计数++
+     */
+    fun addMsgReceiveCount(): Long {
+        val count = getMsgReceiveCount() + 1
+        this.dataCache["plugin.msgReceiveCount"] = count
+        return count
+    }
+
+    /**
+     * 获取消息接收计数
+     */
+    fun getMsgReceiveCount(): Long {
+        val count = this.dataCache["plugin.msgReceiveCount"] ?: return 0
+        return count as Long
+    }
+
+    /**
+     * 获取插件运行时长
+     */
+    fun getRuntimeAsString(): String {
+        return DateUtil.formatBetween(Date((this.dataCache["plugin.enableTime"] as Long)), Date())
+    }
+
+    /**
+     * 获取插件运行时长
+     */
+    fun getRuntimeAsLong(): Long {
+        return this.dataCache["plugin.enableTime"] as Long - System.currentTimeMillis()
+    }
+
+    /**
+     * 获取机器人在线时长
+     */
+    fun getBotOnlineTimeAsString(bot: Long): String {
+        return DateUtil.formatBetween(Date((this.dataCache["plugin.botOnlineTime.$bot"] as Long)), Date())
+    }
+
+    /**
+     * 获取机器人在线时长
+     */
+    fun getBotOnlineTimeAsLong(bot: Long): Long {
+        return this.dataCache["plugin.botOnlineTime.$bot"] as Long - System.currentTimeMillis()
     }
 }

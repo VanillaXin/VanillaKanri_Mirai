@@ -1,7 +1,13 @@
 package xin.vanilla.event;
 
+import cn.hutool.extra.pinyin.PinyinUtil;
+import cn.hutool.system.oshi.CpuInfo;
+import cn.hutool.system.oshi.OshiUtil;
 import lombok.Getter;
 import net.mamoe.mirai.Bot;
+import net.mamoe.mirai.console.MiraiConsole;
+import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescription;
+import net.mamoe.mirai.console.util.SemVersion;
 import net.mamoe.mirai.contact.Group;
 import net.mamoe.mirai.contact.MemberPermission;
 import net.mamoe.mirai.contact.NormalMember;
@@ -11,6 +17,7 @@ import net.mamoe.mirai.event.events.GroupTempMessageEvent;
 import net.mamoe.mirai.event.events.MessageEvent;
 import net.mamoe.mirai.message.data.*;
 import org.jetbrains.annotations.NotNull;
+import oshi.hardware.GlobalMemory;
 import xin.vanilla.VanillaKanri;
 import xin.vanilla.common.RegExpConfig;
 import xin.vanilla.common.annotation.KanriInsEvent;
@@ -21,11 +28,9 @@ import xin.vanilla.entity.config.instruction.KanriInstructions;
 import xin.vanilla.entity.config.instruction.KeywordInstructions;
 import xin.vanilla.entity.config.instruction.TimedTaskInstructions;
 import xin.vanilla.entity.data.MsgCache;
-import xin.vanilla.util.Api;
-import xin.vanilla.util.RegUtils;
-import xin.vanilla.util.StringUtils;
-import xin.vanilla.util.VanillaUtils;
+import xin.vanilla.util.*;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -95,6 +100,34 @@ public class InstructionMsgEvent {
 
 
     // region 群管指令
+
+    /**
+     * 框架/系统信息
+     */
+    @KanriInsEvent(prefix = "status")
+    public int status(long[] groups, long[] qqs, String text) {
+        SemVersion version = MiraiConsole.INSTANCE.getVersion();
+        JvmPluginDescription pluginInfo = Va.getDescription();
+        ForwardMessageBuilder forwardMessageBuilder;
+        StringBuilder rep = new StringBuilder();
+        rep.append(pluginInfo.getName()).append(" - v").append(pluginInfo.getVersion()).append("\n");
+        GlobalMemory memory = OshiUtil.getMemory();
+
+        rep.append("消息收发: ").append(Va.getMsgReceiveCount()).append("/").append(Va.getMsgSendCount()).append("\n");
+
+        rep.append("运行时长: ").append(Va.getRuntimeAsString()).append("\n");
+        rep.append("在线时长: ").append(Va.getBotOnlineTimeAsString(bot.getId())).append("\n");
+
+        rep.append("RAM占用: ").append(StorageUnitUtil.convert(new BigDecimal(memory.getTotal() - memory.getAvailable()), StorageUnitUtil.BYTE, StorageUnitUtil.GB, 2))
+                .append("/").append(StorageUnitUtil.convert(new BigDecimal(memory.getTotal()), StorageUnitUtil.BYTE, StorageUnitUtil.GB, 2)).append("GB\n");
+        CpuInfo cpuInfo = OshiUtil.getCpuInfo();
+        rep.append("CPU占用: ").append(cpuInfo.getUsed()).append("%\n");
+
+        rep.append("Mirai Console - ").append(version);
+        if (group != null) Api.sendMessage(group, rep.toString());
+        else Api.sendMessage(sender, rep.toString());
+        return RETURN_BREAK_TRUE;
+    }
 
     /**
      * 戳一戳
@@ -769,8 +802,7 @@ public class InstructionMsgEvent {
                         groups[0] = this.group.getId();
                     }
                 }
-
-            } catch (IllegalStateException | IllegalArgumentException e) {
+            } catch (IllegalStateException | IllegalArgumentException | NullPointerException e) {
                 groups = new long[]{this.group.getId()};
             }
 
@@ -778,10 +810,36 @@ public class InstructionMsgEvent {
             key = reg.getMatcher().group("key");
             rep = reg.getMatcher().group("rep");
 
-            for (long groupId : groups) {
-                Va.getKeywordData().addKeyword(key, rep, bot.getId(), groupId, type, time, VanillaUtils.getPermissionLevel(bot, groupId, sender.getId()));
+            String keyFormat;
+
+            if (keyword.getContain().contains(type)) {
+                keyFormat = ".*?" + key + ".*?";
+            } else if (keyword.getPinyin().contains(type)) {
+                keyFormat = ".*?" + PinyinUtil.getPinyin(key).trim() + ".*?";
+            } else if (keyword.getRegex().contains(type)) {
+                keyFormat = key;
+            } else {
+                keyFormat = "^" + key + "$";
             }
 
+            ForwardMessageBuilder forwardMessageBuilder = new ForwardMessageBuilder(group)
+                    .add(sender, msg)
+                    .add(bot, new PlainText("触发内容:\r\n" + keyFormat))
+                    .add(bot, new PlainText("回复内容:\r\n" + rep));
+            boolean tf = false;
+            for (long groupId : groups) {
+                long keyId = Va.getKeywordData().addKeyword(key, rep, bot.getId(), groupId, type, time, VanillaUtils.getPermissionLevel(bot, groupId, sender.getId()) * 20);
+                if (keyId > 0) {
+                    tf = true;
+                    forwardMessageBuilder.add(bot, new PlainText("群号: " + groupId + "\r\n关键词编号: " + keyId));
+                }
+            }
+            if (tf) {
+                forwardMessageBuilder.add(bot, new PlainText("添加成功"));
+            } else {
+                forwardMessageBuilder.add(bot, new PlainText("添加失败"));
+            }
+            Api.sendMessage(group, forwardMessageBuilder.build());
             return RETURN_BREAK_TRUE;
         }
         return RETURN_CONTINUE;

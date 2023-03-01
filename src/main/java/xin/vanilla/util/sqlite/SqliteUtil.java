@@ -189,11 +189,11 @@ public class SqliteUtil {
         Connection c = this.getConn();
         PreparedStatement ps = this.getStatement(c, statement.toString());
         try {
-            if (setStatement(statement, ps)) return null;
+            if (setStatement(statement, ps)) return -1;
             return ps.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
-            return null;
+            return -1;
         } finally {
             try {
                 c.commit();

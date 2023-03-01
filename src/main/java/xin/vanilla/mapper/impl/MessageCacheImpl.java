@@ -62,13 +62,13 @@ public class MessageCacheImpl extends Base implements MessageCache {
         if (!sqliteUtil.containsTable(table)) {
             sqliteUtil.executeSql(
                     "CREATE TABLE '" + table + "' (" +
-                            " id     INTEGER     PRIMARY KEY AUTOINCREMENT NOT NULL," +
-                            " nos    TEXT        UNIQUE                    NOT NULL," +
-                            " bot    INTEGER(10)                           NOT NULL," +
-                            " sender INTEGER(10)                           NOT NULL," +
-                            " target INTEGER(10)                           NOT NULL," +
-                            " time   INTEGER(10)                           NOT NULL," +
-                            " msg    TEXT                                  NOT NULL" +
+                            " `id`     INTEGER     PRIMARY KEY AUTOINCREMENT NOT NULL," +
+                            " `nos`    TEXT        UNIQUE                    NOT NULL," +
+                            " `bot`    INTEGER(10)                           NOT NULL," +
+                            " `sender` INTEGER(10)                           NOT NULL," +
+                            " `target` INTEGER(10)                           NOT NULL," +
+                            " `time`   INTEGER(10)                           NOT NULL," +
+                            " `msg`    TEXT                                  NOT NULL" +
                             ")");
         }
     }

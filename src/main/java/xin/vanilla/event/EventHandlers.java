@@ -1,11 +1,13 @@
 package xin.vanilla.event;
 
 import kotlin.coroutines.CoroutineContext;
+import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.contact.MemberPermission;
 import net.mamoe.mirai.event.*;
 import net.mamoe.mirai.event.events.*;
 import net.mamoe.mirai.message.data.AtAll;
 import org.jetbrains.annotations.NotNull;
+import xin.vanilla.VanillaKanri;
 import xin.vanilla.common.RegExpConfig;
 import xin.vanilla.common.annotation.KanriInsEvent;
 import xin.vanilla.common.annotation.KeywordInsEvent;
@@ -53,6 +55,9 @@ public class EventHandlers extends SimpleListenerHost {
      */
     @EventHandler(priority = EventPriority.HIGH)
     public void onMessage(@NotNull MessageEvent event) {
+        // 自增消息接收计数器
+        VanillaKanri.INSTANCE.addMsgReceiveCount();
+
         InstructionMsgEvent insEvent = new InstructionMsgEvent(event);
 
         // 判断是否群管指令
@@ -250,6 +255,12 @@ public class EventHandlers extends SimpleListenerHost {
     @EventHandler
     public void onMessageRecall(@NotNull MessageRecallEvent event) {
         new MsgRecallEvent(event).run();
+    }
+
+    @EventHandler
+    public void onBotOnline(@NotNull BotOnlineEvent event) {
+        long bot = event.getBot().getId();
+        VanillaKanri.INSTANCE.getDataCache().put("plugin.botOnlineTime." + bot, System.currentTimeMillis());
     }
 
     /**

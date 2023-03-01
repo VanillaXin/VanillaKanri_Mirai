@@ -44,7 +44,7 @@ public class RegExpConfig {
                     .groupIgByName("player", "[\\S ]*?").separator();
 
     public static RegUtils defaultRegExp(String prefix) {
-        return RegUtils.start().groupNon(prefix).separator()
+        return RegUtils.start().groupNon(prefix).separator("?")
                 .groupIgByName("operation", ".*?").end();
     }
 
@@ -189,7 +189,7 @@ public class RegExpConfig {
      */
     public static RegUtils keyAddRegExp(String prefix) {
         // /va key add [<group>] 精准|包含|拼音|正则 [key] rep [content]
-        return RegUtils.start().groupNon(prefix).separator().groupNon(base.getAdd()).separator()
+        return RegUtils.start().groupNon(prefix).separator()
                 .groupIgByName("group", GROUP_CODE).appendIg("?").separator("?")
                 .groupByName("type", keyword.getExactly(), keyword.getContain(), keyword.getPinyin(), keyword.getRegex()).separator()
                 .groupIgByName("key", ".*?").separator()
@@ -202,7 +202,7 @@ public class RegExpConfig {
      */
     public static RegUtils keyDelRegExp(String prefix) {
         // /va key del [<group>] 精准|包含|拼音|正则 [key]
-        return RegUtils.start().groupNon(prefix).separator().groupNon(base.getAdd()).separator()
+        return RegUtils.start().groupNon(prefix).separator()
                 .groupIgByName("group", GROUP_CODE).appendIg("?").separator("?")
                 .groupByName("type", keyword.getExactly(), keyword.getContain(), keyword.getPinyin(), keyword.getRegex()).separator()
                 .groupIgByName("key", ".*?").end();

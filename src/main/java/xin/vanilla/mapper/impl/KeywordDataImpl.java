@@ -36,20 +36,20 @@ public class KeywordDataImpl extends Base implements KeywordData {
         if (!sqliteUtil.containsTable(table)) {
             sqliteUtil.executeSql(
                     "CREATE TABLE '" + table + "' (" +
-                            " id     INTEGER     PRIMARY KEY AUTOINCREMENT NOT NULL," +
-                            " word   TEXT                                  NOT NULL," +
-                            " msg    TEXT                                  NOT NULL," +
-                            " bot    INTEGER(10)                           NOT NULL," +
-                            " group  INTEGER(10)                           NOT NULL," +
-                            " time   INTEGER(10)                           NOT NULL," +
-                            " level  INTEGER(2)                            NOT NULL" +
+                            " `id`     INTEGER     PRIMARY KEY AUTOINCREMENT NOT NULL," +
+                            " `word`   TEXT                                  NOT NULL," +
+                            " `msg`    TEXT                                  NOT NULL," +
+                            " `bot`    INTEGER(10)                           NOT NULL," +
+                            " `group`  INTEGER(10)                           NOT NULL," +
+                            " `time`   INTEGER(10)                           NOT NULL," +
+                            " `level`  INTEGER(2)                            NOT NULL" +
                             ")");
             sqliteUtil.executeSql("CREATE UNIQUE INDEX 'word_msg_group_unique'" + " ON '" + table + "' ('word', 'group', 'msg')");
         }
     }
 
     @Override
-    public void addKeyword(String word, String rep, long bot, long group, String type, long time, int level) {
+    public long addKeyword(String word, String rep, long bot, long group, String type, long time, int level) {
         KeywordInstructions keyword = VanillaKanri.INSTANCE.getGlobalConfig().getInstructions().getKeyword();
         String table;
         if (keyword.getExactly().contains(type)) {
@@ -60,7 +60,7 @@ public class KeywordDataImpl extends Base implements KeywordData {
             table = getTableName(KEYWORD_TYPE_PINYIN);
         } else if (keyword.getRegex().contains(type)) {
             table = getTableName(KEYWORD_TYPE_REGEXP);
-        } else return;
+        } else return 0;
         createTable(table);
         // TODO 定义特殊码, 转义特殊码
         InsertStatement insert = InsertStatement.produce(table)
@@ -70,21 +70,24 @@ public class KeywordDataImpl extends Base implements KeywordData {
                 .put(KeyData::getGroup, group)
                 .put(KeyData::getTime, time)
                 .put(KeyData::getLevel, level);
-        sqliteUtil.insert(insert);
+        if (sqliteUtil.insert(insert) > 0) {
+            return sqliteUtil.getLastInsertRowId(table);
+        }
+        return 0;
     }
 
     @Override
-    public void addKeyword(String word, String rep, long bot, long group, String type, long time) {
-        addKeyword(word, rep, bot, group, type, time, 1);
+    public long addKeyword(String word, String rep, long bot, long group, String type, long time) {
+        return addKeyword(word, rep, bot, group, type, time, 1);
     }
 
     @Override
-    public void addKeyword(String word, String rep, long bot, long group, String type, int level) {
-        addKeyword(word, rep, bot, group, type, DateUtil.currentSeconds(), level);
+    public long addKeyword(String word, String rep, long bot, long group, String type, int level) {
+        return addKeyword(word, rep, bot, group, type, DateUtil.currentSeconds(), level);
     }
 
     @Override
-    public void addKeyword(String word, String rep, long bot, long group, String type) {
-        addKeyword(word, rep, bot, group, type, DateUtil.currentSeconds(), 1);
+    public long addKeyword(String word, String rep, long bot, long group, String type) {
+        return addKeyword(word, rep, bot, group, type, DateUtil.currentSeconds(), 1);
     }
 }

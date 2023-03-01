@@ -15,6 +15,7 @@
  */
 package xin.vanilla.util.sqlite.statement;
 
+import lombok.Getter;
 import xin.vanilla.util.lambda.LambdaUtils;
 import xin.vanilla.util.lambda.SerializedFunction;
 
@@ -22,6 +23,9 @@ import xin.vanilla.util.lambda.SerializedFunction;
  * A statement producer that use to producing <b>INSERT</b> command of SQL language.
  */
 public class InsertStatement extends Statement {
+    @Getter
+    private CharSequence table;
+
     /**
      * Producing an "INSERT OR ROLLBACK INTO ..." statement.
      * <p/>
@@ -115,6 +119,7 @@ public class InsertStatement extends Statement {
      */
     protected static InsertStatement produce(CharSequence table, CharSequence clause) {
         InsertStatement createStmt = new InsertStatement();
+        createStmt.table = table;
         createStmt.statement.append("INSERT");
         if (clause != null) createStmt.statement.append(" OR ").append(clause);
         createStmt.statement.append(" INTO ").append("'").append(table).append("'");
@@ -182,7 +187,7 @@ public class InsertStatement extends Statement {
             columns.append(", ");
             values.append(", ");
         }
-        columns.append(column);
+        columns.append("`").append(column).append("`");
         append(values, value);
         return this;
     }
@@ -192,7 +197,7 @@ public class InsertStatement extends Statement {
             columns.append(", ");
             values.append(", ");
         }
-        columns.append(LambdaUtils.getFiledName(column));
+        columns.append("`").append(LambdaUtils.getFiledName(column)).append("`");
         append(values, value);
         return this;
     }

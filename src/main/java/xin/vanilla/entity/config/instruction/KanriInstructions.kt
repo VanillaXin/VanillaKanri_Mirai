@@ -17,6 +17,11 @@ class KanriInstructions {
     var prefix: String = ""
 
     /**
+     * 框架状态+
+     */
+    var status: Set<String> = mutableSetOf("status")
+
+    /**
      * 头衔+
      */
     var tag: Set<String> = mutableSetOf("tag")
