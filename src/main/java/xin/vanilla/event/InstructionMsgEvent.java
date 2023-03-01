@@ -1,5 +1,6 @@
 package xin.vanilla.event;
 
+import cn.hutool.crypto.digest.MD5;
 import cn.hutool.extra.pinyin.PinyinUtil;
 import cn.hutool.system.oshi.CpuInfo;
 import cn.hutool.system.oshi.OshiUtil;
@@ -110,7 +111,10 @@ public class InstructionMsgEvent {
         JvmPluginDescription pluginInfo = Va.getDescription();
         ForwardMessageBuilder forwardMessageBuilder;
         StringBuilder rep = new StringBuilder();
-        rep.append(pluginInfo.getName()).append(" - v").append(pluginInfo.getVersion()).append("\n");
+        String path = this.getClass().getProtectionDomain().getCodeSource().getLocation().getPath();
+        String md5 = MD5.create().digestHex16(path).substring(0, 5);
+
+        rep.append(pluginInfo.getName()).append(" - v").append(pluginInfo.getVersion()).append(" : ").append(md5).append("\n");
         GlobalMemory memory = OshiUtil.getMemory();
 
         rep.append("消息收发: ").append(Va.getMsgReceiveCount()).append("/").append(Va.getMsgSendCount()).append("\n");
