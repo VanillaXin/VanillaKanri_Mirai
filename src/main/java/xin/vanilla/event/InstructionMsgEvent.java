@@ -302,7 +302,7 @@ public class InstructionMsgEvent {
             // }
             // }
             else {
-                MessageReceipt<Contact> contactMessageReceipt = Api.sendMessage(thatGroup, text);
+                MessageReceipt<Contact> contactMessageReceipt = Api.sendMessage(thatGroup, MessageChain.deserializeFromMiraiCode(text, thatGroup));
                 if (!thatGroup.setEssenceMessage(contactMessageReceipt.getSource())) {
                     // 设置失败就撤回消息
                     contactMessageReceipt.recall();
