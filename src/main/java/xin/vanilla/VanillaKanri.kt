@@ -66,7 +66,7 @@ object VanillaKanri : KotlinPlugin(
         // 延时
         launch {
             delay(1000)
-            logger.info("Plugin loaded a second ago!")
+            logger.info("插件在一秒前就加载好了！")
         }
 
         dataCache["plugin.enableTime"] = System.currentTimeMillis()
@@ -83,7 +83,7 @@ object VanillaKanri : KotlinPlugin(
 
     override fun onDisable() {
         // 插件创建的所有线程或异步任务都需要在 onDisable() 时关闭。
-        logger.info("Plugin disabled!")
+        logger.info("插件被禁用了！")
         // 关闭SQLite连接
         SqliteUtil.closeAll(SqliteUtil.CLOSE_MODE_COMMIT)
         super.onDisable()
@@ -92,9 +92,7 @@ object VanillaKanri : KotlinPlugin(
     fun delayed(delayMillis: Long, runnable: Runnable): CompletableFuture<Void?> {
         return future {
             delay(delayMillis)
-            runInterruptible(Dispatchers.IO) {
-                runnable.run()
-            }
+            runInterruptible(Dispatchers.IO) { runnable.run() }
             null
         }
     }

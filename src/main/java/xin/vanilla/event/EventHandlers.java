@@ -1,11 +1,12 @@
 package xin.vanilla.event;
 
+import cn.hutool.core.date.DateUtil;
 import kotlin.coroutines.CoroutineContext;
 import net.mamoe.mirai.Bot;
-import net.mamoe.mirai.contact.MemberPermission;
+import net.mamoe.mirai.contact.*;
 import net.mamoe.mirai.event.*;
 import net.mamoe.mirai.event.events.*;
-import net.mamoe.mirai.message.data.AtAll;
+import net.mamoe.mirai.message.data.*;
 import org.jetbrains.annotations.NotNull;
 import xin.vanilla.VanillaKanri;
 import xin.vanilla.common.RegExpConfig;
@@ -214,7 +215,22 @@ public class EventHandlers extends SimpleListenerHost {
      */
     @EventHandler
     public void onGroupMessage(@NotNull GroupMessageEvent event) {
-        new GroupMsgEvent(event).run();
+        GroupMsgEvent groupMsgEvent = new GroupMsgEvent(event);
+        MessageChain message = groupMsgEvent.getMsg();
+        // 转义事件特殊码
+        if (message.contentToString().startsWith("(:vaevent:)")) {
+            MessageChainBuilder messages = new MessageChainBuilder();
+            for (SingleMessage singleMessage : message) {
+                if (singleMessage instanceof PlainText) {
+                    PlainText plainText = (PlainText) singleMessage;
+                    messages.add(plainText.contentToString().replace("(:vaevent:)", "\\(:vaevent:\\)"));
+                } else {
+                    messages.add(singleMessage);
+                }
+            }
+            groupMsgEvent.setMsg(messages.build());
+        }
+        groupMsgEvent.run();
     }
 
     /**
@@ -222,7 +238,22 @@ public class EventHandlers extends SimpleListenerHost {
      */
     @EventHandler
     public void onFriendMessage(@NotNull FriendMessageEvent event) {
-        new FriendMsgEvent(event).run();
+        FriendMsgEvent friendMsgEvent = new FriendMsgEvent(event);
+        MessageChain message = friendMsgEvent.getMsg();
+        // 转义事件特殊码
+        if (message.contentToString().startsWith("(:vaevent:)")) {
+            MessageChainBuilder messages = new MessageChainBuilder();
+            for (SingleMessage singleMessage : message) {
+                if (singleMessage instanceof PlainText) {
+                    PlainText plainText = (PlainText) singleMessage;
+                    messages.add(plainText.contentToString().replace("(:vaevent:)", "\\(:vaevent:\\)"));
+                } else {
+                    messages.add(singleMessage);
+                }
+            }
+            friendMsgEvent.setMsg(messages.build());
+        }
+        friendMsgEvent.run();
     }
 
     /**
@@ -257,10 +288,69 @@ public class EventHandlers extends SimpleListenerHost {
         new MsgRecallEvent(event).run();
     }
 
+    /**
+     * 监听机器人登录完成事件
+     */
     @EventHandler
     public void onBotOnline(@NotNull BotOnlineEvent event) {
         long bot = event.getBot().getId();
         VanillaKanri.INSTANCE.getDataCache().put("plugin.botOnlineTime." + bot, System.currentTimeMillis());
+    }
+
+    /**
+     * 监听戳一戳事件, 并转换为与语境匹配的消息事件
+     */
+    @EventHandler
+    public void onTapEvent(@NotNull NudgeEvent event) {
+        Contact subject = event.getSubject();
+        UserOrBot sender = event.getFrom();
+        UserOrBot target = event.getTarget();
+        Bot bot = event.getBot();
+        String action = event.getAction();
+        String suffix = event.getSuffix();
+        if (subject instanceof Group) {
+            Group group = (Group) subject;
+            // 获取发送者对象
+            NormalMember normalMember = group.get(sender.getId());
+            assert normalMember != null;
+
+            // 构建群聊消息事件
+            GroupMessageEvent groupMessageEvent = new GroupMessageEvent(
+                    sender.getNick(),
+                    normalMember.getPermission(),
+                    normalMember,
+                    buildTapMessage(sender, target, bot, action, suffix),
+                    (int) DateUtil.currentSeconds()
+            );
+
+            // 触发群聊消息事件
+            new GroupMsgEvent(groupMessageEvent).run();
+        } else if (subject instanceof Stranger) {
+
+        } else if (subject instanceof Friend) {
+            Friend friend = (Friend) subject;
+            MessageChainBuilder singleMessages;
+            FriendMessageEvent friendMessageEvent = new FriendMessageEvent(
+                    friend,
+                    buildTapMessage(sender, target, bot, action, suffix),
+                    (int) DateUtil.currentSeconds()
+
+            );
+            new FriendMsgEvent(friendMessageEvent).run();
+        } else if (subject instanceof Member) {
+
+        }
+    }
+
+    private MessageChain buildTapMessage(UserOrBot sender, UserOrBot target, Bot bot, String action, String suffix) {
+        MessageChainBuilder singleMessages = new MessageChainBuilder().append("(:vaevent:)");
+        if (target.getId() == bot.getId())
+            singleMessages.append("<+tap+>");
+        else
+            singleMessages.append("<-tap->");
+        singleMessages.append("(").append(String.valueOf(sender.getId())).append(":").append(String.valueOf(target.getId())).append(")");
+        singleMessages.append("{").append(action).append("=").append(suffix).append("}");
+        return singleMessages.build();
     }
 
     /**

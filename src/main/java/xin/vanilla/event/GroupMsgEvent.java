@@ -1,6 +1,8 @@
 package xin.vanilla.event;
 
 import cn.hutool.core.util.RandomUtil;
+import lombok.Getter;
+import lombok.Setter;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.contact.Group;
 import net.mamoe.mirai.contact.Member;
@@ -29,7 +31,9 @@ import static xin.vanilla.mapper.impl.MessageCacheImpl.MSG_TYPE_GROUP;
 
 public class GroupMsgEvent extends BaseMsgEvent {
     private final GroupMessageEvent event;
-    private final MessageChain msg;
+    @Getter
+    @Setter
+    private MessageChain msg;
     private final Group group;
     private final Member sender;
     private final Bot bot;
