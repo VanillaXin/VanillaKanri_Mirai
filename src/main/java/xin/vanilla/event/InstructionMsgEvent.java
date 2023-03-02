@@ -9,13 +9,11 @@ import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.console.MiraiConsole;
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescription;
 import net.mamoe.mirai.console.util.SemVersion;
-import net.mamoe.mirai.contact.Group;
-import net.mamoe.mirai.contact.MemberPermission;
-import net.mamoe.mirai.contact.NormalMember;
-import net.mamoe.mirai.contact.User;
+import net.mamoe.mirai.contact.*;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
 import net.mamoe.mirai.event.events.GroupTempMessageEvent;
 import net.mamoe.mirai.event.events.MessageEvent;
+import net.mamoe.mirai.message.MessageReceipt;
 import net.mamoe.mirai.message.data.*;
 import org.jetbrains.annotations.NotNull;
 import oshi.hardware.GlobalMemory;
@@ -304,8 +302,10 @@ public class InstructionMsgEvent {
             // }
             // }
             else {
-                OnlineMessageSource.Outgoing source = Api.sendMessage(thatGroup, text).getSource();
-                if (!thatGroup.setEssenceMessage(source)) {
+                MessageReceipt<Contact> contactMessageReceipt = Api.sendMessage(thatGroup, text);
+                if (!thatGroup.setEssenceMessage(contactMessageReceipt.getSource())) {
+                    // 设置失败就撤回消息
+                    contactMessageReceipt.recall();
                     Api.sendMessage(thatGroup, "精华消息设置失败");
                 }
             }

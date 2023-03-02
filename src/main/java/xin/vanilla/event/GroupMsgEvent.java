@@ -108,7 +108,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
      * @return 是否不继续执行
      */
     private boolean hentai() {
-        if (msg.contentToString().matches("(来.?|.*?不够)[射蛇色涩瑟铯\uD83D\uDC0D].*?")) {
+        if (msg.contentToString().matches(".*?(来.?|.*?不够)[射蛇色涩瑟铯\uD83D\uDC0D].*?")) {
             String path = Va.getGlobalConfig().getHentai_path().get();
             if (!StringUtils.isNullOrEmpty(path)) {
                 List<Path> paths;
@@ -117,7 +117,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
                 }
                 paths = (List<Path>) Va.getDataCache().get(path);
                 long index = VanillaUtils.getDataCacheAsLong(path + "!index");
-                int i1 = RandomUtil.randomInt(1, 5);
+                int i1 = RandomUtil.randomInt(1, msg.contentToString().length());
                 index += i1;
                 VanillaUtils.setDateCache(path + "!index", index);
                 if (paths.size() <= index) {
