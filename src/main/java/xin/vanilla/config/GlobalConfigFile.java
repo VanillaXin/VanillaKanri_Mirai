@@ -27,9 +27,9 @@ public class GlobalConfigFile extends JavaAutoSavePluginConfig {
     /**
      * MC RCON 配置
      */
-    public SerializerAwareValue<String> mc_rcon_ip = value("mc_rcon_ip", "127.0.0.1");
-    public SerializerAwareValue<Integer> mc_rcon_port = value("mc_rcon_port", 25575);
-    public SerializerAwareValue<String> mc_rcon_psw = value("mc_rcon_psw", "password");
+    public SerializerAwareValue<String> mcRconIp = value("mcRconIp", "127.0.0.1");
+    public SerializerAwareValue<Integer> mcRconPort = value("mcRconPort", 25575);
+    public SerializerAwareValue<String> mcRconPsw = value("mcRconPsw", "password");
 
     /**
      * 后台管理群
@@ -43,7 +43,7 @@ public class GlobalConfigFile extends JavaAutoSavePluginConfig {
      */
     @Getter
     @Setter
-    public SerializerAwareValue<String> hentai_path = value("hentai_path", "");
+    public SerializerAwareValue<String> hentaiPath = value("hentaiPath", "");
 
     /**
      * 超人
@@ -161,28 +161,28 @@ public class GlobalConfigFile extends JavaAutoSavePluginConfig {
         return 1;
     }
 
-    public String getMc_rcon_ip() {
-        return mc_rcon_ip.get();
+    public String getMcRconIp() {
+        return mcRconIp.get();
     }
 
-    public void setMc_rcon_ip(String mc_rcon_ip) {
-        this.mc_rcon_ip.set(mc_rcon_ip);
+    public void setMcRconIp(String mcRconIp) {
+        this.mcRconIp.set(mcRconIp);
     }
 
-    public Integer getMc_rcon_port() {
-        return mc_rcon_port.get();
+    public Integer getMcRconPort() {
+        return mcRconPort.get();
     }
 
-    public void setMc_rcon_port(Integer mc_rcon_port) {
-        this.mc_rcon_port.set(mc_rcon_port);
+    public void setMcRconPort(Integer mcRconPort) {
+        this.mcRconPort.set(mcRconPort);
     }
 
-    public String getMc_rcon_psw() {
-        return mc_rcon_psw.get();
+    public String getMcRconPsw() {
+        return mcRconPsw.get();
     }
 
-    public void setMc_rcon_psw(String mc_rcon_psw) {
-        this.mc_rcon_psw.set(mc_rcon_psw);
+    public void setMcRconPsw(String mcRconPsw) {
+        this.mcRconPsw.set(mcRconPsw);
     }
 
     public Long getSuperOwner() {
