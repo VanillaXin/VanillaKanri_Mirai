@@ -318,7 +318,7 @@ public class MessageCacheImpl extends Base implements MessageCache {
             else if (no.startsWith("|"))
                 query.and(MsgCache::getNos).likeEndsWith(no);
             else
-                query.and(MsgCache::getNos).likeStartsWith(no);
+                query.and(MsgCache::getNos).likeContains(no);
             msgCache = sqliteUtil.getEntity(query, MsgCache.class);
             if (msgCache != null && msgCache.getId() > 0) break;
         }

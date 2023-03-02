@@ -54,7 +54,7 @@ public class Statement {
         statement.append(" FROM ");
         for (int i = 0; i < tables.length; i++) {
             if (i > 0) statement.append(", ");
-            statement.append("'").append(tables[i]).append("'");
+            statement.append("`").append(tables[i]).append("`");
         }
         return this;
     }
@@ -68,12 +68,12 @@ public class Statement {
      * @return this statement.
      */
     public Statement where(Object operand) {
-        statement.append(" WHERE ").append(operand);
+        statement.append(" WHERE `").append(operand).append("`");
         return this;
     }
 
     public <T> Statement where(SerializedFunction<T, ?> operand) {
-        statement.append(" WHERE ").append(LambdaUtils.getFiledName(operand));
+        statement.append(" WHERE `").append(LambdaUtils.getFiledName(operand)).append("`");
         return this;
     }
 
@@ -86,12 +86,12 @@ public class Statement {
      * @return this statement.
      */
     public Statement and(Object operand) {
-        statement.append(" AND ").append(operand);
+        statement.append(" AND `").append(operand).append("`");
         return this;
     }
 
     public <T> Statement and(SerializedFunction<T, ?> operand) {
-        statement.append(" AND ").append(LambdaUtils.getFiledName(operand));
+        statement.append(" AND `").append(LambdaUtils.getFiledName(operand)).append("`");
         return this;
     }
 
@@ -104,12 +104,12 @@ public class Statement {
      * @return this statement.
      */
     public Statement or(Object operand) {
-        statement.append(" OR ").append(operand);
+        statement.append(" OR `").append(operand).append("`");
         return this;
     }
 
     public <T> Statement or(SerializedFunction<T, ?> operand) {
-        statement.append(" OR ").append(LambdaUtils.getFiledName(operand));
+        statement.append(" OR `").append(LambdaUtils.getFiledName(operand)).append("`");
         return this;
     }
 

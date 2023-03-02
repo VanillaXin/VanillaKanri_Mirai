@@ -1,14 +1,8 @@
 package xin.vanilla.entity
 
 import kotlinx.serialization.Serializable
-import lombok.Getter
-import lombok.Setter
-import lombok.experimental.Accessors
 
 
-@Setter
-@Getter
-@Accessors(chain = true)
 @Serializable
 class TestEntity {
     var name: String = ""

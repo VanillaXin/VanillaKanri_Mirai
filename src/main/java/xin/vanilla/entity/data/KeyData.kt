@@ -1,13 +1,9 @@
 package xin.vanilla.entity.data
 
 import kotlinx.serialization.Serializable
-import lombok.Data
-import lombok.experimental.Accessors
 
-@Data
-@Accessors(chain = true)
 @Serializable
-object KeyData {
+class KeyData {
     var id: Int = 0
     var word: String = ""
     var msg: String = ""
