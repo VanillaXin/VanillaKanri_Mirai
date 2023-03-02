@@ -6,7 +6,9 @@ import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.contact.*;
 import net.mamoe.mirai.event.*;
 import net.mamoe.mirai.event.events.*;
-import net.mamoe.mirai.message.data.*;
+import net.mamoe.mirai.message.data.AtAll;
+import net.mamoe.mirai.message.data.MessageChain;
+import net.mamoe.mirai.message.data.MessageChainBuilder;
 import org.jetbrains.annotations.NotNull;
 import xin.vanilla.VanillaKanri;
 import xin.vanilla.common.RegExpConfig;
@@ -216,20 +218,7 @@ public class EventHandlers extends SimpleListenerHost {
     @EventHandler
     public void onGroupMessage(@NotNull GroupMessageEvent event) {
         GroupMsgEvent groupMsgEvent = new GroupMsgEvent(event);
-        MessageChain message = groupMsgEvent.getMsg();
-        // 转义事件特殊码
-        if (message.contentToString().startsWith("(:vaevent:)")) {
-            MessageChainBuilder messages = new MessageChainBuilder();
-            for (SingleMessage singleMessage : message) {
-                if (singleMessage instanceof PlainText) {
-                    PlainText plainText = (PlainText) singleMessage;
-                    messages.add(plainText.contentToString().replace("(:vaevent:)", "\\(:vaevent:\\)"));
-                } else {
-                    messages.add(singleMessage);
-                }
-            }
-            groupMsgEvent.setMsg(messages.build());
-        }
+        groupMsgEvent.encodeVaEvent();
         groupMsgEvent.run();
     }
 
@@ -239,20 +228,7 @@ public class EventHandlers extends SimpleListenerHost {
     @EventHandler
     public void onFriendMessage(@NotNull FriendMessageEvent event) {
         FriendMsgEvent friendMsgEvent = new FriendMsgEvent(event);
-        MessageChain message = friendMsgEvent.getMsg();
-        // 转义事件特殊码
-        if (message.contentToString().startsWith("(:vaevent:)")) {
-            MessageChainBuilder messages = new MessageChainBuilder();
-            for (SingleMessage singleMessage : message) {
-                if (singleMessage instanceof PlainText) {
-                    PlainText plainText = (PlainText) singleMessage;
-                    messages.add(plainText.contentToString().replace("(:vaevent:)", "\\(:vaevent:\\)"));
-                } else {
-                    messages.add(singleMessage);
-                }
-            }
-            friendMsgEvent.setMsg(messages.build());
-        }
+        friendMsgEvent.encodeVaEvent();
         friendMsgEvent.run();
     }
 
@@ -308,6 +284,7 @@ public class EventHandlers extends SimpleListenerHost {
         Bot bot = event.getBot();
         String action = event.getAction();
         String suffix = event.getSuffix();
+
         if (subject instanceof Group) {
             Group group = (Group) subject;
             // 获取发送者对象
@@ -342,7 +319,20 @@ public class EventHandlers extends SimpleListenerHost {
         }
     }
 
-    private MessageChain buildTapMessage(UserOrBot sender, UserOrBot target, Bot bot, String action, String suffix) {
+    /**
+     * 获取最底层的异常
+     */
+    private Throwable getBaseException(@NotNull Throwable exception) {
+        Throwable cause = exception.getCause();
+        while (cause != null) {
+            cause = exception.getCause();
+            if (cause != null) exception = cause;
+        }
+        return exception;
+    }
+
+    @NotNull
+    private MessageChain buildTapMessage(UserOrBot sender, @NotNull UserOrBot target, @NotNull Bot bot, String action, String suffix) {
         MessageChainBuilder singleMessages = new MessageChainBuilder().append("(:vaevent:)");
         if (target.getId() == bot.getId())
             singleMessages.append("<+tap+>");
@@ -352,17 +342,4 @@ public class EventHandlers extends SimpleListenerHost {
         singleMessages.append("{").append(action).append("=").append(suffix).append("}");
         return singleMessages.build();
     }
-
-    /**
-     * 获取最底层的异常
-     */
-    private Throwable getBaseException(Throwable exception) {
-        Throwable cause = exception.getCause();
-        while (cause != null) {
-            cause = exception.getCause();
-            if (cause != null) exception = cause;
-        }
-        return exception;
-    }
-
 }
