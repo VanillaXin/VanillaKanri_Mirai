@@ -58,7 +58,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
 
         String command;
         if (msg.contentToString().startsWith(prefix)) {
-            if (!VanillaUtils.hasPermissionOrMore(bot, group, sender.getId(), PermissionLevel.PERMISSION_LEVEL_SUPER_ADMIN))
+            if (VanillaUtils.hasNotPermissionAndMore(bot, group, sender.getId(), PermissionLevel.PERMISSION_LEVEL_SUPER_ADMIN))
                 return false;
             command = msg.contentToString().substring(prefix.length());
         } else if (msg.contentToString().equals("/list") || msg.contentToString().equals("/ls")) command = "list";

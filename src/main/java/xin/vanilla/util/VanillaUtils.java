@@ -8,6 +8,7 @@ import net.mamoe.mirai.contact.NormalMember;
 import net.mamoe.mirai.message.code.MiraiCode;
 import net.mamoe.mirai.message.data.*;
 import xin.vanilla.VanillaKanri;
+import xin.vanilla.enumeration.DataCacheKey;
 import xin.vanilla.enumeration.PermissionLevel;
 
 import java.util.Arrays;
@@ -19,44 +20,9 @@ import static xin.vanilla.enumeration.PermissionLevel.*;
 @SuppressWarnings("unused")
 public class VanillaUtils {
     private static final VanillaKanri Va = VanillaKanri.INSTANCE;
-    // 主人>超管>群主>主管>群管>副管=群副管
-
-    // region 判断指令格式
-
-    /**
-     * 判断是否指令消息
-     */
-    public static boolean isInstructionMsg(MessageChain msg) {
-        return isInstructionMsg(msg, true);
-    }
-
-    /**
-     * 判断是否指令消息
-     * <p> 匹配规则: [顶级前缀] [群号] 二级前缀
-     *
-     * @param secondary 若顶级前缀为空, 是否继续判断二级指令前缀
-     */
-    public static boolean isInstructionMsg(MessageChain msg, boolean secondary) {
-        String prefix = Va.getGlobalConfig().getInstructions().getPrefix();
-        if ("".equals(prefix)) {
-            if (!secondary) return true;
-
-            // 如果顶级前缀为空则遍历二级指令前缀
-            for (String prefix_ : Va.getGlobalConfig().getInstructions().getSecondaryPrefix()) {
-                if ("".equals(prefix_)) continue;
-                if (msg.contentToString().startsWith(prefix_ + " ")) return true;
-            }
-            return false;
-        } else {
-            String space = " ";
-            if (StringUtils.isCommonMark(prefix)) space = "";
-            return msg.contentToString().startsWith(prefix + space);
-        }
-    }
-
-    // endregion 判断指令格式
 
     // region 判断权限
+    // 主人>超管>群主>主管>群管>副管=群副管
 
     /**
      * 机器人是否群主
@@ -294,7 +260,16 @@ public class VanillaUtils {
     }
 
     /**
-     * 是否有或(有大于)给定的权限等级
+     * 是否没有(且没有大于)给定的权限等级
+     *
+     * @param level 权限等级 例: PERMISSION_LEVEL_BOT_ADMIN
+     */
+    public static boolean hasNotPermissionAndMore(Bot bot, Group group, long qq, PermissionLevel level) {
+        return !hasPermissionOrMore(bot, group, qq, level);
+    }
+
+    /**
+     * 是否有(或有大于)给定的权限等级
      *
      * @param level 权限等级 例: PERMISSION_LEVEL_BOT_ADMIN
      */
@@ -305,6 +280,109 @@ public class VanillaUtils {
 
     // endregion 判断权限
 
+    // region 判断指令格式
+
+    /**
+     * 判断是否指令消息
+     */
+    public static boolean isInstructionMsg(MessageChain msg) {
+        return isInstructionMsg(msg, true);
+    }
+
+    /**
+     * 判断是否指令消息
+     * <p> 匹配规则: [顶级前缀] [群号] 二级前缀
+     *
+     * @param secondary 若顶级前缀为空, 是否继续判断二级指令前缀
+     */
+    public static boolean isInstructionMsg(MessageChain msg, boolean secondary) {
+        String prefix = Va.getGlobalConfig().getInstructions().getPrefix();
+        if ("".equals(prefix)) {
+            if (!secondary) return true;
+
+            // 如果顶级前缀为空则遍历二级指令前缀
+            for (String prefix_ : Va.getGlobalConfig().getInstructions().getSecondaryPrefix()) {
+                if ("".equals(prefix_)) continue;
+                if (msg.contentToString().startsWith(prefix_ + " ")) return true;
+            }
+            return false;
+        } else {
+            String space = " ";
+            if (StringUtils.isCommonMark(prefix)) space = "";
+            return msg.contentToString().startsWith(prefix + space);
+        }
+    }
+
+    // endregion 判断指令格式
+
+    // region 缓存存取
+
+    /**
+     * 设置缓存数据
+     *
+     * @param key 参考 {@link DataCacheKey} 中的键值或自定义键值
+     */
+    public static void setDateCache(String key, Object value) {
+        Va.getDataCache().put(key, value);
+    }
+
+    /**
+     * 获取数据缓存
+     *
+     * @param key 参考 {@link DataCacheKey} 中的键值或自定义键值
+     */
+    public static String getDataCacheAsString(String key) {
+        if (Va.getDataCache().containsKey(key)) {
+            return (String) Va.getDataCache().get(key);
+        }
+        return "";
+    }
+
+    /**
+     * 获取数据缓存
+     *
+     * @param key 参考 {@link DataCacheKey} 中的键值或自定义键值
+     */
+    public static long getDataCacheAsLong(String key) {
+        if (Va.getDataCache().containsKey(key)) {
+            return (long) Va.getDataCache().get(key);
+        }
+        return 0;
+    }
+
+    /**
+     * 获取数据缓存
+     *
+     * @param key 参考 {@link DataCacheKey} 中的键值或自定义键值
+     */
+    public static double getDataCacheAsDouble(String key) {
+        if (Va.getDataCache().containsKey(key)) {
+            return (double) Va.getDataCache().get(key);
+        }
+        return 0;
+    }
+
+    /**
+     * 获取数据缓存
+     *
+     * @param key 参考 {@link DataCacheKey} 中的键值或自定义键值
+     */
+    public static boolean getDataCacheAsBoolean(String key) {
+        if (Va.getDataCache().containsKey(key)) {
+            return (boolean) Va.getDataCache().get(key);
+        }
+        return false;
+    }
+
+    // endregion 缓存存取
+
+    // region 消息转码
+
+    /**
+     * 将形如 <code>123456789 [mirai:at:234567890] [mirai:at:345678901]</code> 的
+     * <p>QQ号字符串转为QQ号数组</p>
+     * <p>[123456789, 234567890, 345678901]</p>
+     */
     public static long[] getQQFromString(String qq) {
         try {
             qq = qq.trim();
@@ -330,6 +408,11 @@ public class VanillaUtils {
         return new long[0];
     }
 
+    /**
+     * 将形如 <code>&lt;123456789 234567890&gt;</code> 的
+     * <p>群号字符串转为群号数组:</p>
+     * <p>[123456789, 234567890]</p>
+     */
     public static long[] getGroupFromString(String group) {
         try {
             group = group.trim().replace("<", "").replace(">", "");
@@ -348,54 +431,9 @@ public class VanillaUtils {
         return new long[0];
     }
 
-    public static void setDateCache(String key, Object value) {
-        Va.getDataCache().put(key, value);
-    }
-
-    /**
-     * 获取数据缓存
-     */
-    public static String getDataCacheAsString(String key) {
-        if (Va.getDataCache().containsKey(key)) {
-            return (String) Va.getDataCache().get(key);
-        }
-        return "";
-    }
-
-    /**
-     * 获取数据缓存
-     */
-    public static long getDataCacheAsLong(String key) {
-        if (Va.getDataCache().containsKey(key)) {
-            return (long) Va.getDataCache().get(key);
-        }
-        return 0;
-    }
-
-    /**
-     * 获取数据缓存
-     */
-    public static double getDataCacheAsDouble(String key) {
-        if (Va.getDataCache().containsKey(key)) {
-            return (double) Va.getDataCache().get(key);
-        }
-        return 0;
-    }
-
-    /**
-     * 获取数据缓存
-     */
-    public static boolean getDataCacheAsBoolean(String key) {
-        if (Va.getDataCache().containsKey(key)) {
-            return (boolean) Va.getDataCache().get(key);
-        }
-        return false;
-    }
-
     /**
      * 将消息转为Mirai码 <strong>慎用</strong>
-     * <p>
-     * 不转码文本消息中的特殊字符
+     * <p>不转码文本消息中的特殊字符</p>
      */
     public static String messageToString(MessageChain message) {
         StringBuilder stringBuilder = new StringBuilder();
@@ -422,4 +460,7 @@ public class VanillaUtils {
     public static MessageChain deserializeVanillaCode(String msg) {
         return MessageChain.deserializeFromJsonString(msg);
     }
+
+    // endregion 消息转码
+
 }

@@ -127,7 +127,7 @@ public class EventHandlers extends SimpleListenerHost {
 
                 // 判断发送者是否拥有权限
                 PermissionLevel senderLevel = annotation.sender();
-                if (!VanillaUtils.hasPermissionOrMore(insEvent.getBot(), insEvent.getGroup(), insEvent.getSender().getId(), senderLevel)) {
+                if (VanillaUtils.hasNotPermissionAndMore(insEvent.getBot(), insEvent.getGroup(), insEvent.getSender().getId(), senderLevel)) {
                     continue;
                 }
 
@@ -170,7 +170,7 @@ public class EventHandlers extends SimpleListenerHost {
                         // 非超管及以上权限不允许同时操作多群
                         if (groups.length > 0) {
                             if (groups.length > 1 || groups[0] > 0) {
-                                if (!VanillaUtils.hasPermissionOrMore(insEvent.getBot(), null, insEvent.getSender().getId(), PermissionLevel.PERMISSION_LEVEL_SUPER_ADMIN)) {
+                                if (VanillaUtils.hasNotPermissionAndMore(insEvent.getBot(), null, insEvent.getSender().getId(), PermissionLevel.PERMISSION_LEVEL_SUPER_ADMIN)) {
                                     Api.sendMessage(insEvent.getGroup(), "权限不足");
                                     return;
                                 }

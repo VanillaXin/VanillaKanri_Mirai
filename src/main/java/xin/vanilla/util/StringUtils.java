@@ -1,5 +1,7 @@
 package xin.vanilla.util;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.Collection;
 
 public class StringUtils {
@@ -59,7 +61,23 @@ public class StringUtils {
         return null == s || s.trim().equals("");
     }
 
+    /**
+     * 将数值数组 <code>[123456789, 234567890]</code>
+     * <p>转换为形如 <code>123456789,234567890</code> 的字符串</p>
+     */
+    @NotNull
     public static String toString(int[] a) {
+        return toString(a, ',');
+    }
+
+    /**
+     * 将数值数组 <code>[123456789, 234567890]</code>
+     * <p>转换为形如 <code>123456789,234567890</code> 的字符串</p>
+     *
+     * @param separator 分隔符
+     */
+    @NotNull
+    public static String toString(int[] a, char separator) {
         if (a == null)
             return "null";
         // a = Arrays.stream(a).sorted().toArray();
@@ -72,11 +90,27 @@ public class StringUtils {
             b.append(a[i]);
             if (i == iMax)
                 return b.toString();
-            b.append(",");
+            b.append(separator);
         }
     }
 
+    /**
+     * 将数值数组 <code>[123456789, 234567890]</code>
+     * <p>转换为形如 <code>123456789,234567890</code> 的字符串</p>
+     */
+    @NotNull
     public static String toString(long[] a) {
+        return toString(a, ',');
+    }
+
+    /**
+     * 将数值数组 <code>[123456789, 234567890]</code>
+     * <p>转换为形如 <code>123456789,234567890</code> 的字符串</p>
+     *
+     * @param separator 分隔符
+     */
+    @NotNull
+    public static String toString(long[] a, char separator) {
         if (a == null)
             return "null";
         // a = Arrays.stream(a).sorted().toArray();
@@ -89,11 +123,25 @@ public class StringUtils {
             b.append(a[i]);
             if (i == iMax)
                 return b.toString();
-            b.append(",");
+            b.append(separator);
         }
     }
 
+    /**
+     * 将数值集合 <code>[123456789, 234567890]</code>
+     * <p>转换为形如 <code>123456789,234567890</code> 的字符串</p>
+     */
     public static String toString(Collection<?> a) {
+        return toString(a, ',');
+    }
+
+    /**
+     * 将数值集合 <code>[123456789, 234567890]</code>
+     * <p>转换为形如 <code>123456789,234567890</code> 的字符串</p>
+     *
+     * @param separator 分隔符
+     */
+    public static String toString(Collection<?> a, char separator) {
         if (a == null)
             return "null";
         // a = Arrays.stream(a).sorted().toArray();
@@ -107,7 +155,7 @@ public class StringUtils {
             b.append(o);
             i++;
             if (i <= iMax)
-                b.append(",");
+                b.append(separator);
         }
         return b.toString();
     }
