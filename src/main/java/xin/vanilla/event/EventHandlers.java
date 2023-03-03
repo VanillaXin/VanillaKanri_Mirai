@@ -6,16 +6,14 @@ import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.contact.*;
 import net.mamoe.mirai.event.*;
 import net.mamoe.mirai.event.events.*;
-import net.mamoe.mirai.message.data.AtAll;
-import net.mamoe.mirai.message.data.MessageChain;
-import net.mamoe.mirai.message.data.MessageChainBuilder;
+import net.mamoe.mirai.message.data.*;
 import org.jetbrains.annotations.NotNull;
 import xin.vanilla.VanillaKanri;
 import xin.vanilla.common.RegExpConfig;
 import xin.vanilla.common.annotation.KanriInsEvent;
 import xin.vanilla.common.annotation.KeywordInsEvent;
-import xin.vanilla.common.annotation.TimedInsEvent;
 import xin.vanilla.entity.config.instruction.KanriInstructions;
+import xin.vanilla.entity.event.events.GroupMessageEvents;
 import xin.vanilla.enumeration.PermissionLevel;
 import xin.vanilla.util.Api;
 import xin.vanilla.util.RegUtils;
@@ -206,10 +204,11 @@ public class EventHandlers extends SimpleListenerHost {
                 } catch (IllegalAccessException | InvocationTargetException e) {
                     throw new RuntimeException(e);
                 }
-            } else if (method.isAnnotationPresent(TimedInsEvent.class)) {
-                // TODO 解析定时任务指令
-
             }
+            // TODO 解析定时任务指令
+            // else if (method.isAnnotationPresent(TimedInsEvent.class)) {
+            //
+            // }
 
         }
     }
@@ -219,7 +218,7 @@ public class EventHandlers extends SimpleListenerHost {
      */
     @EventHandler
     public void onGroupMessage(@NotNull GroupMessageEvent event) {
-        GroupMsgEvent groupMsgEvent = new GroupMsgEvent(event);
+        GroupMsgEvent groupMsgEvent = new GroupMsgEvent(new GroupMessageEvents(event));
         groupMsgEvent.encodeVaEvent();
         groupMsgEvent.run();
     }
@@ -294,31 +293,34 @@ public class EventHandlers extends SimpleListenerHost {
             assert normalMember != null;
 
             // 构建群聊消息事件
-            GroupMessageEvent groupMessageEvent = new GroupMessageEvent(
+            xin.vanilla.entity.event.GroupMessageEvent groupMessageEvent = new xin.vanilla.entity.event.GroupMessageEvent(
                     sender.getNick(),
                     normalMember.getPermission(),
                     normalMember,
-                    buildTapMessage(sender, target, bot, action, suffix),
+                    buildTapMessage(sender, target, bot, action, suffix, MessageSourceKind.GROUP),
                     (int) DateUtil.currentSeconds()
             );
 
             // 触发群聊消息事件
-            new GroupMsgEvent(groupMessageEvent).run();
-        } else if (subject instanceof Stranger) {
-
-        } else if (subject instanceof Friend) {
+            new GroupMsgEvent(new GroupMessageEvents(groupMessageEvent)).run();
+        }
+        // else if (subject instanceof Stranger) {
+        //
+        // }
+        else if (subject instanceof Friend) {
             Friend friend = (Friend) subject;
             MessageChainBuilder singleMessages;
             FriendMessageEvent friendMessageEvent = new FriendMessageEvent(
                     friend,
-                    buildTapMessage(sender, target, bot, action, suffix),
+                    buildTapMessage(sender, target, bot, action, suffix, MessageSourceKind.FRIEND),
                     (int) DateUtil.currentSeconds()
 
             );
             new FriendMsgEvent(friendMessageEvent).run();
-        } else if (subject instanceof Member) {
-
         }
+        // else if (subject instanceof Member) {
+        //
+        // }
     }
 
     /**
@@ -334,7 +336,7 @@ public class EventHandlers extends SimpleListenerHost {
     }
 
     @NotNull
-    private MessageChain buildTapMessage(UserOrBot sender, @NotNull UserOrBot target, @NotNull Bot bot, String action, String suffix) {
+    private MessageChain buildTapMessage(UserOrBot sender, @NotNull UserOrBot target, @NotNull Bot bot, String action, String suffix, MessageSourceKind kind) {
         MessageChainBuilder singleMessages = new MessageChainBuilder().append("(:vaevent:)");
         if (target.getId() == bot.getId())
             singleMessages.append("<+tap+>");
@@ -342,6 +344,13 @@ public class EventHandlers extends SimpleListenerHost {
             singleMessages.append("<-tap->");
         singleMessages.append("(").append(String.valueOf(sender.getId())).append(":").append(String.valueOf(target.getId())).append(")");
         singleMessages.append("{").append(action).append("=").append(suffix).append("}");
+
+        singleMessages.append(new MessageSourceBuilder()
+                .sender(sender.getId())
+                .target(target.getId())
+                .id(0)
+                .internalId(0)
+                .build(bot.getId(), kind));
         return singleMessages.build();
     }
 }

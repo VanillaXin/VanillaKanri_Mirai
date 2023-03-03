@@ -9,10 +9,10 @@ import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import net.mamoe.mirai.contact.Group;
 import net.mamoe.mirai.contact.Member;
-import net.mamoe.mirai.event.events.GroupMessageEvent;
 import net.mamoe.mirai.message.data.*;
 import net.mamoe.mirai.utils.ExternalResource;
 import xin.vanilla.entity.data.KeyData;
+import xin.vanilla.entity.event.events.GroupMessageEvents;
 import xin.vanilla.enumeration.PermissionLevel;
 import xin.vanilla.rcon.Rcon;
 import xin.vanilla.util.Api;
@@ -34,12 +34,12 @@ import static xin.vanilla.common.RegExpConfig.RCON_RESULT_LIST;
 import static xin.vanilla.mapper.impl.MessageCacheImpl.MSG_TYPE_GROUP;
 
 public class GroupMsgEvent extends BaseMsgEvent {
-    private final GroupMessageEvent event;
+    private final GroupMessageEvents event;
     private final Group group;
     private final Member sender;
 
 
-    public GroupMsgEvent(GroupMessageEvent event) {
+    public GroupMsgEvent(GroupMessageEvents event) {
         super(event.getMessage(), event.getBot(), event.getTime());
         this.event = event;
         this.group = this.event.getGroup();
