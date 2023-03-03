@@ -303,7 +303,7 @@ public class SqliteUtil {
             }
             return list;
         } catch (Exception ignored) {
-            return null;
+            return new ArrayList<>();
         }
     }
 

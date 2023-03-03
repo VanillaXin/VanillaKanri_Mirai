@@ -5,7 +5,6 @@ import lombok.Setter;
 import net.mamoe.mirai.contact.*;
 import net.mamoe.mirai.message.data.*;
 import xin.vanilla.entity.data.MsgCache;
-import xin.vanilla.mapper.Base;
 import xin.vanilla.mapper.MessageCache;
 import xin.vanilla.util.StringUtils;
 import xin.vanilla.util.VanillaUtils;

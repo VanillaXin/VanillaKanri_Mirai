@@ -5,10 +5,39 @@ import kotlinx.serialization.Serializable
 @Serializable
 class KeyData {
     var id: Int = 0
+
+    /**
+     * 关键词
+     */
     var word: String = ""
+
+    /**
+     * 回复词
+     */
     var msg: String = ""
+
+    /**
+     * 机器人ID
+     */
     var bot: Long = 0
+
+    /**
+     * 群号, -1为全局
+     */
     var group: Long = 0
+
+    /**
+     * 添加时间
+     */
     var time: Long = 0
+
+    /**
+     * 权级
+     */
     var level: Int = 1
+
+    /**
+     * 关键词类型
+     */
+    var type: String = ""
 }

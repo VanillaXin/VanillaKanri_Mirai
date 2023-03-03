@@ -1,5 +1,10 @@
 package xin.vanilla.mapper;
 
+import xin.vanilla.entity.data.KeyData;
+import xin.vanilla.util.sqlite.PaginationList;
+
+import java.util.List;
+
 public interface KeywordData {
     void createTable(String table);
 
@@ -11,4 +16,39 @@ public interface KeywordData {
 
     long addKeyword(String word, String rep, long bot, long group, String type);
 
+    KeyData getKeywordById(long id, String type);
+
+    KeyData getKeyword(String word, long bot, long group, String type);
+
+    KeyData getKeyword(String word, long bot, long group);
+
+    KeyData getKeyword(String word, long bot, String type);
+
+    KeyData getKeyword(String word, long bot);
+
+    List<KeyData> getKeywordList(String word, long bot, long group, String type);
+
+    List<KeyData> getKeywordList(String word, long bot, long group);
+
+    List<KeyData> getKeywordList(String word, long bot, String type);
+
+    List<KeyData> getKeywordList(String word, long bot);
+
+    PaginationList<KeyData> getKeywordByPage(String word, long bot, long group, String type, int page, int size);
+
+    PaginationList<KeyData> getKeywordByPage(String word, long bot, long group, int page, int size);
+
+    PaginationList<KeyData> getKeywordByPage(String word, long bot, String type, int page, int size);
+
+    PaginationList<KeyData> getKeywordByPage(String word, long bot, int page, int size);
+
+    int deleteKeywordById(long id, String type);
+
+    int deleteKeyword(String word, long bot, long group, String type);
+
+    int deleteKeyword(String word, long bot, long group);
+
+    int deleteKeyword(String word, long bot, String type);
+
+    int deleteKeyword(String word, long bot);
 }

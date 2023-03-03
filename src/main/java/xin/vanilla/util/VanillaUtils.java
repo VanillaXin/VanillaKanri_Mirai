@@ -7,6 +7,7 @@ import net.mamoe.mirai.contact.MemberPermission;
 import net.mamoe.mirai.contact.NormalMember;
 import net.mamoe.mirai.message.code.MiraiCode;
 import net.mamoe.mirai.message.data.*;
+import org.jetbrains.annotations.NotNull;
 import xin.vanilla.VanillaKanri;
 import xin.vanilla.enumeration.DataCacheKey;
 import xin.vanilla.enumeration.PermissionLevel;
@@ -435,6 +436,7 @@ public class VanillaUtils {
      * 将消息转为Mirai码 <strong>慎用</strong>
      * <p>不转码文本消息中的特殊字符</p>
      */
+    @NotNull
     public static String messageToString(MessageChain message) {
         StringBuilder stringBuilder = new StringBuilder();
         for (SingleMessage singleMessage : message) {
@@ -450,6 +452,7 @@ public class VanillaUtils {
     /**
      * 将消息序列化为Json
      */
+    @NotNull
     public static String serializeToVanillaCode(MessageChain msg) {
         return MessageChain.serializeToJsonString(msg);
     }
@@ -457,6 +460,7 @@ public class VanillaUtils {
     /**
      * 将Json反序列化为消息
      */
+    @NotNull
     public static MessageChain deserializeVanillaCode(String msg) {
         return MessageChain.deserializeFromJsonString(msg);
     }

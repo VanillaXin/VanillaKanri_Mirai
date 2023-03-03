@@ -1,9 +1,10 @@
 package xin.vanilla.event;
 
 import cn.hutool.crypto.digest.MD5;
-import cn.hutool.extra.pinyin.PinyinUtil;
 import cn.hutool.system.oshi.CpuInfo;
 import cn.hutool.system.oshi.OshiUtil;
+import com.github.houbb.pinyin.constant.enums.PinyinStyleEnum;
+import com.github.houbb.pinyin.util.PinyinHelper;
 import lombok.Getter;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.console.MiraiConsole;
@@ -819,7 +820,8 @@ public class InstructionMsgEvent {
             if (keyword.getContain().contains(type)) {
                 keyFormat = ".*?" + key + ".*?";
             } else if (keyword.getPinyin().contains(type)) {
-                keyFormat = ".*?" + PinyinUtil.getPinyin(key).trim() + ".*?";
+                key = PinyinHelper.toPinyin(key, PinyinStyleEnum.NORMAL).trim();
+                keyFormat = ".*?" + key + ".*?";
             } else if (keyword.getRegex().contains(type)) {
                 keyFormat = key;
             } else {

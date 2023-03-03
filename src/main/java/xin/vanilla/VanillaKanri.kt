@@ -71,7 +71,7 @@ object VanillaKanri : KotlinPlugin(
         }
 
         // 记录插件启用时刻
-        dataCache[PLUGIN_ENABLE_TIME.key] = System.currentTimeMillis()
+        dataCache[PLUGIN_ENABLE_TIME.getKey()] = System.currentTimeMillis()
 
         // 注册事件监听
         GlobalEventChannel.registerListenerHost(EventHandlers())
@@ -114,7 +114,7 @@ object VanillaKanri : KotlinPlugin(
      */
     fun addMsgSendCount(): Long {
         val count = getMsgSendCount() + 1
-        this.dataCache[PLUGIN_MSG_SEND_COUNT.key] = count
+        this.dataCache[PLUGIN_MSG_SEND_COUNT.getKey()] = count
         return count
     }
 
@@ -122,7 +122,7 @@ object VanillaKanri : KotlinPlugin(
      * 获取消息发送计数
      */
     fun getMsgSendCount(): Long {
-        val count = this.dataCache[PLUGIN_MSG_SEND_COUNT.key] ?: return 0
+        val count = this.dataCache[PLUGIN_MSG_SEND_COUNT.getKey()] ?: return 0
         return count as Long
     }
 
@@ -131,7 +131,7 @@ object VanillaKanri : KotlinPlugin(
      */
     fun addMsgReceiveCount(): Long {
         val count = getMsgReceiveCount() + 1
-        this.dataCache[PLUGIN_MSG_RECEIVE_COUNT.key] = count
+        this.dataCache[PLUGIN_MSG_RECEIVE_COUNT.getKey()] = count
         return count
     }
 
@@ -139,7 +139,7 @@ object VanillaKanri : KotlinPlugin(
      * 获取消息接收计数
      */
     fun getMsgReceiveCount(): Long {
-        val count = this.dataCache[PLUGIN_MSG_RECEIVE_COUNT.key] ?: return 0
+        val count = this.dataCache[PLUGIN_MSG_RECEIVE_COUNT.getKey()] ?: return 0
         return count as Long
     }
 
@@ -147,14 +147,14 @@ object VanillaKanri : KotlinPlugin(
      * 获取插件运行时长
      */
     fun getRuntimeAsString(): String {
-        return DateUtil.formatBetween(Date((this.dataCache[PLUGIN_ENABLE_TIME.key] as Long)), Date())
+        return DateUtil.formatBetween(Date((this.dataCache[PLUGIN_ENABLE_TIME.getKey()] as Long)), Date())
     }
 
     /**
      * 获取插件运行时长
      */
     fun getRuntimeAsLong(): Long {
-        return this.dataCache[PLUGIN_ENABLE_TIME.key] as Long - System.currentTimeMillis()
+        return this.dataCache[PLUGIN_ENABLE_TIME.getKey()] as Long - System.currentTimeMillis()
     }
 
     /**

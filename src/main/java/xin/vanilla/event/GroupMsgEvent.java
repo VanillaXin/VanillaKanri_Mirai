@@ -6,6 +6,7 @@ import net.mamoe.mirai.contact.Member;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
 import net.mamoe.mirai.message.data.*;
 import net.mamoe.mirai.utils.ExternalResource;
+import xin.vanilla.entity.data.KeyData;
 import xin.vanilla.enumeration.PermissionLevel;
 import xin.vanilla.rcon.Rcon;
 import xin.vanilla.util.Api;
@@ -44,8 +45,9 @@ public class GroupMsgEvent extends BaseMsgEvent {
         // logger.info("群聊: " + group.getId() + ":" + sender.getId() + " -> " + msg.serializeToMiraiCode());
         if (rcon()) return;
         if (hentai()) return;
+        if (keyRep()) return;
 
-        test();
+        // test();
     }
 
     /**
@@ -143,6 +145,29 @@ public class GroupMsgEvent extends BaseMsgEvent {
         }
     }
 
+    /**
+     * 解析关键词回复
+     */
+    private boolean keyRep() {
+        // 群内关键词查询
+        KeyData keyword = Va.getKeywordData().getKeyword(VanillaUtils.messageToString(msg), bot.getId(), group.getId());
+        if (keyword.getId() > 0) {
+            MessageChain rep = MessageChain.deserializeFromMiraiCode(keyword.getMsg(), group);
+            Api.sendMessage(group, rep);
+            return true;
+        }
+
+        // 全局关键词查询
+        keyword = Va.getKeywordData().getKeyword(VanillaUtils.messageToString(msg), bot.getId(), -1);
+        if (keyword.getId() > 0) {
+            MessageChain rep = MessageChain.deserializeFromMiraiCode(keyword.getMsg(), group);
+            Api.sendMessage(group, rep);
+            return true;
+        }
+
+        return true;
+    }
+
     private void test() {
         // 构造消息
         MessageChain chain = new MessageChainBuilder()
@@ -190,6 +215,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
         if (msg.contentToString().startsWith("/va get msgcache ")) {
             int no = Integer.parseInt(msg.contentToString().substring("/va get msgcache ".length()));
             MessageSource source = msg.get(MessageSource.Key);
+            assert source != null;
             no = source.getIds()[0] - no;
             String msgCache = Va.getMessageCache().getMsgJsonCode(String.valueOf(no), group.getId(), MSG_TYPE_GROUP);
             Api.sendMessage(group, msgCache);
