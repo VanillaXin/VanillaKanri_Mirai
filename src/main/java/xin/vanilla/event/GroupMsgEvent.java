@@ -1,12 +1,21 @@
 package xin.vanilla.event;
 
+import cn.hutool.core.io.IORuntimeException;
 import cn.hutool.core.util.RandomUtil;
+import cn.hutool.core.util.ReUtil;
+import cn.hutool.http.HttpRequest;
+import cn.hutool.http.HttpUtil;
+import cn.hutool.json.JSONArray;
+import cn.hutool.json.JSONObject;
+import cn.hutool.json.JSONUtil;
+import com.sun.javafx.fxml.builder.ProxyBuilder;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.contact.Group;
 import net.mamoe.mirai.contact.Member;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
 import net.mamoe.mirai.message.data.*;
 import net.mamoe.mirai.utils.ExternalResource;
+import sun.net.www.http.HttpClient;
 import xin.vanilla.enumeration.PermissionLevel;
 import xin.vanilla.rcon.Rcon;
 import xin.vanilla.util.Api;
@@ -14,12 +23,14 @@ import xin.vanilla.util.StringUtils;
 import xin.vanilla.util.VanillaUtils;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -48,10 +59,147 @@ public class GroupMsgEvent extends BaseMsgEvent {
 
     public void run() {
         // logger.info("群聊: " + group.getId() + ":" + sender.getId() + " -> " + msg.serializeToMiraiCode());
-        if (rcon()) return;
-        if (hentai()) return;
+        st();
+        st2();
+        chatGpt2();
+//        if (rcon()) return;
+//        if (hentai()) return;
+//        test();
+    }
 
-        test();
+    private void chatGpt2(){
+        final String prefix = "chatGPT";
+        if (msg.contentToString().startsWith(prefix)) {
+            String command = msg.contentToString().substring(prefix.length());
+            JSONObject jsonObject = JSONUtil.createObj();
+            Map<String, Object> map = new HashMap<String, Object>();
+            List list = new ArrayList<Map<String,Object>>();
+            list.add(map);
+            map.put("role","user");
+            map.put("content",command);
+            jsonObject.put("model","gpt-3.5-turbo")
+                    .put("messages", list);
+
+            try {
+                String res = HttpRequest.post("https://api.openai.com/v1/chat/completions").setHttpProxy("localhost", 10808)
+                        .header("Content-Type", "application/json")
+                        .header("Authorization", "Bearer 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")
+                        .body(JSONUtil.toJsonStr(jsonObject))
+                        .timeout(40000)
+                        .execute()
+                        .body();
+
+                JSONObject jsonObject1 = JSONUtil.parseObj(res);
+                JSONArray jsonArray = JSONUtil.parseArray(jsonObject1.get("choices"));
+                JSONObject jsonObject2 = JSONUtil.parseObj(jsonArray.get(0));
+                JSONObject jsonObject3 = JSONUtil.parseObj(jsonObject2.get("message"));
+//            System.out.println(jsonObject3.get("content"));
+//            System.out.println(jsonObject2.get("text"));
+
+                String bake = (String) jsonObject3.get("content");
+                bake = ReUtil.delFirst("^\n+", bake);
+                Api.sendMessage(group, bake);
+//            System.out.println(bake);
+            } catch (IORuntimeException e) {
+                Api.sendMessage(group, "可能是请求太快也可能是模型使用超时总之挂了，后续在改");
+                throw new RuntimeException(e);
+            }
+        }
+
+    }
+
+
+    private void chatGpt() {
+        final String prefix = "chatGPT";
+        if (msg.contentToString().startsWith(prefix)) {
+
+            try {
+                String command = msg.contentToString().substring(prefix.length());
+                JSONObject jsonObject = JSONUtil.createObj();
+                String[] list = {"Human:", "AI:"};
+                jsonObject.put("model", "text-davinci-003").put("prompt", command).put("max_tokens", 4000).put("temperature", 0).put("top_p", 1).put("frequency_penalty", 0).put("presence_penalty", 0.6).put("stop", list);
+
+
+                String result = HttpRequest.post("https://api.openai.com/v1/completions").setHttpProxy("127.0.0.1", 10808).header("Content-Type", "application/json").header("Accept-Encoding", " gzip,deflate").header("Content-Length", "1024").header("Transfer-Encoding", " chunked").header("Authorization", "Bearer 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").body(JSONUtil.toJsonStr(jsonObject)).timeout(40000).execute().body();
+
+                JSONObject jsonObject1 = JSONUtil.parseObj(result);
+                JSONArray jsonArray = JSONUtil.parseArray(jsonObject1.get("choices"));
+                JSONObject jsonObject2 = JSONUtil.parseObj(jsonArray.get(0));
+                System.out.println(jsonObject2);
+                System.out.println(jsonObject2.get("text"));
+
+                String bake = (String) jsonObject2.get("text");
+                bake = ReUtil.delFirst("^\n+", bake);
+//                bake = StrUtil.replace(bake,"\n","");
+//                StrUtil.trim(bake);
+                Api.sendMessage(group, bake);
+            } catch (Exception e) {
+                Api.sendMessage(group, "可能是请求太快也可能是模型使用超时总之挂了，后续在改");
+                throw new RuntimeException(e);
+
+            }
+        }
+    }
+
+    public void st() {
+
+        if (msg.contentToString().matches("(来.?|.*?不够)[射蛇色涩瑟铯\uD83D\uDC0D].*?")) {
+            ForwardMessageBuilder forwardMessageBuilder = new ForwardMessageBuilder(group).add(sender, msg);
+            try {
+                for (int i = 0; i <= 10; i++) {
+                    URL url = new URL("https://api.jrsgslb.cn/cos/url.php?return=img");
+                    InputStream inputStream = url.openConnection().getInputStream();
+                    ExternalResource ex = ExternalResource.Companion.create(inputStream);
+                    Image img = ExternalResource.uploadAsImage(ex, event.getSubject());
+
+                    forwardMessageBuilder.add(sender, new MessageChainBuilder().append(img).build());
+                    ex.close();
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
+            group.sendMessage(forwardMessageBuilder.build());
+
+
+//                MessageChain chain = new MessageChainBuilder()
+//                        .append(img)
+//                        .build();
+
+//                event.getSubject().sendMessage(chain);
+
+//            ExternalResource ex = ExternalResource.Companion.create(HttpUtil.downloadBytes("https://picture.yinux.workers.dev"));
+
+        }
+
+
+    }
+
+    public void st2() {
+
+        if (msg.contentToString().matches(".*?cos.*?")) {
+            ForwardMessageBuilder forwardMessageBuilder = new ForwardMessageBuilder(group).add(sender, msg);
+            try {
+                for (int i = 0; i <= 10; i++) {
+                    InputStream inputStream = HttpRequest.get("https://picture.yinux.workers.dev").setHttpProxy("127.0.0.1", 10808).execute().bodyStream();
+//                    URL url = new URL("https://api.jrsgslb.cn/cos/url.php?return=img");
+//                    InputStream inputStream = url.openConnection().getInputStream();
+                    ExternalResource ex = ExternalResource.Companion.create(inputStream);
+                    Image img = ExternalResource.uploadAsImage(ex, event.getSubject());
+
+                    forwardMessageBuilder.add(sender, new MessageChainBuilder().append(img).build());
+                    ex.close();
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
+            group.sendMessage(forwardMessageBuilder.build());
+
+
+        }
+
+
     }
 
     /**
@@ -123,12 +271,9 @@ public class GroupMsgEvent extends BaseMsgEvent {
                 if (paths.size() <= index) {
                     getHentaiList(path);
                 } else {
-                    ForwardMessageBuilder forwardMessageBuilder = new ForwardMessageBuilder(group)
-                            .add(sender, msg);
+                    ForwardMessageBuilder forwardMessageBuilder = new ForwardMessageBuilder(group).add(sender, msg);
                     for (int i = 0; i < i1; i++) {
-                        forwardMessageBuilder.add(sender, new MessageChainBuilder()
-                                .append(ExternalResource.uploadAsImage(paths.get((int) index - i).toFile(), group))
-                                .build());
+                        forwardMessageBuilder.add(sender, new MessageChainBuilder().append(ExternalResource.uploadAsImage(paths.get((int) index - i).toFile(), group)).build());
                     }
                     group.sendMessage(forwardMessageBuilder.build()).recallIn(100 * 1000);
                 }
@@ -151,20 +296,15 @@ public class GroupMsgEvent extends BaseMsgEvent {
 
     private void test() {
         // 构造消息
-        MessageChain chain = new MessageChainBuilder()
-                .append(new PlainText("string"))
-                .append("string") // 会被构造成 PlainText 再添加, 相当于上一行
-                .append(AtAll.INSTANCE)
-                .append(Image.fromId("{f8f1ab55-bf8e-4236-b55e-955848d7069f}.png"))
-                .build();
+        MessageChain chain = new MessageChainBuilder().append(new PlainText("string")).append("string") // 会被构造成 PlainText 再添加, 相当于上一行
+                .append(AtAll.INSTANCE).append(Image.fromId("{f8f1ab55-bf8e-4236-b55e-955848d7069f}.png")).build();
 
         // 取某类型消息
         Image image = (Image) msg.stream().filter(Image.class::isInstance).findFirst().orElse(null);
 
         // 撤回指定消息
         QuoteReply quote = msg.get(QuoteReply.Key);
-        if (quote != null && msg.contentToString().equals("recall"))
-            MessageSource.recall(quote.getSource());
+        if (quote != null && msg.contentToString().equals("recall")) MessageSource.recall(quote.getSource());
 
         // 利用缓存的ids与internalIds撤回消息
         if (group.getId() == 851159783L) {
@@ -175,23 +315,15 @@ public class GroupMsgEvent extends BaseMsgEvent {
             if (msg.contentToString().startsWith("/va recall by ")) {
                 String s = msg.contentToString().substring("/va recall by ".length());
 
-                int[] ids = Arrays.stream(s.substring(0, s.indexOf("|")).split(","))
-                        .mapToInt(Integer::parseInt).toArray();
-                int[] internalIds = Arrays.stream(s.substring(s.indexOf("|") + 1).split(","))
-                        .mapToInt(Integer::parseInt).toArray();
+                int[] ids = Arrays.stream(s.substring(0, s.indexOf("|")).split(",")).mapToInt(Integer::parseInt).toArray();
+                int[] internalIds = Arrays.stream(s.substring(s.indexOf("|") + 1).split(",")).mapToInt(Integer::parseInt).toArray();
 
-                MessageSource.recall(new MessageSourceBuilder()
-                        .sender(3085477411L)
-                        .target(group.getId())
-                        .id(ids)
-                        .internalId(internalIds)
-                        .build(bot.getId(), MessageSourceKind.GROUP));
+                MessageSource.recall(new MessageSourceBuilder().sender(3085477411L).target(group.getId()).id(ids).internalId(internalIds).build(bot.getId(), MessageSourceKind.GROUP));
             }
         }
 
         // 序列化转码消息
-        if (msg.contentToString().startsWith("/va to string "))
-            Api.sendMessage(group, msg.serializeToMiraiCode());
+        if (msg.contentToString().startsWith("/va to string ")) Api.sendMessage(group, msg.serializeToMiraiCode());
 
         if (msg.contentToString().startsWith("/va get msgcache ")) {
             int no = Integer.parseInt(msg.contentToString().substring("/va get msgcache ".length()));
