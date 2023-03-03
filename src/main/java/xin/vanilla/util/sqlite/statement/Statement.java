@@ -20,7 +20,9 @@ import xin.vanilla.util.lambda.LambdaUtils;
 import xin.vanilla.util.lambda.SerializedFunction;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * A base class for constructing SQL statement. Internal holding a {@link StringBuilder} to representing
@@ -54,7 +56,7 @@ public class Statement {
         statement.append(" FROM ");
         for (int i = 0; i < tables.length; i++) {
             if (i > 0) statement.append(", ");
-            statement.append("'").append(tables[i]).append("'");
+            statement.append("`").append(tables[i]).append("`");
         }
         return this;
     }
@@ -68,12 +70,12 @@ public class Statement {
      * @return this statement.
      */
     public Statement where(Object operand) {
-        statement.append(" WHERE ").append(operand);
+        statement.append(" WHERE `").append(operand).append("`");
         return this;
     }
 
     public <T> Statement where(SerializedFunction<T, ?> operand) {
-        statement.append(" WHERE ").append(LambdaUtils.getFiledName(operand));
+        statement.append(" WHERE `").append(LambdaUtils.getFiledName(operand)).append("`");
         return this;
     }
 
@@ -86,12 +88,33 @@ public class Statement {
      * @return this statement.
      */
     public Statement and(Object operand) {
-        statement.append(" AND ").append(operand);
+        statement.append(" AND `").append(operand).append("`");
         return this;
     }
 
     public <T> Statement and(SerializedFunction<T, ?> operand) {
-        statement.append(" AND ").append(LambdaUtils.getFiledName(operand));
+        statement.append(" AND `").append(LambdaUtils.getFiledName(operand)).append("`");
+        return this;
+    }
+
+    public <T> Statement andLikeContains(SerializedFunction<T, ?> operand, Object value) {
+        statement.append(" AND ").append("?");
+        statement.append(" LIKE '%' || `").append(LambdaUtils.getFiledName(operand)).append("` || '%'");
+        this.operands.add(value);
+        return this;
+    }
+
+    public <T> Statement andLikeEndWith(SerializedFunction<T, ?> operand, Object value) {
+        statement.append(" AND ").append("?");
+        statement.append(" LIKE '%' || `").append(LambdaUtils.getFiledName(operand)).append("`");
+        this.operands.add(value);
+        return this;
+    }
+
+    public <T> Statement andLikeStartWith(SerializedFunction<T, ?> operand, Object value) {
+        statement.append(" AND ").append("?");
+        statement.append(" LIKE `").append(LambdaUtils.getFiledName(operand)).append("` || '%'");
+        this.operands.add(value);
         return this;
     }
 
@@ -104,12 +127,12 @@ public class Statement {
      * @return this statement.
      */
     public Statement or(Object operand) {
-        statement.append(" OR ").append(operand);
+        statement.append(" OR `").append(operand).append("`");
         return this;
     }
 
     public <T> Statement or(SerializedFunction<T, ?> operand) {
-        statement.append(" OR ").append(LambdaUtils.getFiledName(operand));
+        statement.append(" OR `").append(LambdaUtils.getFiledName(operand)).append("`");
         return this;
     }
 
@@ -123,6 +146,21 @@ public class Statement {
     public Statement orderBy(Object... columns) {
         statement.append(" ORDER BY ");
         appendClauses(columns);
+        return this;
+    }
+
+    /**
+     * Appending the ORDER BY clause.
+     *
+     * @param columns the column list to be sorting. Each name can be either a normal String which just
+     *                the column name or wrapped the column name's {@link Function}||{@link Scoping} object.
+     * @return this statement.
+     */
+    @SafeVarargs
+    public final <T> Statement orderBy(SerializedFunction<T, ?>... columns) {
+        statement.append(" ORDER BY ");
+        Object[] collect = Arrays.stream(columns).map(LambdaUtils::getFiledName).toArray(Object[]::new);
+        appendClauses(collect);
         return this;
     }
 
@@ -430,6 +468,13 @@ public class Statement {
      */
     public Statement regexp(CharSequence regexp) {
         statement.append(" REGEXP '").append(regexp).append('\'');
+        return this;
+    }
+
+    public <T> Statement andRegexp(SerializedFunction<T, ?> operand, CharSequence value) {
+        statement.append(" AND ").append("?");
+        statement.append(" REGEXP ").append(LambdaUtils.getFiledName(operand));
+        this.operands.add(value);
         return this;
     }
 

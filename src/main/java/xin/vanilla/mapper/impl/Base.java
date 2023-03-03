@@ -1,4 +1,4 @@
-package xin.vanilla.mapper;
+package xin.vanilla.mapper.impl;
 
 public class Base {
     protected static String dbVersion = "1.0.1";

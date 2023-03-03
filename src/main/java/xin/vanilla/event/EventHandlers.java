@@ -1,11 +1,14 @@
 package xin.vanilla.event;
 
+import cn.hutool.core.date.DateUtil;
 import kotlin.coroutines.CoroutineContext;
 import net.mamoe.mirai.Bot;
-import net.mamoe.mirai.contact.MemberPermission;
+import net.mamoe.mirai.contact.*;
 import net.mamoe.mirai.event.*;
 import net.mamoe.mirai.event.events.*;
 import net.mamoe.mirai.message.data.AtAll;
+import net.mamoe.mirai.message.data.MessageChain;
+import net.mamoe.mirai.message.data.MessageChainBuilder;
 import org.jetbrains.annotations.NotNull;
 import xin.vanilla.VanillaKanri;
 import xin.vanilla.common.RegExpConfig;
@@ -27,6 +30,8 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static xin.vanilla.enumeration.DataCacheKey.PLUGIN_BOT_ONLINE_TIME;
 
 @SuppressWarnings("unused")
 public class EventHandlers extends SimpleListenerHost {
@@ -122,7 +127,7 @@ public class EventHandlers extends SimpleListenerHost {
 
                 // 判断发送者是否拥有权限
                 PermissionLevel senderLevel = annotation.sender();
-                if (!VanillaUtils.hasPermissionOrMore(insEvent.getBot(), insEvent.getGroup(), insEvent.getSender().getId(), senderLevel)) {
+                if (VanillaUtils.hasNotPermissionAndMore(insEvent.getBot(), insEvent.getGroup(), insEvent.getSender().getId(), senderLevel)) {
                     continue;
                 }
 
@@ -165,7 +170,7 @@ public class EventHandlers extends SimpleListenerHost {
                         // 非超管及以上权限不允许同时操作多群
                         if (groups.length > 0) {
                             if (groups.length > 1 || groups[0] > 0) {
-                                if (!VanillaUtils.hasPermissionOrMore(insEvent.getBot(), null, insEvent.getSender().getId(), PermissionLevel.PERMISSION_LEVEL_SUPER_ADMIN)) {
+                                if (VanillaUtils.hasNotPermissionAndMore(insEvent.getBot(), null, insEvent.getSender().getId(), PermissionLevel.PERMISSION_LEVEL_SUPER_ADMIN)) {
                                     Api.sendMessage(insEvent.getGroup(), "权限不足");
                                     return;
                                 }
@@ -214,7 +219,9 @@ public class EventHandlers extends SimpleListenerHost {
      */
     @EventHandler
     public void onGroupMessage(@NotNull GroupMessageEvent event) {
-        new GroupMsgEvent(event).run();
+        GroupMsgEvent groupMsgEvent = new GroupMsgEvent(event);
+        groupMsgEvent.encodeVaEvent();
+        groupMsgEvent.run();
     }
 
     /**
@@ -222,7 +229,9 @@ public class EventHandlers extends SimpleListenerHost {
      */
     @EventHandler
     public void onFriendMessage(@NotNull FriendMessageEvent event) {
-        new FriendMsgEvent(event).run();
+        FriendMsgEvent friendMsgEvent = new FriendMsgEvent(event);
+        friendMsgEvent.encodeVaEvent();
+        friendMsgEvent.run();
     }
 
     /**
@@ -257,16 +266,65 @@ public class EventHandlers extends SimpleListenerHost {
         new MsgRecallEvent(event).run();
     }
 
+    /**
+     * 监听机器人登录完成事件
+     */
     @EventHandler
     public void onBotOnline(@NotNull BotOnlineEvent event) {
         long bot = event.getBot().getId();
-        VanillaKanri.INSTANCE.getDataCache().put("plugin.botOnlineTime." + bot, System.currentTimeMillis());
+        VanillaKanri.INSTANCE.getDataCache().put(PLUGIN_BOT_ONLINE_TIME.getKey(bot), System.currentTimeMillis());
+    }
+
+    /**
+     * 监听戳一戳事件, 并转换为与语境匹配的消息事件
+     */
+    @EventHandler
+    public void onTapEvent(@NotNull NudgeEvent event) {
+        Contact subject = event.getSubject();
+        UserOrBot sender = event.getFrom();
+        UserOrBot target = event.getTarget();
+        Bot bot = event.getBot();
+        String action = event.getAction();
+        String suffix = event.getSuffix();
+
+        if (subject instanceof Group) {
+            Group group = (Group) subject;
+            // 获取发送者对象
+            NormalMember normalMember = group.get(sender.getId());
+            assert normalMember != null;
+
+            // 构建群聊消息事件
+            GroupMessageEvent groupMessageEvent = new GroupMessageEvent(
+                    sender.getNick(),
+                    normalMember.getPermission(),
+                    normalMember,
+                    buildTapMessage(sender, target, bot, action, suffix),
+                    (int) DateUtil.currentSeconds()
+            );
+
+            // 触发群聊消息事件
+            new GroupMsgEvent(groupMessageEvent).run();
+        } else if (subject instanceof Stranger) {
+
+        } else if (subject instanceof Friend) {
+            Friend friend = (Friend) subject;
+            MessageChainBuilder singleMessages;
+            FriendMessageEvent friendMessageEvent = new FriendMessageEvent(
+                    friend,
+                    buildTapMessage(sender, target, bot, action, suffix),
+                    (int) DateUtil.currentSeconds()
+
+            );
+            new FriendMsgEvent(friendMessageEvent).run();
+        } else if (subject instanceof Member) {
+
+        }
     }
 
     /**
      * 获取最底层的异常
      */
-    private Throwable getBaseException(Throwable exception) {
+    private Throwable getBaseException(@NotNull Throwable exception) {
         Throwable cause = exception.getCause();
         while (cause != null) {
             cause = exception.getCause();
@@ -275,4 +333,15 @@ public class EventHandlers extends SimpleListenerHost {
         return exception;
     }
 
+    @NotNull
+    private MessageChain buildTapMessage(UserOrBot sender, @NotNull UserOrBot target, @NotNull Bot bot, String action, String suffix) {
+        MessageChainBuilder singleMessages = new MessageChainBuilder().append("(:vaevent:)");
+        if (target.getId() == bot.getId())
+            singleMessages.append("<+tap+>");
+        else
+            singleMessages.append("<-tap->");
+        singleMessages.append("(").append(String.valueOf(sender.getId())).append(":").append(String.valueOf(target.getId())).append(")");
+        singleMessages.append("{").append(action).append("=").append(suffix).append("}");
+        return singleMessages.build();
+    }
 }

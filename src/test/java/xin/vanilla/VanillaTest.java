@@ -83,6 +83,14 @@ public class VanillaTest {
     }
 
     @Test
+    public void testQuery() throws SQLException {
+        SqliteUtil sqliteUtil = SqliteUtil.getInstance();
+        Statement select = QueryStatement.produce().from("test_table")
+                .where(TestTable::getAddress).likeContains("a");
+        System.out.println(sqliteUtil.getEntity(select, TestTable.class));
+    }
+
+    @Test
     public void test01() {
         TestEntity testEntity = new TestEntity();
         testEntity.setName("TsukiMaaii");

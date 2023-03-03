@@ -5,7 +5,6 @@ import lombok.Setter;
 import net.mamoe.mirai.contact.*;
 import net.mamoe.mirai.message.data.*;
 import xin.vanilla.entity.data.MsgCache;
-import xin.vanilla.mapper.Base;
 import xin.vanilla.mapper.MessageCache;
 import xin.vanilla.util.StringUtils;
 import xin.vanilla.util.VanillaUtils;
@@ -318,7 +317,7 @@ public class MessageCacheImpl extends Base implements MessageCache {
             else if (no.startsWith("|"))
                 query.and(MsgCache::getNos).likeEndsWith(no);
             else
-                query.and(MsgCache::getNos).likeStartsWith(no);
+                query.and(MsgCache::getNos).likeContains(no);
             msgCache = sqliteUtil.getEntity(query, MsgCache.class);
             if (msgCache != null && msgCache.getId() > 0) break;
         }

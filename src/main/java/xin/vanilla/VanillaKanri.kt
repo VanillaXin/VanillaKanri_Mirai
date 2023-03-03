@@ -12,6 +12,7 @@ import net.mamoe.mirai.console.plugin.jvm.reloadPluginConfig
 import net.mamoe.mirai.event.GlobalEventChannel
 import xin.vanilla.config.GlobalConfigFile
 import xin.vanilla.config.GroupConfigFile
+import xin.vanilla.enumeration.DataCacheKey.*
 import xin.vanilla.event.EventHandlers
 import xin.vanilla.mapper.KeywordData
 import xin.vanilla.mapper.MessageCache
@@ -66,10 +67,11 @@ object VanillaKanri : KotlinPlugin(
         // 延时
         launch {
             delay(1000)
-            logger.info("Plugin loaded a second ago!")
+            logger.info("插件在一秒前就加载好了！")
         }
 
-        dataCache["plugin.enableTime"] = System.currentTimeMillis()
+        // 记录插件启用时刻
+        dataCache[PLUGIN_ENABLE_TIME.getKey()] = System.currentTimeMillis()
 
         // 注册事件监听
         GlobalEventChannel.registerListenerHost(EventHandlers())
@@ -83,7 +85,7 @@ object VanillaKanri : KotlinPlugin(
 
     override fun onDisable() {
         // 插件创建的所有线程或异步任务都需要在 onDisable() 时关闭。
-        logger.info("Plugin disabled!")
+        logger.info("插件被禁用了！")
         // 关闭SQLite连接
         SqliteUtil.closeAll(SqliteUtil.CLOSE_MODE_COMMIT)
         super.onDisable()
@@ -92,9 +94,7 @@ object VanillaKanri : KotlinPlugin(
     fun delayed(delayMillis: Long, runnable: Runnable): CompletableFuture<Void?> {
         return future {
             delay(delayMillis)
-            runInterruptible(Dispatchers.IO) {
-                runnable.run()
-            }
+            runInterruptible(Dispatchers.IO) { runnable.run() }
             null
         }
     }
@@ -114,7 +114,7 @@ object VanillaKanri : KotlinPlugin(
      */
     fun addMsgSendCount(): Long {
         val count = getMsgSendCount() + 1
-        this.dataCache["plugin.msgSendCount"] = count
+        this.dataCache[PLUGIN_MSG_SEND_COUNT.getKey()] = count
         return count
     }
 
@@ -122,7 +122,7 @@ object VanillaKanri : KotlinPlugin(
      * 获取消息发送计数
      */
     fun getMsgSendCount(): Long {
-        val count = this.dataCache["plugin.msgSendCount"] ?: return 0
+        val count = this.dataCache[PLUGIN_MSG_SEND_COUNT.getKey()] ?: return 0
         return count as Long
     }
 
@@ -131,7 +131,7 @@ object VanillaKanri : KotlinPlugin(
      */
     fun addMsgReceiveCount(): Long {
         val count = getMsgReceiveCount() + 1
-        this.dataCache["plugin.msgReceiveCount"] = count
+        this.dataCache[PLUGIN_MSG_RECEIVE_COUNT.getKey()] = count
         return count
     }
 
@@ -139,7 +139,7 @@ object VanillaKanri : KotlinPlugin(
      * 获取消息接收计数
      */
     fun getMsgReceiveCount(): Long {
-        val count = this.dataCache["plugin.msgReceiveCount"] ?: return 0
+        val count = this.dataCache[PLUGIN_MSG_RECEIVE_COUNT.getKey()] ?: return 0
         return count as Long
     }
 
@@ -147,27 +147,27 @@ object VanillaKanri : KotlinPlugin(
      * 获取插件运行时长
      */
     fun getRuntimeAsString(): String {
-        return DateUtil.formatBetween(Date((this.dataCache["plugin.enableTime"] as Long)), Date())
+        return DateUtil.formatBetween(Date((this.dataCache[PLUGIN_ENABLE_TIME.getKey()] as Long)), Date())
     }
 
     /**
      * 获取插件运行时长
      */
     fun getRuntimeAsLong(): Long {
-        return this.dataCache["plugin.enableTime"] as Long - System.currentTimeMillis()
+        return this.dataCache[PLUGIN_ENABLE_TIME.getKey()] as Long - System.currentTimeMillis()
     }
 
     /**
      * 获取机器人在线时长
      */
     fun getBotOnlineTimeAsString(bot: Long): String {
-        return DateUtil.formatBetween(Date((this.dataCache["plugin.botOnlineTime.$bot"] as Long)), Date())
+        return DateUtil.formatBetween(Date((this.dataCache[PLUGIN_BOT_ONLINE_TIME.getKey(bot)] as Long)), Date())
     }
 
     /**
      * 获取机器人在线时长
      */
     fun getBotOnlineTimeAsLong(bot: Long): Long {
-        return this.dataCache["plugin.botOnlineTime.$bot"] as Long - System.currentTimeMillis()
+        return this.dataCache[PLUGIN_BOT_ONLINE_TIME.getKey(bot)] as Long - System.currentTimeMillis()
     }
 }

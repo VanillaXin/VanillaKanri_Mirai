@@ -1,14 +1,8 @@
 package xin.vanilla.entity.data
 
 import kotlinx.serialization.Serializable
-import lombok.Getter
-import lombok.Setter
-import lombok.experimental.Accessors
 import net.mamoe.mirai.contact.User
 
-@Getter
-@Setter
-@Accessors(chain = true)
 @Serializable
 class ForwardMsg {
     var preview: List<String> = ArrayList()
@@ -23,9 +17,6 @@ class ForwardMsg {
     var bot: Long = 0
 }
 
-@Getter
-@Setter
-@Accessors(chain = true)
 @Serializable
 class Node {
     /**

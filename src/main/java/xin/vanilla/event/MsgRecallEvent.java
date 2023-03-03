@@ -23,25 +23,18 @@ public class MsgRecallEvent extends BaseMsgEvent {
     @Getter
     private final MessageRecallEvent event;
     @Getter
-    private final MessageChain msg;
-    @Getter
     private final UserOrBot sender;
     @Getter
     private Group group;
     @Getter
     private Member operator;
-    @Getter
-    private final Bot bot;
-    @Getter
-    private final long time;
 
     public MsgRecallEvent(MessageRecallEvent event) {
+        super(null, event.getBot(), event.getMessageTime());
         this.event = event;
         int[] ids = this.event.getMessageIds();
         int[] internalIds = this.event.getMessageInternalIds();
-        this.time = this.event.getMessageTime();
         this.sender = this.event.getAuthor();
-        this.bot = this.event.getBot();
 
         if (event instanceof MessageRecallEvent.GroupRecall) {
             MessageRecallEvent.GroupRecall groupRecall = (MessageRecallEvent.GroupRecall) event;

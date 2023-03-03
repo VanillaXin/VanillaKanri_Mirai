@@ -16,6 +16,9 @@
 package xin.vanilla.util.sqlite;
 
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,6 +29,8 @@ import java.util.List;
  * @param <T> The generic type for datasource.
  */
 @SuppressWarnings("unused")
+@Setter
+@Getter
 public class PaginationList<T> extends ArrayList<T> {
     private int totalPageCount;
     private int totalItemCount;
@@ -59,36 +64,8 @@ public class PaginationList<T> extends ArrayList<T> {
         return this;
     }
 
-    public int getTotalPageCount() {
-        return totalPageCount;
-    }
-
-    public void setTotalPageCount(int totalPageCount) {
-        this.totalPageCount = totalPageCount;
-    }
-
-    public int getTotalItemCount() {
-        return totalItemCount;
-    }
-
-    public void setTotalItemCount(int totalItemCount) {
-        this.totalItemCount = totalItemCount;
-    }
-
-    public int getPageItemCount() {
-        return pageItemCount;
-    }
-
-    public void setPageItemCount(int pageItemCount) {
-        this.pageItemCount = pageItemCount;
-    }
-
-    public int getCurPageNo() {
-        return curPageNo;
-    }
-
-    public void setCurPageNo(int curPageNo) {
-        this.curPageNo = curPageNo;
+    public void addTotalPageCount(int count) {
+        this.totalPageCount += count;
     }
 
     public boolean hasNextPage() {
