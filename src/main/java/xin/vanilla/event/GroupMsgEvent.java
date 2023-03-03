@@ -1,8 +1,10 @@
 package xin.vanilla.event;
 
 import cn.hutool.core.io.IORuntimeException;
+import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.ReUtil;
+import cn.hutool.crypto.SecureUtil;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
@@ -19,6 +21,7 @@ import xin.vanilla.util.Api;
 import xin.vanilla.util.StringUtils;
 import xin.vanilla.util.VanillaUtils;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -49,10 +52,11 @@ public class GroupMsgEvent extends BaseMsgEvent {
 
     public void run() {
         // logger.info("群聊: " + group.getId() + ":" + sender.getId() + " -> " + msg.serializeToMiraiCode());
-        if (rcon()) return;
-        if (hentai()) return;
-        if (keyRep()) return;
-
+//        chatGpt2();
+        st();
+        st2();
+        audioTest();
+        chartGPTVoice();
         // test();
     }
 
@@ -174,6 +178,96 @@ public class GroupMsgEvent extends BaseMsgEvent {
         return true;
     }
 
+
+    private void chartGPTVoice() {
+
+
+        final String prefix = "chatGPTVoice";
+        if (msg.contentToString().startsWith(prefix)) {
+
+            String command = msg.contentToString().substring(prefix.length());
+
+            String bake = Api.chatGPT(command);
+            Api.sendMessage(group, bake);
+            String res = Api.fanyi_jp(bake.replace("\n","".replace(" ",""))).replace("\n", "").replace(" ", "");
+//            Api.sendMessage(group,res);
+            String path = "E:\\model\\temp\\";
+            String id = IdUtil.randomUUID();
+            path = path + id + ".wav";
+            Api.sendMessage(group, res);
+            try {
+                Process process = Runtime.getRuntime().exec("C:\\ProgramData\\Anaconda3\\envs\\vits\\python.exe C:\\Users\\Administrator\\Desktop\\MoeGoe-master\\MoeGoe.py " + res + " " + path);
+
+                Api.sendMessage(group, "消息执行");
+                process.waitFor();
+//                Path path = Paths.get("E:\\model\\dd.wav");
+                File file = new File(path);
+                ExternalResource externalResource = ExternalResource.create(file);
+                OfflineAudio offlineAudio = group.uploadAudio(externalResource);
+                Api.sendMessage(group, offlineAudio);
+                externalResource.close();
+            } catch (Exception e) {
+                Api.sendMessage(group, "可能是请求太快也可能是模型使用超时总之挂了，后续在改");
+                throw new RuntimeException(e);
+
+            }
+        }
+
+    }
+
+    private void audioTest() {
+
+
+        final String prefix = "audio";
+        if (msg.contentToString().startsWith(prefix)) {
+
+            String command = msg.contentToString().substring(prefix.length());
+
+            String appid = "20210126000681992";
+            String salt = "112";
+            String key = "X3WYhQFwg6O8cPWv7dTe";
+            String q = command;
+            String sign = SecureUtil.md5(appid + q + salt + key);
+            System.out.println(sign);
+            Map<String, Object> map = new HashMap<>();
+            map.put("from", "auto");
+            map.put("to", "jp");
+            map.put("appid", appid);
+            map.put("q", q);
+            map.put("salt", salt);
+            map.put("sign", sign);
+
+            String body = HttpRequest.post("https://fanyi-api.baidu.com/api/trans/vip/translate")
+                    .form(map)
+                    .execute().body();
+            JSONObject jsonObject1 = JSONUtil.parseObj(body);
+            JSONArray jsonArray = JSONUtil.parseArray(jsonObject1.get("trans_result"));
+            JSONObject jsonObject2 = JSONUtil.parseObj(jsonArray.get(0));
+            String res = (String) jsonObject2.get("dst");
+            String path = "E:\\model\\temp\\";
+            String id = IdUtil.randomUUID();
+            path = path + id + ".wav";
+            Api.sendMessage(group, res);
+            try {
+                Process process = Runtime.getRuntime().exec("C:\\ProgramData\\Anaconda3\\envs\\vits\\python.exe C:\\Users\\Administrator\\Desktop\\MoeGoe-master\\MoeGoe.py " + res + " " + path);
+
+                Api.sendMessage(group, "消息执行");
+                process.waitFor();
+                Thread.sleep(1000 * 10);
+//                Path path = Paths.get("E:\\model\\dd.wav");
+                File file = new File(path);
+                ExternalResource externalResource = ExternalResource.create(file);
+                OfflineAudio offlineAudio = group.uploadAudio(externalResource);
+                Api.sendMessage(group, offlineAudio);
+            } catch (Exception e) {
+                Api.sendMessage(group, "可能是请求太快也可能是模型使用超时总之挂了，后续在改");
+                throw new RuntimeException(e);
+
+            }
+        }
+
+    }
+
     private void chatGpt2() {
         final String prefix = "chatGPT";
         if (msg.contentToString().startsWith(prefix)) {
@@ -190,7 +284,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
                 String res = HttpRequest.post("https://api.openai.com/v1/chat/completions")
                         .setHttpProxy("localhost", 10808)
                         .header("Content-Type", "application/json")
-                        .header("Authorization", "Bearer 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")
+                        .header("Authorization", "Bearer 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")
                         .body(JSONUtil.toJsonStr(jsonObject))
                         .timeout(40000)
                         .execute()
@@ -237,7 +331,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
                         .header("Accept-Encoding", " gzip,deflate")
                         .header("Content-Length", "1024")
                         .header("Transfer-Encoding", " chunked")
-                        .header("Authorization", "Bearer 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")
+                        .header("Authorization", "Bearer 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")
                         .body(JSONUtil.toJsonStr(jsonObject))
                         .timeout(40000)
                         .execute().body();

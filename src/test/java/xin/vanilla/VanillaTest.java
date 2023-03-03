@@ -3,7 +3,9 @@ package xin.vanilla;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.IORuntimeException;
 import cn.hutool.core.io.IoUtil;
+import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.ReUtil;
+import cn.hutool.crypto.SecureUtil;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
@@ -11,6 +13,8 @@ import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson2.JSON;
 import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
 import net.mamoe.mirai.internal.deps.io.ktor.client.engine.ProxyBuilder;
+import net.mamoe.mirai.message.data.OfflineAudio;
+import net.mamoe.mirai.utils.ExternalResource;
 import org.junit.Test;
 import xin.vanilla.entity.TestEntities;
 import xin.vanilla.entity.TestEntity;
@@ -22,6 +26,7 @@ import xin.vanilla.util.sqlite.statement.InsertStatement;
 import xin.vanilla.util.sqlite.statement.QueryStatement;
 import xin.vanilla.util.sqlite.statement.Statement;
 
+import java.io.File;
 import java.io.InputStream;
 import java.net.Proxy;
 import java.security.SecureRandom;
@@ -208,6 +213,51 @@ public class VanillaTest {
             System.out.println(bake);
         } catch (IORuntimeException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    @Test
+    public void test06() {
+        String appid = "20210126000681992";
+        String salt = "112";
+        String key = "X3WYhQFwg6O8cPWv7dTe";
+        String q = "这个工具的用处类似于Apache Commons Lang中的StringUtil，之所以使用StrUtil而不是使用StringUtil是因为前者更短，而且Str这个简写我想已经深入人心了";
+        String sign = SecureUtil.md5(appid + q + salt + key);
+        System.out.println(sign);
+        Map<String, Object> map = new HashMap<>();
+        map.put("from", "auto");
+        map.put("to", "jp");
+        map.put("appid", appid);
+        map.put("q", q);
+        map.put("salt", salt);
+        map.put("sign", sign);
+
+        String body = HttpRequest.post("https://fanyi-api.baidu.com/api/trans/vip/translate")
+                .form(map)
+                .execute().body();
+        JSONObject jsonObject1 = JSONUtil.parseObj(body);
+        JSONArray jsonArray = JSONUtil.parseArray(jsonObject1.get("trans_result"));
+        JSONObject jsonObject2 = JSONUtil.parseObj(jsonArray.get(0));
+        String res = (String) jsonObject2.get("dst");
+        String path = "G:\\MoeGoe\\model\\temp\\";
+        String id = IdUtil.randomUUID();
+        path = path + id + ".wav";
+        String cmd = " C:\\Users\\86152\\.conda\\envs\\vits\\python.exe D:\\MoeGoe-master\\MoeGoe.py " + res + " " + path;
+        try {
+            System.out.println(cmd);
+//            Process process = Runtime.getRuntime().exec("cmd /c C:\\Users\\86152\\.conda\\envs\\vits\\python.exe D:\\MoeGoe-master\\MoeGoe.py" + res + " " + path);
+            Process process = Runtime.getRuntime().exec(cmd);
+//            Api.sendMessage(group, "消息执行");
+            process.waitFor();
+//            Thread.sleep(1000 * 10);
+////                Path path = Paths.get("E:\\model\\dd.wav");
+//            File file = new File(path);
+//            ExternalResource externalResource = ExternalResource.create(file);
+//            OfflineAudio offlineAudio = group.uploadAudio(externalResource);
+//            Api.sendMessage(group, offlineAudio);
+            System.out.println("ok");
+        }catch (Exception e){
+            e.printStackTrace();
         }
     }
 
