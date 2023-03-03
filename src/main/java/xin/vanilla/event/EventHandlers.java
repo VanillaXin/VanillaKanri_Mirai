@@ -31,6 +31,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static xin.vanilla.enumeration.DataCacheKey.PLUGIN_BOT_ONLINE_TIME;
+
 @SuppressWarnings("unused")
 public class EventHandlers extends SimpleListenerHost {
     @Override
@@ -270,7 +272,7 @@ public class EventHandlers extends SimpleListenerHost {
     @EventHandler
     public void onBotOnline(@NotNull BotOnlineEvent event) {
         long bot = event.getBot().getId();
-        VanillaKanri.INSTANCE.getDataCache().put("plugin.botOnlineTime." + bot, System.currentTimeMillis());
+        VanillaKanri.INSTANCE.getDataCache().put(PLUGIN_BOT_ONLINE_TIME.getKey(bot), System.currentTimeMillis());
     }
 
     /**
