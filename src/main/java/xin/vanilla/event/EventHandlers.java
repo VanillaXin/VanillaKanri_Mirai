@@ -341,10 +341,20 @@ public class EventHandlers extends SimpleListenerHost {
     @NotNull
     private MessageChain buildTapMessage(UserOrBot sender, @NotNull UserOrBot target, @NotNull Bot bot, String action, String suffix, MessageSourceKind kind) {
         MessageChainBuilder singleMessages = new MessageChainBuilder().append("(:vaevent:)");
-        if (target.getId() == bot.getId())
-            singleMessages.append("<+tap+>");
-        else
-            singleMessages.append("<-tap->");
+        // +代表本身 -代表他人, 防止自娱自乐(
+        //"<-tap+>" 别人戳了机器人
+        //"<-tap->" 别人戳了别人
+        //"<+tap->" 机器人人戳了别人
+        //"<+tap+>" 机器人人戳了机器人
+        singleMessages.append("<");
+
+        if (sender.getId() == bot.getId()) singleMessages.append("+");
+        else singleMessages.append("-");
+        singleMessages.append("tap");
+        if (target.getId() == bot.getId()) singleMessages.append("+");
+        else singleMessages.append("-");
+        singleMessages.append(">");
+
         singleMessages.append("(").append(String.valueOf(sender.getId())).append(":").append(String.valueOf(target.getId())).append(")");
         singleMessages.append("{").append(action).append("=").append(suffix).append("}");
 
