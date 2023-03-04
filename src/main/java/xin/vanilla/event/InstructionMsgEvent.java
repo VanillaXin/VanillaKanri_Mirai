@@ -536,12 +536,12 @@ public class InstructionMsgEvent {
         StringBuilder rep = new StringBuilder();
         if (qqs.length == 0 && base.getSelect().contains(text)) {
             for (long groupId : groups) {
-                rep.append("\r\n");
+                rep.append("\n");
                 if (groupId < 0) {
-                    rep.append("全局:\r\n");
+                    rep.append("全局:\n");
                     rep.append(StringUtils.toString(Va.getGlobalConfig().getPermissions(bot.getId()).getDeputyAdmin()));
                 }
-                rep.append(groupId).append(":\r\n");
+                rep.append(groupId).append(":\n");
                 rep.append(StringUtils.toString(Va.getGroupConfig().getDeputyAdmin(groupId)));
             }
             Api.sendMessage(group, "副管列表:" + rep);
@@ -601,8 +601,8 @@ public class InstructionMsgEvent {
         StringBuilder rep = new StringBuilder();
         if (qqs.length == 0 && base.getSelect().contains(text)) {
             for (long groupId : groups) {
-                rep.append("\r\n");
-                rep.append(groupId).append(":\r\n");
+                rep.append("\n");
+                rep.append(groupId).append(":\n");
                 rep.append(StringUtils.toString(Va.getGroupConfig().getDeputyAdmin(groupId)));
             }
             Api.sendMessage(group, "副管列表:" + rep);
@@ -643,7 +643,7 @@ public class InstructionMsgEvent {
     public int botAdmin(long[] groups, @NotNull long[] qqs, String text) {
         StringBuilder rep = new StringBuilder();
         if (qqs.length == 0 && base.getSelect().contains(text)) {
-            rep.append("主管列表:\r\n");
+            rep.append("主管列表:\n");
             rep.append(StringUtils.toString(Va.getGlobalConfig().getPermissions(bot.getId()).getBotAdmin()));
             Api.sendMessage(group, rep.toString());
             return RETURN_BREAK_TRUE;
@@ -680,7 +680,7 @@ public class InstructionMsgEvent {
     public int superAdmin(long[] groups, @NotNull long[] qqs, String text) {
         StringBuilder rep = new StringBuilder();
         if (qqs.length == 0 && base.getSelect().contains(text)) {
-            rep.append("超管列表:\r\n");
+            rep.append("超管列表:\n");
             rep.append(StringUtils.toString(Va.getGlobalConfig().getPermissions(bot.getId()).getSuperAdmin()));
             Api.sendMessage(group, rep.toString());
             return RETURN_BREAK_TRUE;
@@ -831,17 +831,19 @@ public class InstructionMsgEvent {
 
             ForwardMessageBuilder forwardMessageBuilder = new ForwardMessageBuilder(group)
                     .add(sender, msg)
-                    .add(bot, new MessageChainBuilder().append("触发内容:\r\n").append(keyFormat).build())
-                    .add(bot, new MessageChainBuilder().append("回复内容:\r\n").append(repFormat).build())
-                    .add(bot, new PlainText("触发内容文本:\r\n").plus(VanillaUtils.enVanillaCodeMsg(key)))
-                    .add(bot, new PlainText("回复内容文本:\r\n").plus(VanillaUtils.enVanillaCodeRep(rep)));
+                    .add(bot, new MessageChainBuilder().append("触发内容:\n").append(keyFormat).build())
+                    .add(bot, new MessageChainBuilder().append("回复内容:\n").append(repFormat).build())
+                    .add(bot, new PlainText("触发内容文本:"))
+                    .add(bot, new PlainText(VanillaUtils.enVanillaCodeMsg(key)))
+                    .add(bot, new PlainText("回复内容文本:"))
+                    .add(bot, new PlainText(VanillaUtils.enVanillaCodeRep(rep)));
             boolean tf = false;
             for (long groupId : groups) {
                 int level = VanillaUtils.getPermissionLevel(bot, groupId, sender.getId()) * 10;
                 long keyId = Va.getKeywordData().addKeyword(key, rep, bot.getId(), groupId, type, time, level > 0 ? level : 1);
                 if (keyId > 0) {
                     tf = true;
-                    forwardMessageBuilder.add(bot, new PlainText("群号: " + groupId + "\r\n关键词编号: " + keyId));
+                    forwardMessageBuilder.add(bot, new PlainText("群号: " + groupId + "\n关键词编号: " + keyId));
                 }
             }
             if (tf) {
