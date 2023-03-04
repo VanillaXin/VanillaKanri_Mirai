@@ -843,7 +843,7 @@ public class InstructionMsgEvent {
                 long keyId = Va.getKeywordData().addKeyword(key, rep, bot.getId(), groupId, type, time, level > 0 ? level : 1);
                 if (keyId > 0) {
                     tf = true;
-                    forwardMessageBuilder.add(bot, new PlainText("群号: " + groupId + "\n关键词编号: " + keyId));
+                    forwardMessageBuilder.add(bot, new PlainText("群号: " + (groupId == -1 ? "全局" : groupId) + "\n关键词编号: " + keyId));
                 }
             }
             if (tf) {
