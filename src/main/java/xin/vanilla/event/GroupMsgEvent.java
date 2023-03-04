@@ -44,7 +44,9 @@ public class GroupMsgEvent extends BaseMsgEvent {
         this.event = event;
         this.group = this.event.getGroup();
         this.sender = this.event.getSender();
-        Va.getMessageCache().addMsg(this.group, this.msg);
+        // 当原始事件不为null时才记录消息
+        if (event.getOriginalEvent() != null)
+            Va.getMessageCache().addMsg(this.group, this.msg);
     }
 
     public void run() {

@@ -9,11 +9,11 @@ import net.mamoe.mirai.message.data.OnlineMessageSource
 
 
 class GroupMessageEvents {
-    private var originalEvent: net.mamoe.mirai.event.events.GroupMessageEvent? = null
-    var event: xin.vanilla.entity.event.GroupMessageEvent? = null
+    var originalEvent: net.mamoe.mirai.event.events.GroupMessageEvent? = null
+    var customEvent: xin.vanilla.entity.event.GroupMessageEvent? = null
 
     constructor(event: xin.vanilla.entity.event.GroupMessageEvent) {
-        this.event = event
+        this.customEvent = event
     }
 
     constructor(originalEvent: net.mamoe.mirai.event.events.GroupMessageEvent) {
@@ -21,47 +21,47 @@ class GroupMessageEvents {
     }
 
     fun getMessage(): MessageChain? {
-        return if (event != null) event?.message
+        return if (customEvent != null) customEvent?.message
         else originalEvent?.message
     }
 
     fun getBot(): Bot? {
-        return if (event != null) event?.bot
+        return if (customEvent != null) customEvent?.bot
         else originalEvent?.bot
     }
 
     fun getTime(): Int {
-        return if (event != null) event?.time ?: 0
+        return if (customEvent != null) customEvent?.time ?: 0
         else originalEvent?.time ?: 0
     }
 
     fun getGroup(): Group? {
-        return if (event != null) event?.group
+        return if (customEvent != null) customEvent?.group
         else originalEvent?.group
     }
 
     fun getSender(): Member? {
-        return if (event != null) event?.sender
+        return if (customEvent != null) customEvent?.sender
         else originalEvent?.sender
     }
 
     fun getSubject(): Group? {
-        return if (event != null) event?.subject
+        return if (customEvent != null) customEvent?.subject
         else originalEvent?.subject
     }
 
     fun getSenderName(): String? {
-        return if (event != null) event?.senderName
+        return if (customEvent != null) customEvent?.senderName
         else originalEvent?.senderName
     }
 
     fun getPermission(): MemberPermission? {
-        return if (event != null) event?.permission
+        return if (customEvent != null) customEvent?.permission
         else originalEvent?.permission
     }
 
     fun getSource(): OnlineMessageSource.Incoming.FromGroup? {
-        return if (event != null) event?.source
+        return if (customEvent != null) customEvent?.source
         else originalEvent?.source
     }
 }
