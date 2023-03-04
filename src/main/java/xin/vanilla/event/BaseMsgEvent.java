@@ -31,7 +31,7 @@ public class BaseMsgEvent {
      */
     protected void encodeVaEvent() {
         // 转义事件特殊码
-        if (this.msg.contentToString().startsWith("(:vaevent:)")) {
+        if (this.msg.contentToString().contains("(:vaevent:)")) {
             MessageChainBuilder messages = new MessageChainBuilder();
             for (SingleMessage singleMessage : msg) {
                 if (singleMessage instanceof PlainText) {
