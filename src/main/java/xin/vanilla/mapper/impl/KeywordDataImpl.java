@@ -134,8 +134,6 @@ public class KeywordDataImpl extends Base implements KeywordData {
         if (StringUtils.isNullOrEmpty(type)) types = KEYWORD_TYPES;
         else types = new String[]{type};
 
-        word = VanillaUtils.enVanillaCodeMsg(word);
-
         List<KeyData> keys = new ArrayList<>();
         for (String typeString : types) {
             String table = getTable(typeString);
@@ -194,8 +192,6 @@ public class KeywordDataImpl extends Base implements KeywordData {
         String[] types;
         if (StringUtils.isNullOrEmpty(type)) types = KEYWORD_TYPES;
         else types = new String[]{type};
-
-        word = VanillaUtils.enVanillaCodeMsg(word);
 
         for (String typeString : types) {
             String table = getTable(typeString);

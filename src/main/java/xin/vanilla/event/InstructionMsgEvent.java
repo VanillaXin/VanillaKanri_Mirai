@@ -812,10 +812,11 @@ public class InstructionMsgEvent {
             }
 
             type = reg.getMatcher().group("type");
-            key = reg.getMatcher().group("key");
+            key = VanillaUtils.enVanillaCodeMsg(reg.getMatcher().group("key"));
             rep = reg.getMatcher().group("rep");
 
             MessageChain keyFormat;
+            MessageChain repFormat = MessageChain.deserializeFromMiraiCode(rep, group);
 
             if (keyword.getContain().contains(type)) {
                 keyFormat = MessageChain.deserializeFromMiraiCode(".*?" + key + ".*?", group);
@@ -830,8 +831,10 @@ public class InstructionMsgEvent {
 
             ForwardMessageBuilder forwardMessageBuilder = new ForwardMessageBuilder(group)
                     .add(sender, msg)
-                    .add(bot, new PlainText("触发内容:\r\n" + keyFormat))
-                    .add(bot, new PlainText("回复内容:\r\n" + rep));
+                    .add(bot, new MessageChainBuilder().append("触发内容:\r\n").append(keyFormat).build())
+                    .add(bot, new MessageChainBuilder().append("回复内容:\r\n").append(repFormat).build())
+                    .add(bot, new PlainText("触发内容文本:\r\n").plus(key))
+                    .add(bot, new PlainText("回复内容文本:\r\n").plus(rep));
             boolean tf = false;
             for (long groupId : groups) {
                 int level = VanillaUtils.getPermissionLevel(bot, groupId, sender.getId()) * 10;
