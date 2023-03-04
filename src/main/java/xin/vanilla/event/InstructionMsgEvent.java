@@ -812,8 +812,8 @@ public class InstructionMsgEvent {
             }
 
             type = reg.getMatcher().group("type");
-            key = VanillaUtils.enVanillaCodeMsg(reg.getMatcher().group("key"));
-            rep = VanillaUtils.enVanillaCodeRep(reg.getMatcher().group("rep"));
+            key = reg.getMatcher().group("key");
+            rep = reg.getMatcher().group("rep");
 
             MessageChain keyFormat;
             MessageChain repFormat = MessageChain.deserializeFromMiraiCode(rep, group);
@@ -833,8 +833,8 @@ public class InstructionMsgEvent {
                     .add(sender, msg)
                     .add(bot, new MessageChainBuilder().append("触发内容:\r\n").append(keyFormat).build())
                     .add(bot, new MessageChainBuilder().append("回复内容:\r\n").append(repFormat).build())
-                    .add(bot, new PlainText("触发内容文本:\r\n").plus(key))
-                    .add(bot, new PlainText("回复内容文本:\r\n").plus(rep));
+                    .add(bot, new PlainText("触发内容文本:\r\n").plus(VanillaUtils.enVanillaCodeMsg(key)))
+                    .add(bot, new PlainText("回复内容文本:\r\n").plus(VanillaUtils.enVanillaCodeRep(rep)));
             boolean tf = false;
             for (long groupId : groups) {
                 int level = VanillaUtils.getPermissionLevel(bot, groupId, sender.getId()) * 10;
