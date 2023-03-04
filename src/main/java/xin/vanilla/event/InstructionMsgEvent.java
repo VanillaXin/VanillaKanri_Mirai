@@ -813,7 +813,7 @@ public class InstructionMsgEvent {
 
             type = reg.getMatcher().group("type");
             key = VanillaUtils.enVanillaCodeMsg(reg.getMatcher().group("key"));
-            rep = reg.getMatcher().group("rep");
+            rep = VanillaUtils.enVanillaCodeRep(reg.getMatcher().group("rep"));
 
             MessageChain keyFormat;
             MessageChain repFormat = MessageChain.deserializeFromMiraiCode(rep, group);
