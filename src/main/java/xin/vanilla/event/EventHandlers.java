@@ -87,6 +87,7 @@ public class EventHandlers extends SimpleListenerHost {
         else prefix = insEvent.getIns();
 
         for (Method method : insEvent.getClass().getMethods()) {
+            int back = InstructionMsgEvent.RETURN_CONTINUE;
             if (method.isAnnotationPresent(KanriInsEvent.class)) {
                 KanriInsEvent annotation = method.getAnnotation(KanriInsEvent.class);
 
@@ -186,12 +187,7 @@ public class EventHandlers extends SimpleListenerHost {
                             qqs = new long[]{};
                         }
 
-                        int back = (int) method.invoke(insEvent, groups, qqs, operation);
-                        if (back == InstructionMsgEvent.RETURN_BREAK_TRUE) {
-                            event.intercept();
-                            return;
-                        } else if (back == InstructionMsgEvent.RETURN_BREAK_FALSE)
-                            return;
+                        back = (int) method.invoke(insEvent, groups, qqs, operation);
                     }
                 } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
                     throw new RuntimeException(e);
@@ -199,12 +195,19 @@ public class EventHandlers extends SimpleListenerHost {
 
             } else if (method.isAnnotationPresent(KeywordInsEvent.class)) {
                 try {
-                    int back = (int) method.invoke(insEvent, prefix);
+                    back = (int) method.invoke(insEvent, prefix);
 
                 } catch (IllegalAccessException | InvocationTargetException e) {
                     throw new RuntimeException(e);
                 }
             }
+            // 根据返回值判断是否继续执行事件
+            if (back == InstructionMsgEvent.RETURN_BREAK_TRUE) {
+                event.intercept();
+                return;
+            } else if (back == InstructionMsgEvent.RETURN_BREAK_FALSE)
+                return;
+
             // TODO 解析定时任务指令
             // else if (method.isAnnotationPresent(TimedInsEvent.class)) {
             //

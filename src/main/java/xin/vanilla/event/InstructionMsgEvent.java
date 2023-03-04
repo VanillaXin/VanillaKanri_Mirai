@@ -815,17 +815,17 @@ public class InstructionMsgEvent {
             key = reg.getMatcher().group("key");
             rep = reg.getMatcher().group("rep");
 
-            String keyFormat;
+            MessageChain keyFormat;
 
             if (keyword.getContain().contains(type)) {
-                keyFormat = ".*?" + key + ".*?";
+                keyFormat = MessageChain.deserializeFromMiraiCode(".*?" + key + ".*?", group);
             } else if (keyword.getPinyin().contains(type)) {
                 key = PinyinHelper.toPinyin(key, PinyinStyleEnum.NORMAL).trim();
-                keyFormat = ".*?" + key + ".*?";
+                keyFormat = MessageChain.deserializeFromMiraiCode(".*?" + key + ".*?", group);
             } else if (keyword.getRegex().contains(type)) {
-                keyFormat = key;
+                keyFormat = MessageChain.deserializeFromMiraiCode(key, group);
             } else {
-                keyFormat = "^" + key + "$";
+                keyFormat = MessageChain.deserializeFromMiraiCode("^" + key + "$", group);
             }
 
             ForwardMessageBuilder forwardMessageBuilder = new ForwardMessageBuilder(group)
@@ -834,7 +834,8 @@ public class InstructionMsgEvent {
                     .add(bot, new PlainText("回复内容:\r\n" + rep));
             boolean tf = false;
             for (long groupId : groups) {
-                long keyId = Va.getKeywordData().addKeyword(key, rep, bot.getId(), groupId, type, time, VanillaUtils.getPermissionLevel(bot, groupId, sender.getId()) * 20);
+                int level = VanillaUtils.getPermissionLevel(bot, groupId, sender.getId()) * 10;
+                long keyId = Va.getKeywordData().addKeyword(key, rep, bot.getId(), groupId, type, time, level > 0 ? level : 1);
                 if (keyId > 0) {
                     tf = true;
                     forwardMessageBuilder.add(bot, new PlainText("群号: " + groupId + "\r\n关键词编号: " + keyId));

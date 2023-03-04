@@ -40,4 +40,9 @@ class KeyData {
      * 关键词类型
      */
     var type: String = ""
+
+    /**
+     * 权级
+     */
+    var status: Int = 0
 }

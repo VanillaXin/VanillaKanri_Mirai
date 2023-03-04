@@ -10,6 +10,7 @@ import xin.vanilla.entity.config.instruction.KeywordInstructions;
 import xin.vanilla.entity.data.KeyData;
 import xin.vanilla.mapper.KeywordData;
 import xin.vanilla.util.StringUtils;
+import xin.vanilla.util.VanillaUtils;
 import xin.vanilla.util.sqlite.PaginationList;
 import xin.vanilla.util.sqlite.SqliteUtil;
 import xin.vanilla.util.sqlite.statement.InsertStatement;
@@ -47,16 +48,17 @@ public class KeywordDataImpl extends Base implements KeywordData {
     public void createTable(String table) {
         if (!sqliteUtil.containsTable(table)) {
             sqliteUtil.executeSql(
-                    "CREATE TABLE `" + table + "` (" +
+                    "CREATE TABLE IF NOT EXISTS `" + table + "` (" +
                             " `id`     INTEGER     PRIMARY KEY AUTOINCREMENT NOT NULL," +
                             " `word`   TEXT                                  NOT NULL," +
                             " `msg`    TEXT                                  NOT NULL," +
                             " `bot`    INTEGER(10)                           NOT NULL," +
                             " `group`  INTEGER(10)                           NOT NULL," +
                             " `time`   INTEGER(10)                           NOT NULL," +
-                            " `level`  INTEGER(2)                            NOT NULL" +
+                            " `level`  INTEGER(4)                            NOT NULL DEFAULT 1," +
+                            " `status` INTEGER(1)                            NOT NULL DEFAULT 0" +
                             ")");
-            sqliteUtil.executeSql("CREATE UNIQUE INDEX 'word_msg_group_unique'" + " ON `" + table + "` ('word', 'group', 'msg')");
+            sqliteUtil.executeSql("CREATE UNIQUE INDEX IF NOT EXISTS `word_msg_group_unique`" + " ON `" + table + "` ('word', 'group', 'msg')");
         }
     }
 
@@ -66,12 +68,16 @@ public class KeywordDataImpl extends Base implements KeywordData {
         createTable(table);
         // TODO 定义特殊码, 转义特殊码
         InsertStatement insert = InsertStatement.produce(table)
-                .put(KeyData::getWord, word)
+                .put(KeyData::getWord, VanillaUtils.enVanillaCodeMsg(word))
                 .put(KeyData::getMsg, rep)
                 .put(KeyData::getBot, bot)
                 .put(KeyData::getGroup, group)
                 .put(KeyData::getTime, time)
-                .put(KeyData::getLevel, level);
+                .put(KeyData::getLevel, level > 0 ? level : 1);
+        // 判断是否非普通群员添加的关键词
+        if (level > 1) {
+            insert.put(KeyData::getStatus, 1);
+        }
         if (sqliteUtil.insert(insert) > 0) {
             return sqliteUtil.getLastInsertRowId(table);
         }
@@ -128,12 +134,15 @@ public class KeywordDataImpl extends Base implements KeywordData {
         if (StringUtils.isNullOrEmpty(type)) types = KEYWORD_TYPES;
         else types = new String[]{type};
 
+        word = VanillaUtils.enVanillaCodeMsg(word);
+
         List<KeyData> keys = new ArrayList<>();
         for (String typeString : types) {
             String table = getTable(typeString);
             createTable(table);
             Statement query = QueryStatement.produce().from(table)
-                    .where(KeyData::getBot).eq(bot);
+                    .where(KeyData::getBot).eq(bot)
+                    .and(KeyData::getStatus).gt(0);
             if (group != 0)
                 query.and(KeyData::getGroup).eq(group);
 
@@ -186,11 +195,14 @@ public class KeywordDataImpl extends Base implements KeywordData {
         if (StringUtils.isNullOrEmpty(type)) types = KEYWORD_TYPES;
         else types = new String[]{type};
 
+        word = VanillaUtils.enVanillaCodeMsg(word);
+
         for (String typeString : types) {
             String table = getTable(typeString);
             createTable(table);
             Statement query = QueryStatement.produce().from(table)
-                    .where(KeyData::getBot).eq(bot);
+                    .where(KeyData::getBot).eq(bot)
+                    .and(KeyData::getStatus).gt(0);
             if (group != 0)
                 query.and(KeyData::getGroup).eq(group);
 
