@@ -33,7 +33,7 @@ public class RegExpConfig {
             + "|" + RegUtils.processGroup(base.getGlobal()) + ")" + REG_SEPARATOR + "?)*?>";
 
     /**
-     * RCON 指令返回内容: /list
+     * MC RCON 指令返回内容: /list
      */
     public static final RegUtils RCON_RESULT_LIST =
             RegUtils.start().append("There").separator().append("are").separator()

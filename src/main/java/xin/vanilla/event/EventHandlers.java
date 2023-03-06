@@ -87,6 +87,7 @@ public class EventHandlers extends SimpleListenerHost {
         else prefix = insEvent.getIns();
 
         for (Method method : insEvent.getClass().getMethods()) {
+            int back = InstructionMsgEvent.RETURN_CONTINUE;
             if (method.isAnnotationPresent(KanriInsEvent.class)) {
                 KanriInsEvent annotation = method.getAnnotation(KanriInsEvent.class);
 
@@ -186,12 +187,7 @@ public class EventHandlers extends SimpleListenerHost {
                             qqs = new long[]{};
                         }
 
-                        int back = (int) method.invoke(insEvent, groups, qqs, operation);
-                        if (back == InstructionMsgEvent.RETURN_BREAK_TRUE) {
-                            event.intercept();
-                            return;
-                        } else if (back == InstructionMsgEvent.RETURN_BREAK_FALSE)
-                            return;
+                        back = (int) method.invoke(insEvent, groups, qqs, operation);
                     }
                 } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
                     throw new RuntimeException(e);
@@ -199,12 +195,19 @@ public class EventHandlers extends SimpleListenerHost {
 
             } else if (method.isAnnotationPresent(KeywordInsEvent.class)) {
                 try {
-                    int back = (int) method.invoke(insEvent, prefix);
+                    back = (int) method.invoke(insEvent, prefix);
 
                 } catch (IllegalAccessException | InvocationTargetException e) {
                     throw new RuntimeException(e);
                 }
             }
+            // 根据返回值判断是否继续执行事件
+            if (back == InstructionMsgEvent.RETURN_BREAK_TRUE) {
+                event.intercept();
+                return;
+            } else if (back == InstructionMsgEvent.RETURN_BREAK_FALSE)
+                return;
+
             // TODO 解析定时任务指令
             // else if (method.isAnnotationPresent(TimedInsEvent.class)) {
             //
@@ -335,16 +338,41 @@ public class EventHandlers extends SimpleListenerHost {
         return exception;
     }
 
+    /**
+     * 构建戳一戳消息
+     * <p>
+     * <p>+代表本身 -代表他人, 防止自娱自乐(</p>
+     * <p><code><-tap+></code> 别人戳了机器人</p>
+     * <p><code><-tap-></code> 别人戳了别人</p>
+     * <p><code><+tap-></code> 机器人人戳了别人</p>
+     * <p><code><+tap+></code> 机器人人戳了机器人</p>
+     */
     @NotNull
-    private MessageChain buildTapMessage(UserOrBot sender, @NotNull UserOrBot target, @NotNull Bot bot, String action, String suffix, MessageSourceKind kind) {
-        MessageChainBuilder singleMessages = new MessageChainBuilder().append("(:vaevent:)");
-        if (target.getId() == bot.getId())
-            singleMessages.append("<+tap+>");
-        else
-            singleMessages.append("<-tap->");
-        singleMessages.append("(").append(String.valueOf(sender.getId())).append(":").append(String.valueOf(target.getId())).append(")");
+    private MessageChain buildTapMessage(@NotNull UserOrBot sender, @NotNull UserOrBot target, @NotNull Bot bot, String action, String suffix, MessageSourceKind kind) {
+        MessageChainBuilder singleMessages = new MessageChainBuilder();
+
+        // 构建 (:vaevent:)<±tap±>
+        StringBuilder prefix = new StringBuilder("(:vaevent:)");
+        prefix.append("<");
+        if (sender.getId() == bot.getId()) prefix.append("+");
+        else prefix.append("-");
+        prefix.append("tap");
+        if (target.getId() == bot.getId()) prefix.append("+");
+        else prefix.append("-");
+        prefix.append(">");
+
+        // 追加 (:vaevent:)<±tap±>(触发者->被戳者)
+        singleMessages.append(prefix);
+        singleMessages.append("(").append(String.valueOf(sender.getId())).append("->").append(String.valueOf(target.getId())).append(")\n");
+
+        // 追加 (:vaevent:)<±tap±>(被戳者<-触发者)
+        singleMessages.append(prefix);
+        singleMessages.append("(").append(String.valueOf(target.getId())).append("<-").append(String.valueOf(sender.getId())).append(")\n");
+
+        // 追加 {动作=后缀}
         singleMessages.append("{").append(action).append("=").append(suffix).append("}");
 
+        // 追加 消息源
         singleMessages.append(new MessageSourceBuilder()
                 .sender(sender.getId())
                 .target(target.getId())

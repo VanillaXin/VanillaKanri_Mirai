@@ -71,11 +71,11 @@ public class MsgRecallEvent extends BaseMsgEvent {
                         .append(this.sender.getId())
                         .append("):");
             } else {
-                stringBuilder.append("群聊:『").append(this.group.getName()).append("』(").append(this.group.getId()).append(")\r\n")
+                stringBuilder.append("群聊:『").append(this.group.getName()).append("』(").append(this.group.getId()).append(")\n")
                         .append("操作者:『").append(operator.getNick()).append("』")
-                        .append("(").append(operator.getId()).append(")\r\n")
+                        .append("(").append(operator.getId()).append(")\n")
                         .append("发送者:『").append(sender.getNick()).append("』")
-                        .append("(").append(sender.getId()).append(")\r\n")
+                        .append("(").append(sender.getId()).append(")\n")
                         .append("消息发送时间:『").append(DateUtils.toString(new Date(this.time * 1000L), "MM/dd HH:mm:ss")).append("』")
                         .append("(").append(this.time).append("):");
             }
@@ -93,7 +93,7 @@ public class MsgRecallEvent extends BaseMsgEvent {
                 Api.sendMessage(backGroup, this.msg);
             } else {
                 Api.sendMessage(backGroup, new MessageChainBuilder()
-                        .append(stringBuilder.append("\r\n"))
+                        .append(stringBuilder.append("\n"))
                         .append(this.msg)
                         .build()
                 );

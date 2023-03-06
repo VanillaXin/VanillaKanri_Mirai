@@ -27,17 +27,17 @@ class KeywordInstructions {
     /**
      * 精准匹配+
      */
-    var exactly: Set<String> = mutableSetOf("exactly", "perfect")
+    var exactly: Set<String> = mutableSetOf("exactly", "perfect", "per")
 
     /**
      * 包含匹配+
      */
-    var contain: Set<String> = mutableSetOf("contain", "include")
+    var contain: Set<String> = mutableSetOf("contain", "include", "inc")
 
     /**
      * 拼音包含匹配+
      */
-    var pinyin: Set<String> = mutableSetOf("pinyin")
+    var pinyin: Set<String> = mutableSetOf("pinyin", "pin")
 
     /**
      * 正则匹配+

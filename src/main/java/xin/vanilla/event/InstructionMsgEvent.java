@@ -1,6 +1,5 @@
 package xin.vanilla.event;
 
-import cn.hutool.crypto.digest.MD5;
 import cn.hutool.system.oshi.CpuInfo;
 import cn.hutool.system.oshi.OshiUtil;
 import com.github.houbb.pinyin.constant.enums.PinyinStyleEnum;
@@ -110,10 +109,9 @@ public class InstructionMsgEvent {
         JvmPluginDescription pluginInfo = Va.getDescription();
         ForwardMessageBuilder forwardMessageBuilder;
         StringBuilder rep = new StringBuilder();
-        String path = this.getClass().getProtectionDomain().getCodeSource().getLocation().getPath();
-        String md5 = MD5.create().digestHex16(path).substring(0, 5);
-
-        rep.append(pluginInfo.getName()).append(" - v").append(pluginInfo.getVersion()).append(" : ").append(md5).append("\n");
+        // 获取Git当前分支的哈希值
+        String hash = Va.getResource("hash");
+        rep.append(pluginInfo.getName()).append(" - v").append(pluginInfo.getVersion()).append(" : ").append(hash).append("\n");
         GlobalMemory memory = OshiUtil.getMemory();
 
         rep.append("消息收发: ").append(Va.getMsgReceiveCount()).append("/").append(Va.getMsgSendCount()).append("\n");
@@ -536,12 +534,12 @@ public class InstructionMsgEvent {
         StringBuilder rep = new StringBuilder();
         if (qqs.length == 0 && base.getSelect().contains(text)) {
             for (long groupId : groups) {
-                rep.append("\r\n");
+                rep.append("\n");
                 if (groupId < 0) {
-                    rep.append("全局:\r\n");
+                    rep.append("全局:\n");
                     rep.append(StringUtils.toString(Va.getGlobalConfig().getPermissions(bot.getId()).getDeputyAdmin()));
                 }
-                rep.append(groupId).append(":\r\n");
+                rep.append(groupId).append(":\n");
                 rep.append(StringUtils.toString(Va.getGroupConfig().getDeputyAdmin(groupId)));
             }
             Api.sendMessage(group, "副管列表:" + rep);
@@ -601,8 +599,8 @@ public class InstructionMsgEvent {
         StringBuilder rep = new StringBuilder();
         if (qqs.length == 0 && base.getSelect().contains(text)) {
             for (long groupId : groups) {
-                rep.append("\r\n");
-                rep.append(groupId).append(":\r\n");
+                rep.append("\n");
+                rep.append(groupId).append(":\n");
                 rep.append(StringUtils.toString(Va.getGroupConfig().getDeputyAdmin(groupId)));
             }
             Api.sendMessage(group, "副管列表:" + rep);
@@ -643,7 +641,7 @@ public class InstructionMsgEvent {
     public int botAdmin(long[] groups, @NotNull long[] qqs, String text) {
         StringBuilder rep = new StringBuilder();
         if (qqs.length == 0 && base.getSelect().contains(text)) {
-            rep.append("主管列表:\r\n");
+            rep.append("主管列表:\n");
             rep.append(StringUtils.toString(Va.getGlobalConfig().getPermissions(bot.getId()).getBotAdmin()));
             Api.sendMessage(group, rep.toString());
             return RETURN_BREAK_TRUE;
@@ -680,7 +678,7 @@ public class InstructionMsgEvent {
     public int superAdmin(long[] groups, @NotNull long[] qqs, String text) {
         StringBuilder rep = new StringBuilder();
         if (qqs.length == 0 && base.getSelect().contains(text)) {
-            rep.append("超管列表:\r\n");
+            rep.append("超管列表:\n");
             rep.append(StringUtils.toString(Va.getGlobalConfig().getPermissions(bot.getId()).getSuperAdmin()));
             Api.sendMessage(group, rep.toString());
             return RETURN_BREAK_TRUE;
@@ -815,29 +813,35 @@ public class InstructionMsgEvent {
             key = reg.getMatcher().group("key");
             rep = reg.getMatcher().group("rep");
 
-            String keyFormat;
+            MessageChain keyFormat;
+            MessageChain repFormat = MessageChain.deserializeFromMiraiCode(rep, group);
 
             if (keyword.getContain().contains(type)) {
-                keyFormat = ".*?" + key + ".*?";
+                keyFormat = MessageChain.deserializeFromMiraiCode(".*?" + key + ".*?", group);
             } else if (keyword.getPinyin().contains(type)) {
                 key = PinyinHelper.toPinyin(key, PinyinStyleEnum.NORMAL).trim();
-                keyFormat = ".*?" + key + ".*?";
+                keyFormat = MessageChain.deserializeFromMiraiCode(".*?" + key + ".*?", group);
             } else if (keyword.getRegex().contains(type)) {
-                keyFormat = key;
+                keyFormat = MessageChain.deserializeFromMiraiCode(key, group);
             } else {
-                keyFormat = "^" + key + "$";
+                keyFormat = MessageChain.deserializeFromMiraiCode("^" + key + "$", group);
             }
 
             ForwardMessageBuilder forwardMessageBuilder = new ForwardMessageBuilder(group)
                     .add(sender, msg)
-                    .add(bot, new PlainText("触发内容:\r\n" + keyFormat))
-                    .add(bot, new PlainText("回复内容:\r\n" + rep));
+                    .add(bot, new MessageChainBuilder().append("触发内容:\n").append(keyFormat).build())
+                    .add(bot, new MessageChainBuilder().append("回复内容:\n").append(repFormat).build())
+                    .add(bot, new PlainText("触发内容文本:"))
+                    .add(bot, new PlainText(VanillaUtils.enVanillaCodeMsg(key)))
+                    .add(bot, new PlainText("回复内容文本:"))
+                    .add(bot, new PlainText(VanillaUtils.enVanillaCodeRep(rep)));
             boolean tf = false;
             for (long groupId : groups) {
-                long keyId = Va.getKeywordData().addKeyword(key, rep, bot.getId(), groupId, type, time, VanillaUtils.getPermissionLevel(bot, groupId, sender.getId()) * 20);
+                int level = VanillaUtils.getPermissionLevel(bot, groupId, sender.getId()) * 10;
+                long keyId = Va.getKeywordData().addKeyword(key, rep, bot.getId(), groupId, type, time, level > 0 ? level : 1);
                 if (keyId > 0) {
                     tf = true;
-                    forwardMessageBuilder.add(bot, new PlainText("群号: " + groupId + "\r\n关键词编号: " + keyId));
+                    forwardMessageBuilder.add(bot, new PlainText("群号: " + (groupId == -1 ? "全局" : groupId) + "\n关键词编号: " + keyId));
                 }
             }
             if (tf) {
@@ -845,6 +849,13 @@ public class InstructionMsgEvent {
             } else {
                 forwardMessageBuilder.add(bot, new PlainText("添加失败"));
             }
+            // forwardMessageBuilder.setDisplayStrategy(new ForwardMessage.DisplayStrategy() {
+            //     @NotNull
+            //     @Override
+            //     public String generateTitle(@NotNull RawForwardMessage forward) {
+            //         return ForwardMessage.DisplayStrategy.super.generateTitle(forward);
+            //     }
+            // });
             Api.sendMessage(group, forwardMessageBuilder.build());
             return RETURN_BREAK_TRUE;
         }
@@ -864,6 +875,17 @@ public class InstructionMsgEvent {
 
             return RETURN_BREAK_TRUE;
         }
+        return RETURN_CONTINUE;
+    }
+
+    /**
+     * 审核通过普通用户添加的关键词
+     */
+    public int keyApproved(String prefix) {
+        if (!base.getAdd().contains(prefix)) return RETURN_CONTINUE;
+        if (!prefix.equals(this.ins)) return RETURN_CONTINUE;
+
+
         return RETURN_CONTINUE;
     }
 

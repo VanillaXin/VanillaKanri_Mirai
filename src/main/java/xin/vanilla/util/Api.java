@@ -85,7 +85,7 @@ public class Api {
      */
     public static MessageReceipt<Contact> sendMessage(@NotNull Contact contact, @NotNull String message) {
         // 反转义事件特殊码
-        if (message.startsWith("\\(:vaevent:\\)"))
+        if (message.contains("\\(:vaevent:\\)"))
             message = message.replace("\\(:vaevent:\\)", "(:vaevent:)");
         MessageReceipt<Contact> contactMessageReceipt = contact.sendMessage(message);
         Va.addMsgSendCount();
@@ -99,7 +99,7 @@ public class Api {
     public static MessageReceipt<Contact> sendMessage(@NotNull Contact contact,@NotNull  Message message) {
         // 反转义事件特殊码
         if (message instanceof MessageChain) {
-            if (message.contentToString().startsWith("\\(:vaevent:\\)")) {
+            if (message.contentToString().contains("\\(:vaevent:\\)")) {
                 MessageChain messageChain = (MessageChain) message;
                 MessageChainBuilder messages = new MessageChainBuilder();
                 for (SingleMessage singleMessage : messageChain) {

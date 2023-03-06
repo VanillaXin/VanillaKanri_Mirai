@@ -453,7 +453,7 @@ public class VanillaUtils {
      * 将消息序列化为Json
      */
     @NotNull
-    public static String serializeToVanillaCode(MessageChain msg) {
+    public static String serializeToJsonCode(MessageChain msg) {
         return MessageChain.serializeToJsonString(msg);
     }
 
@@ -461,8 +461,41 @@ public class VanillaUtils {
      * 将Json反序列化为消息
      */
     @NotNull
-    public static MessageChain deserializeVanillaCode(String msg) {
+    public static MessageChain deserializeJsonCode(String msg) {
         return MessageChain.deserializeFromJsonString(msg);
+    }
+
+    /**
+     * 词库触发(keyWord)消息转码
+     */
+    @NotNull
+    public static String enVanillaCodeMsg(@NotNull String msg) {
+        if (msg.contains("[mirai:image:{")) {
+            msg = msg.replaceAll("\\[mirai:image:\\{", "[vacode:image:{")
+                    .replaceAll("}\\.\\w{3,5}]", "}]");
+        }
+        return msg;
+    }
+
+    /**
+     * 词库触发(keyWord)消息解码
+     */
+    public static String deVanillaCodeMsg(@NotNull String msg) {
+        return msg;
+    }
+
+    /**
+     * 词库回复(repMsg)消息转码
+     */
+    public static String enVanillaCodeRep(@NotNull String msg) {
+        return msg;
+    }
+
+    /**
+     * 词库回复(repMsg)消息解码
+     */
+    public static String deVanillaCodeRep(@NotNull String msg) {
+        return msg;
     }
 
     // endregion 消息转码

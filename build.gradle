@@ -3,6 +3,7 @@ plugins {
     id 'org.jetbrains.kotlin.plugin.serialization' version '1.7.10'
 
     id 'net.mamoe.mirai-console' version '2.14.0-RC'
+    id 'org.ajoberstar.grgit' version '5.0.0' // Git 插件
 }
 
 group = 'xin.vanilla'
@@ -36,4 +37,17 @@ dependencies {
 
 tasks.withType(JavaCompile) {
     options.encoding = "UTF-8"
+}
+
+// 获取 Git 当前分支的哈希值并加入到配置
+tasks.register("appendGitHashToFile") {
+    doLast {
+        def gitCommitHash = grgit.head().abbreviatedId
+        file('src/main/resources/hash').write("${gitCommitHash}")
+    }
+}
+
+tasks.named('processResources') {
+    // 先执行 appendGitHashToPluginYml 任务
+    dependsOn "appendGitHashToFile"
 }

@@ -129,7 +129,7 @@ public class MessageCacheImpl extends Base implements MessageCache {
     private void addMsg(MessageChain msg, int time, String table, long target, long sender, int[] ids, int[] internalIds, long botId) {
         createTable(table);
         String nos = StringUtils.toString(ids) + "|" + StringUtils.toString(internalIds);
-        String msgString = VanillaUtils.serializeToVanillaCode(msg);
+        String msgString = VanillaUtils.serializeToJsonCode(msg);
 
         if (msgString.equals("")) {
             MarketFace marketFace = msg.get(MarketFace.Key);
@@ -196,7 +196,7 @@ public class MessageCacheImpl extends Base implements MessageCache {
 
     @Override
     public MessageChain getMsgChain(String no, long sender, long target, long time, String type) {
-        return VanillaUtils.deserializeVanillaCode(getMsgJsonCode(no, sender, target, time, type));
+        return VanillaUtils.deserializeJsonCode(getMsgJsonCode(no, sender, target, time, type));
     }
 
     @Override
