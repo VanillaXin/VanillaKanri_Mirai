@@ -849,6 +849,13 @@ public class InstructionMsgEvent {
             } else {
                 forwardMessageBuilder.add(bot, new PlainText("添加失败"));
             }
+            // forwardMessageBuilder.setDisplayStrategy(new ForwardMessage.DisplayStrategy() {
+            //     @NotNull
+            //     @Override
+            //     public String generateTitle(@NotNull RawForwardMessage forward) {
+            //         return ForwardMessage.DisplayStrategy.super.generateTitle(forward);
+            //     }
+            // });
             Api.sendMessage(group, forwardMessageBuilder.build());
             return RETURN_BREAK_TRUE;
         }
@@ -868,6 +875,17 @@ public class InstructionMsgEvent {
 
             return RETURN_BREAK_TRUE;
         }
+        return RETURN_CONTINUE;
+    }
+
+    /**
+     * 审核通过普通用户添加的关键词
+     */
+    public int keyApproved(String prefix) {
+        if (!base.getAdd().contains(prefix)) return RETURN_CONTINUE;
+        if (!prefix.equals(this.ins)) return RETURN_CONTINUE;
+
+
         return RETURN_CONTINUE;
     }
 

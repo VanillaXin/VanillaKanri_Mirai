@@ -10,12 +10,10 @@ import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson2.JSON;
 import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
-import net.mamoe.mirai.internal.deps.io.ktor.client.engine.ProxyBuilder;
 import org.junit.Test;
 import xin.vanilla.entity.TestEntities;
 import xin.vanilla.entity.TestEntity;
 import xin.vanilla.entity.TestTable;
-import xin.vanilla.util.Api;
 import xin.vanilla.util.StringUtils;
 import xin.vanilla.util.sqlite.SqliteUtil;
 import xin.vanilla.util.sqlite.statement.InsertStatement;
@@ -23,10 +21,12 @@ import xin.vanilla.util.sqlite.statement.QueryStatement;
 import xin.vanilla.util.sqlite.statement.Statement;
 
 import java.io.InputStream;
-import java.net.Proxy;
 import java.security.SecureRandom;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class VanillaTest {
     @Test
@@ -124,17 +124,17 @@ public class VanillaTest {
         try {
 
             JSONObject jsonObject = JSONUtil.createObj();
-            String[] list = {"Human:","AI:"};
-            jsonObject.put("model","text-davinci-003")
-                    .put("prompt","用Java实现以下功能: 给定一个对象集合, 对象中的属性有: 姓名, 地址, 权级。以每个对象中的权级大小为概率随机抽取一个对象")
-                    .put("max_tokens",4000)
-                    .put("temperature",0)
-                    .put("top_p",1)
-                    .put("frequency_penalty",0)
-                    .put("presence_penalty",0.6)
-                    .put("stop",list);
+            String[] list = {"Human:", "AI:"};
+            jsonObject.put("model", "text-davinci-003")
+                    .put("prompt", "用Java实现以下功能: 给定一个对象集合, 对象中的属性有: 姓名, 地址, 权级。以每个对象中的权级大小为概率随机抽取一个对象")
+                    .put("max_tokens", 4000)
+                    .put("temperature", 0)
+                    .put("top_p", 1)
+                    .put("frequency_penalty", 0)
+                    .put("presence_penalty", 0.6)
+                    .put("stop", list);
 
-            String result = HttpRequest.post("https://api.openai.com/v1/completions").setHttpProxy("localhost",10808)
+            String result = HttpRequest.post("https://api.openai.com/v1/completions").setHttpProxy("localhost", 10808)
                     .header("Content-Type", "application/json")
                     .header("Accept-Encoding", "gzip,deflate")
                     .header("Content-Length", "1024")
@@ -153,8 +153,8 @@ public class VanillaTest {
 
             String bake = (String) jsonObject2.get("text");
             bake = ReUtil.delFirst("^\n+", bake);
-//                bake = StrUtil.replace(bake,"\n","");
-//                StrUtil.trim(bake);
+            // bake = StrUtil.replace(bake,"\n","");
+            // StrUtil.trim(bake);
             System.out.println(bake);
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -163,28 +163,28 @@ public class VanillaTest {
     }
 
     @Test
-    public void test04(){
-//        https://picture.yinux.workers.dev
+    public void test04() {
+        // https://picture.yinux.workers.dev
 
         try {
             InputStream localhost = HttpRequest.post("https://picture.yinux.workers.dev").setHttpProxy("localhost", 10808).execute().bodyStream();
             byte[] bytes = IoUtil.readBytes(localhost);
-            IoUtil.write(FileUtil.getOutputStream("d:/test2.jpg"),true,bytes);
+            IoUtil.write(FileUtil.getOutputStream("d:/test2.jpg"), true, bytes);
         } catch (IORuntimeException e) {
             throw new RuntimeException(e);
         }
     }
 
     @Test
-    public void test05(){
+    public void test05() {
 
         JSONObject jsonObject = JSONUtil.createObj();
-        Map<String, Object> map = new HashMap<String, Object> ();
-        List list = new ArrayList<Map<String,Object>>();
+        Map<String, Object> map = new HashMap<String, Object>();
+        List list = new ArrayList<Map<String, Object>>();
         list.add(map);
-        map.put("role","user");
-        map.put("content","用Java实现以下功能: 给定一个对象集合, 对象中的属性有: 姓名, 地址, 权级。以每个对象中的权级大小为概率随机抽取一个对象");
-        jsonObject.put("model","gpt-3.5-turbo")
+        map.put("role", "user");
+        map.put("content", "用Java实现以下功能: 给定一个对象集合, 对象中的属性有: 姓名, 地址, 权级。以每个对象中的权级大小为概率随机抽取一个对象");
+        jsonObject.put("model", "gpt-3.5-turbo")
                 .put("messages", list);
 
         try {
@@ -200,8 +200,8 @@ public class VanillaTest {
             JSONArray jsonArray = JSONUtil.parseArray(jsonObject1.get("choices"));
             JSONObject jsonObject2 = JSONUtil.parseObj(jsonArray.get(0));
             JSONObject jsonObject3 = JSONUtil.parseObj(jsonObject2.get("message"));
-//            System.out.println(jsonObject3.get("content"));
-//            System.out.println(jsonObject2.get("text"));
+            // System.out.println(jsonObject3.get("content"));
+            // System.out.println(jsonObject2.get("text"));
 
             String bake = (String) jsonObject3.get("content");
             bake = ReUtil.delFirst("^\n+", bake);
@@ -209,6 +209,11 @@ public class VanillaTest {
         } catch (IORuntimeException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Test
+    public void test() {
+
     }
 
 }
