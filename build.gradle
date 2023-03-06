@@ -39,8 +39,8 @@ tasks.withType(JavaCompile) {
     options.encoding = "UTF-8"
 }
 
-// 获取 Git 当前分支的哈希值并加入到插件配置
-tasks.register("appendGitHashToPluginYml") {
+// 获取 Git 当前分支的哈希值并加入到配置
+tasks.register("appendGitHashToFile") {
     doLast {
         def gitCommitHash = grgit.head().abbreviatedId
         file('src/main/resources/hash').write("${gitCommitHash}")
@@ -49,5 +49,5 @@ tasks.register("appendGitHashToPluginYml") {
 
 tasks.named('processResources') {
     // 先执行 appendGitHashToPluginYml 任务
-    dependsOn "appendGitHashToPluginYml"
+    dependsOn "appendGitHashToFile"
 }
