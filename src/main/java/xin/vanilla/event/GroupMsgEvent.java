@@ -121,7 +121,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
                 }
                 paths = (List<Path>) Va.getDataCache().get(path);
                 long index = VanillaUtils.getDataCacheAsLong(path + "!index");
-                int i1 = RandomUtil.randomInt(1, msg.contentToString().length());
+                int i1 = RandomUtil.randomInt(1, Math.max(22 - msg.contentToString().length(), 1));
                 index += i1;
                 VanillaUtils.setDateCache(path + "!index", index);
                 if (paths.size() <= index) {
