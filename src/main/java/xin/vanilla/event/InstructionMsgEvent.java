@@ -1,6 +1,5 @@
 package xin.vanilla.event;
 
-import cn.hutool.crypto.digest.MD5;
 import cn.hutool.system.oshi.CpuInfo;
 import cn.hutool.system.oshi.OshiUtil;
 import com.github.houbb.pinyin.constant.enums.PinyinStyleEnum;
@@ -110,10 +109,9 @@ public class InstructionMsgEvent {
         JvmPluginDescription pluginInfo = Va.getDescription();
         ForwardMessageBuilder forwardMessageBuilder;
         StringBuilder rep = new StringBuilder();
-        String path = this.getClass().getProtectionDomain().getCodeSource().getLocation().getPath();
-        String md5 = MD5.create().digestHex16(path).substring(0, 5);
-
-        rep.append(pluginInfo.getName()).append(" - v").append(pluginInfo.getVersion()).append(" : ").append(md5).append("\n");
+        // 获取Git当前分支的哈希值
+        String hash = Va.getResource("hash");
+        rep.append(pluginInfo.getName()).append(" - v").append(pluginInfo.getVersion()).append(" : ").append(hash).append("\n");
         GlobalMemory memory = OshiUtil.getMemory();
 
         rep.append("消息收发: ").append(Va.getMsgReceiveCount()).append("/").append(Va.getMsgSendCount()).append("\n");

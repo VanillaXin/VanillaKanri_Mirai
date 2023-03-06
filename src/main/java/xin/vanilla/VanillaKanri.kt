@@ -1,5 +1,7 @@
 package xin.vanilla
 
+import cn.hutool.core.date.BetweenFormatter
+import cn.hutool.core.date.DateUnit
 import cn.hutool.core.date.DateUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -147,7 +149,11 @@ object VanillaKanri : KotlinPlugin(
      * 获取插件运行时长
      */
     fun getRuntimeAsString(): String {
-        return DateUtil.formatBetween(Date((this.dataCache[PLUGIN_ENABLE_TIME.getKey()] as Long)), Date())
+        return DateUtil.formatBetween(
+            Date((this.dataCache[PLUGIN_ENABLE_TIME.getKey()] as Long)),
+            Date(),
+            BetweenFormatter.Level.SECOND
+        )
     }
 
     /**
@@ -161,7 +167,11 @@ object VanillaKanri : KotlinPlugin(
      * 获取机器人在线时长
      */
     fun getBotOnlineTimeAsString(bot: Long): String {
-        return DateUtil.formatBetween(Date((this.dataCache[PLUGIN_BOT_ONLINE_TIME.getKey(bot)] as Long)), Date())
+        return DateUtil.formatBetween(
+            Date((this.dataCache[PLUGIN_BOT_ONLINE_TIME.getKey(bot)] as Long)),
+            Date(),
+            BetweenFormatter.Level.SECOND
+        )
     }
 
     /**
