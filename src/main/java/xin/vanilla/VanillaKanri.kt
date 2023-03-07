@@ -11,9 +11,11 @@ import kotlinx.coroutines.runInterruptible
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescription
 import net.mamoe.mirai.console.plugin.jvm.KotlinPlugin
 import net.mamoe.mirai.console.plugin.jvm.reloadPluginConfig
+import net.mamoe.mirai.console.plugin.jvm.reloadPluginData
 import net.mamoe.mirai.event.GlobalEventChannel
 import xin.vanilla.config.GlobalConfigFile
 import xin.vanilla.config.GroupConfigFile
+import xin.vanilla.config.PluginDataFile
 import xin.vanilla.enumeration.DataCacheKey.*
 import xin.vanilla.event.EventHandlers
 import xin.vanilla.mapper.KeywordData
@@ -42,8 +44,17 @@ object VanillaKanri : KotlinPlugin(
 
     /**
      * 数据缓存
+     *
+     * 仅内存
      */
     var dataCache: ConcurrentHashMap<String, Any> = ConcurrentHashMap()
+
+    /**
+     * 插件数据缓存
+     *
+     * 持久化
+     */
+    var pluginData: PluginDataFile = PluginDataFile()
 
     /**
      * 全局设置
@@ -83,6 +94,8 @@ object VanillaKanri : KotlinPlugin(
         reloadPluginConfig(globalConfig)
         // 群聊配置
         reloadPluginConfig(groupConfig)
+        // 插件数据
+        reloadPluginData(pluginData)
     }
 
     override fun onDisable() {

@@ -1,17 +1,19 @@
 package xin.vanilla.util;
 
+import cn.hutool.http.HttpRequest;
+import cn.hutool.http.HttpResponse;
 import net.mamoe.mirai.Bot;
-import net.mamoe.mirai.contact.Group;
-import net.mamoe.mirai.contact.Member;
-import net.mamoe.mirai.contact.MemberPermission;
-import net.mamoe.mirai.contact.NormalMember;
+import net.mamoe.mirai.contact.*;
 import net.mamoe.mirai.message.code.MiraiCode;
 import net.mamoe.mirai.message.data.*;
+import net.mamoe.mirai.utils.ExternalResource;
 import org.jetbrains.annotations.NotNull;
 import xin.vanilla.VanillaKanri;
 import xin.vanilla.enumeration.DataCacheKey;
 import xin.vanilla.enumeration.PermissionLevel;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -499,5 +501,21 @@ public class VanillaUtils {
     }
 
     // endregion 消息转码
+
+    /**
+     * 通过图片链接构建图片对象
+     */
+    @NotNull
+    public static Image uploadImageByUrl(String url, Contact contact) {
+        ExternalResource resource;
+        try (HttpResponse response = HttpRequest.get(url).execute()) {
+            try (InputStream inputStream = response.bodyStream()) {
+                resource = ExternalResource.Companion.create(inputStream);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return ExternalResource.uploadAsImage(resource, contact);
+    }
 
 }

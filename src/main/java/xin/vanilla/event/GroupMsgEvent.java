@@ -1,5 +1,6 @@
 package xin.vanilla.event;
 
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.IORuntimeException;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.RandomUtil;
@@ -9,8 +10,10 @@ import cn.hutool.http.HttpRequest;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
+import net.mamoe.mirai.contact.ContactList;
 import net.mamoe.mirai.contact.Group;
 import net.mamoe.mirai.contact.Member;
+import net.mamoe.mirai.contact.NormalMember;
 import net.mamoe.mirai.message.data.*;
 import net.mamoe.mirai.utils.ExternalResource;
 import xin.vanilla.entity.data.KeyData;
@@ -55,6 +58,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
     public void run() {
         if (rcon()) return;
         if (hentai()) return;
+        if (getWife()) return;
         if (keyRep()) return;
         // logger.info("群聊: " + group.getId() + ":" + sender.getId() + " -> " + msg.serializeToMiraiCode());
         // chatGpt2();
@@ -181,6 +185,38 @@ public class GroupMsgEvent extends BaseMsgEvent {
             return true;
         }
 
+        return false;
+    }
+
+    /**
+     * 抽老婆
+     */
+    private boolean getWife() {
+        if (Va.getGlobalConfig().getOther().getWifePrefix().contains(msg.contentToString())) {
+            String key = DateUtil.format(new Date(), "yyyy.MM.dd") + "." + group.getId() + "." + sender.getId();
+            long wife = 0;
+            try {
+                wife = Va.getPluginData().getWife().get(key);
+            } catch (NullPointerException ignored) {
+            }
+            if (wife == 0) {
+                ContactList<NormalMember> members = group.getMembers();
+                List<Long> qqs = members.stream().map(NormalMember::getId).collect(Collectors.toList());
+                qqs.add(bot.getId());
+                wife = qqs.get((int) (Math.random() * qqs.size()));
+                Va.getPluginData().getWife().put(key, wife);
+            }
+            NormalMember normalMember = group.get(wife);
+            assert normalMember != null;
+            Api.sendMessage(group, new MessageChainBuilder()
+                    .append(new At(sender.getId()))
+                    .append(" 今天你的群友亲爱的是\n")
+                    .append(VanillaUtils.uploadImageByUrl(normalMember.getAvatarUrl(), group))
+                    .append("\n『").append(normalMember.getNick()).append("』")
+                    .append("(").append(String.valueOf(wife)).append(") 喵!")
+                    .build());
+            return true;
+        }
         return false;
     }
 

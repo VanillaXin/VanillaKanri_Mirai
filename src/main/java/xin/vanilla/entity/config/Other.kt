@@ -35,4 +35,9 @@ class Other {
      */
     var mcRconPsw: String = "password"
 
+    /**
+     * 抽老婆关键词
+     */
+    var wifePrefix: Set<String> = mutableSetOf("抽老婆")
+
 }
