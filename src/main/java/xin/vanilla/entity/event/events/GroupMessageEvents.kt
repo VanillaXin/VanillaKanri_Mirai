@@ -7,7 +7,9 @@ import net.mamoe.mirai.contact.MemberPermission
 import net.mamoe.mirai.message.data.MessageChain
 import net.mamoe.mirai.message.data.OnlineMessageSource
 
-
+/**
+ * 包装过的群消息事件
+ */
 class GroupMessageEvents {
     var originalEvent: net.mamoe.mirai.event.events.GroupMessageEvent? = null
     var customEvent: xin.vanilla.entity.event.GroupMessageEvent? = null

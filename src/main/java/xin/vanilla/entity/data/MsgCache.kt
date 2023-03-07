@@ -3,6 +3,9 @@ package xin.vanilla.entity.data
 import kotlinx.serialization.Serializable
 import java.util.*
 
+/**
+ * 消息缓存数据
+ */
 @Serializable
 class MsgCache {
     var id: Int = 0

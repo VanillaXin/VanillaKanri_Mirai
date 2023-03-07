@@ -105,12 +105,13 @@ public class GroupMsgEvent extends BaseMsgEvent {
                 }
                 Api.sendMessage(group, back);
             } else {
-                Api.sendMessage(group, "Failed to authenticate");
+                Api.sendMessage(group, "香草世界不属于你。");
             }
             return true;
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            Api.sendMessage(group, "香草世界一片混沌。");
         }
+        return false;
     }
 
     /**

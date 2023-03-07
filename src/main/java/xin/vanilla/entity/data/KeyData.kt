@@ -2,6 +2,9 @@ package xin.vanilla.entity.data
 
 import kotlinx.serialization.Serializable
 
+/**
+ * 关键词数据
+ */
 @Serializable
 class KeyData {
     var id: Int = 0

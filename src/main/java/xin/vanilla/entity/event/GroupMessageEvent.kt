@@ -6,6 +6,11 @@ import net.mamoe.mirai.message.data.MessageChain
 import net.mamoe.mirai.message.data.OnlineMessageSource
 import net.mamoe.mirai.message.data.source
 
+/**
+ * 重写额群消息事件
+ *
+ * 去除了部分格式验证
+ */
 class GroupMessageEvent(
     val senderName: String,
     /**
