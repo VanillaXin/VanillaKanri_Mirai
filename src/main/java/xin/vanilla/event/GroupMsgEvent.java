@@ -81,8 +81,8 @@ public class GroupMsgEvent extends BaseMsgEvent {
         } else if (msg.contentToString().equals("/list") || msg.contentToString().equals("/ls")) command = "list";
         else return false;
 
-        try (Rcon rcon = Rcon.open(Va.getGlobalConfig().getMcRconIp(), Va.getGlobalConfig().getMcRconPort())) {
-            if (rcon.authenticate(Va.getGlobalConfig().getMcRconPsw())) {
+        try (Rcon rcon = Rcon.open(Va.getGlobalConfig().getOther().getMcRconIp(), Va.getGlobalConfig().getOther().getMcRconPort())) {
+            if (rcon.authenticate(Va.getGlobalConfig().getOther().getMcRconPsw())) {
                 String back = rcon.sendCommand(command);
                 if (back.matches(RCON_RESULT_LIST.build())) {
                     // There are 0 of a max of 20 players online:
@@ -120,7 +120,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
      */
     private boolean hentai() {
         if (msg.contentToString().matches(".*?(来.?|.*?不够)[射蛇色涩瑟铯\uD83D\uDC0D].*?")) {
-            String path = Va.getGlobalConfig().getHentaiPath().get();
+            String path = Va.getGlobalConfig().getOther().getHentaiPath();
             if (!StringUtils.isNullOrEmpty(path)) {
                 List<Path> paths;
                 if (!Va.getDataCache().containsKey(path)) {

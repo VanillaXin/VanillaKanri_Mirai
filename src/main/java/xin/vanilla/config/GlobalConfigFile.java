@@ -1,7 +1,5 @@
 package xin.vanilla.config;
 
-import lombok.Getter;
-import lombok.Setter;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.console.data.PluginDataHolder;
 import net.mamoe.mirai.console.data.PluginDataStorage;
@@ -9,12 +7,16 @@ import net.mamoe.mirai.console.data.SerializerAwareValue;
 import net.mamoe.mirai.console.data.java.JavaAutoSavePluginConfig;
 import org.jetbrains.annotations.NotNull;
 import xin.vanilla.entity.config.Base;
+import xin.vanilla.entity.config.Other;
 import xin.vanilla.entity.config.Permissions;
 import xin.vanilla.entity.config.instruction.Instructions;
 import xin.vanilla.util.StringUtils;
 
 import java.lang.reflect.Field;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 
@@ -24,26 +26,6 @@ import java.util.stream.Collectors;
  * 请使用getter/setter
  */
 public class GlobalConfigFile extends JavaAutoSavePluginConfig {
-    /**
-     * MC RCON 配置
-     */
-    public SerializerAwareValue<String> mcRconIp = value("mcRconIp", "127.0.0.1");
-    public SerializerAwareValue<Integer> mcRconPort = value("mcRconPort", 25575);
-    public SerializerAwareValue<String> mcRconPsw = value("mcRconPsw", "password");
-
-    /**
-     * 后台管理群
-     */
-    @Getter
-    @Setter
-    public SerializerAwareValue<List<Long>> backGroup = typedValue("backGroup", createKType(List.class, createKType(Long.class)));
-
-    /**
-     * 涩图路径
-     */
-    @Getter
-    @Setter
-    public SerializerAwareValue<String> hentaiPath = value("hentaiPath", "");
 
     /**
      * 超人
@@ -54,6 +36,11 @@ public class GlobalConfigFile extends JavaAutoSavePluginConfig {
      * 基础配置
      */
     public SerializerAwareValue<Base> base = typedValue("base", createKType(Base.class));
+
+    /**
+     * 杂项配置
+     */
+    public SerializerAwareValue<Other> other = typedValue("other", createKType(Other.class));
 
     /**
      * 权限配置
@@ -161,36 +148,20 @@ public class GlobalConfigFile extends JavaAutoSavePluginConfig {
         return 1;
     }
 
-    public String getMcRconIp() {
-        return mcRconIp.get();
-    }
-
-    public void setMcRconIp(String mcRconIp) {
-        this.mcRconIp.set(mcRconIp);
-    }
-
-    public Integer getMcRconPort() {
-        return mcRconPort.get();
-    }
-
-    public void setMcRconPort(Integer mcRconPort) {
-        this.mcRconPort.set(mcRconPort);
-    }
-
-    public String getMcRconPsw() {
-        return mcRconPsw.get();
-    }
-
-    public void setMcRconPsw(String mcRconPsw) {
-        this.mcRconPsw.set(mcRconPsw);
-    }
-
     public Long getSuperOwner() {
         return superOwner.get();
     }
 
     public void setSuperOwner(Long superOwner) {
         this.superOwner.set(superOwner);
+    }
+
+    public Other getOther() {
+        return other.get();
+    }
+
+    public void setBase(Other other) {
+        this.other.set(other);
     }
 
     public Base getBase() {

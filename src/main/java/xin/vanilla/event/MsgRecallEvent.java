@@ -56,7 +56,7 @@ public class MsgRecallEvent extends BaseMsgEvent {
 
     public void run() {
         if (sender.getId() == bot.getId()) return;
-        List<Long> groups = Va.getGlobalConfig().getBackGroup().get();
+        List<Long> groups = Va.getGlobalConfig().getBase().getBackGroup();
         // 后台管理群撤回的消息不进行转发
         if (this.group != null && groups.contains(this.group.getId())) return;
         for (Long groupId : groups) {

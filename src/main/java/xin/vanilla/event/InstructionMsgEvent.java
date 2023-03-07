@@ -882,6 +882,7 @@ public class InstructionMsgEvent {
     /**
      * 审核普通用户添加的关键词
      */
+    @KeywordInsEvent
     public int keyExamine(@NotNull String prefix) {
         if (!prefix.equals(this.ins)) return RETURN_CONTINUE;
 
