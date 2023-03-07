@@ -18,8 +18,6 @@ repositories {
 dependencies {
     implementation 'org.xerial:sqlite-jdbc:3.40.0.0' // Sqlite依赖
     implementation 'com.almworks.sqlite4java:sqlite4java:1.0.392'// Sqlite REGEXP函数依赖
-    implementation 'com.almworks.sqlite4java:sqlite4java-impl:1.0.392'// Sqlite REGEXP函数依赖
-    implementation 'com.almworks.sqlite4java:sqlite4java-jni:1.0.392'// Sqlite REGEXP函数依赖
 
     implementation 'io.github.karlatemp:caller:1.1.1'
     implementation 'com.aventrix.jnanoid:jnanoid:2.0.0'
