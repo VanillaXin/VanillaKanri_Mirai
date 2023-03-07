@@ -163,7 +163,6 @@ public class KeywordDataImpl extends Base implements KeywordData {
             // 正则匹配
             else if (table.startsWith(KEYWORD_TYPE_REGEXP)) {
                 query.andRegexp(KeyData::getWord, word);
-                continue;
             }
             List<KeyData> list = sqliteUtil.getList(query, KeyData.class);
             if (list != null) {

@@ -22,7 +22,6 @@ import xin.vanilla.util.lambda.SerializedFunction;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * A base class for constructing SQL statement. Internal holding a {@link StringBuilder} to representing
@@ -473,7 +472,7 @@ public class Statement {
 
     public <T> Statement andRegexp(SerializedFunction<T, ?> operand, CharSequence value) {
         statement.append(" AND ").append("?");
-        statement.append(" REGEXP ").append(LambdaUtils.getFiledName(operand));
+        statement.append(" REGEXP `").append(LambdaUtils.getFiledName(operand)).append("`");
         this.operands.add(value);
         return this;
     }

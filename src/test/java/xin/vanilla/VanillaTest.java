@@ -88,8 +88,10 @@ public class VanillaTest {
     public void testQuery() throws SQLException {
         SqliteUtil sqliteUtil = SqliteUtil.getInstance();
         Statement select = QueryStatement.produce().from("test_table")
-                .where(TestTable::getAddress).likeContains("a");
-        System.out.println(sqliteUtil.getEntity(select, TestTable.class));
+                .where(TestTable::getId).gt(0)
+                .andRegexp(TestTable::getAddress, ".*?a.*?");
+        TestTable entity = sqliteUtil.getEntity(select, TestTable.class);
+        System.out.println(entity);
     }
 
     @Test
