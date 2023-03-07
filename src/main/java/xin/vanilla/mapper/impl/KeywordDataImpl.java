@@ -16,6 +16,7 @@ import xin.vanilla.util.sqlite.SqliteUtil;
 import xin.vanilla.util.sqlite.statement.InsertStatement;
 import xin.vanilla.util.sqlite.statement.QueryStatement;
 import xin.vanilla.util.sqlite.statement.Statement;
+import xin.vanilla.util.sqlite.statement.UpdateStatement;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -161,8 +162,7 @@ public class KeywordDataImpl extends Base implements KeywordData {
             }
             // 正则匹配
             else if (table.startsWith(KEYWORD_TYPE_REGEXP)) {
-                // TODO 正则匹配
-                // query.andRegexp(KeyData::getWord, word);
+                query.andRegexp(KeyData::getWord, word);
                 continue;
             }
             List<KeyData> list = sqliteUtil.getList(query, KeyData.class);
@@ -191,61 +191,54 @@ public class KeywordDataImpl extends Base implements KeywordData {
 
     @Override
     public PaginationList<KeyData> getKeywordByPage(String word, long bot, long group, String type, int page, int size) {
-        String[] types;
-        if (StringUtils.isNullOrEmpty(type)) types = KEYWORD_TYPES;
-        else types = new String[]{type};
-
         word = VanillaUtils.enVanillaCodeMsg(word);
 
-        for (String typeString : types) {
-            String table = getTable(typeString);
-            createTable(table);
-            Statement query = QueryStatement.produce().from(table)
-                    .where(KeyData::getBot).eq(bot)
-                    .and(KeyData::getStatus).gt(0);
-            if (group != 0)
-                query.and(KeyData::getGroup).eq(group);
+        String table = getTable(type);
+        createTable(table);
+        Statement query = QueryStatement.produce().from(table)
+                .where(KeyData::getBot).eq(bot)
+                .and(KeyData::getStatus).gt(0);
+        if (group != 0)
+            query.and(KeyData::getGroup).eq(group);
 
-            assert table != null;
-            // 完全匹配
-            if (table.startsWith(KEYWORD_TYPE_EXACTLY)) {
-                query.and(KeyData::getWord).eq(word);
-            }
-            // 包含匹配
-            else if (table.startsWith(KEYWORD_TYPE_CONTAIN)) {
-                query.andLikeContains(KeyData::getWord, word);
-            }
-            // 拼音包含匹配
-            else if (table.startsWith(KEYWORD_TYPE_PINYIN)) {
-                query.andLikeContains(KeyData::getWord, PinyinHelper.toPinyin(word, PinyinStyleEnum.NORMAL).trim());
-            }
-            // 正则匹配
-            else if (table.startsWith(KEYWORD_TYPE_REGEXP)) {
-                // TODO 正则匹配
-                // query.andRegexp(KeyData::getWord, word);
-                continue;
-            }
-            PaginationList<KeyData> paginationList = sqliteUtil.getPaginationList(query, page, size, KeyData.class);
-            paginationList.forEach(k -> k.setType(table));
-            if (paginationList.getTotalItemCount() > 0) return paginationList;
+        assert table != null;
+        // 完全匹配
+        if (table.startsWith(KEYWORD_TYPE_EXACTLY)) {
+            query.and(KeyData::getWord).eq(word);
         }
+        // 包含匹配
+        else if (table.startsWith(KEYWORD_TYPE_CONTAIN)) {
+            query.andLikeContains(KeyData::getWord, word);
+        }
+        // 拼音包含匹配
+        else if (table.startsWith(KEYWORD_TYPE_PINYIN)) {
+            query.andLikeContains(KeyData::getWord, PinyinHelper.toPinyin(word, PinyinStyleEnum.NORMAL).trim());
+        }
+        // 正则匹配
+        else if (table.startsWith(KEYWORD_TYPE_REGEXP)) {
+            query.andRegexp(KeyData::getWord, word);
+        }
+        PaginationList<KeyData> paginationList = sqliteUtil.getPaginationList(query, page, size, KeyData.class);
+        paginationList.forEach(k -> k.setType(table));
+        if (paginationList.getTotalItemCount() > 0) return paginationList;
+
         return new PaginationList<>(page, size, 0);
     }
 
-    @Override
-    public PaginationList<KeyData> getKeywordByPage(String word, long bot, long group, int page, int size) {
-        return getKeywordByPage(word, bot, group, null, page, size);
-    }
+    // @Override
+    // public PaginationList<KeyData> getKeywordByPage(String word, long bot, long group, int page, int size) {
+    //     return getKeywordByPage(word, bot, group, null, page, size);
+    // }
 
     @Override
     public PaginationList<KeyData> getKeywordByPage(String word, long bot, String type, int page, int size) {
         return getKeywordByPage(word, bot, 0, type, page, size);
     }
 
-    @Override
-    public PaginationList<KeyData> getKeywordByPage(String word, long bot, int page, int size) {
-        return getKeywordByPage(word, bot, 0, null, page, size);
-    }
+    // @Override
+    // public PaginationList<KeyData> getKeywordByPage(String word, long bot, int page, int size) {
+    //     return getKeywordByPage(word, bot, 0, null, page, size);
+    // }
 
     @Override
     public int deleteKeywordById(long id, String type) {
@@ -270,6 +263,15 @@ public class KeywordDataImpl extends Base implements KeywordData {
     @Override
     public int deleteKeyword(String word, long bot) {
         return 0;
+    }
+
+    @Override
+    public int updateStatus(long id, int status, String type) {
+        String table = getTable(type);
+        Statement updateStatement = UpdateStatement.produce(table)
+                .set(KeyData::getStatus, status)
+                .where(KeyData::getId).eq(id);
+        return sqliteUtil.update(updateStatement);
     }
 
     /**

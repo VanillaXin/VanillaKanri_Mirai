@@ -829,6 +829,7 @@ public class InstructionMsgEvent {
 
             ForwardMessageBuilder forwardMessageBuilder = new ForwardMessageBuilder(group)
                     .add(sender, msg)
+                    .add(bot, new PlainText("关键词类型:\n" + type))
                     .add(bot, new MessageChainBuilder().append("触发内容:\n").append(keyFormat).build())
                     .add(bot, new MessageChainBuilder().append("回复内容:\n").append(repFormat).build())
                     .add(bot, new PlainText("触发内容文本:"))
@@ -879,14 +880,52 @@ public class InstructionMsgEvent {
     }
 
     /**
-     * 审核通过普通用户添加的关键词
+     * 审核普通用户添加的关键词
      */
-    public int keyApproved(String prefix) {
-        if (!base.getAdd().contains(prefix)) return RETURN_CONTINUE;
+    public int keyExamine(@NotNull String prefix) {
         if (!prefix.equals(this.ins)) return RETURN_CONTINUE;
 
+        int operand = 0;
+        if (base.getAdd().contains(prefix)) operand = 1;
+        else if (!base.getDelete().contains(prefix)) return RETURN_CONTINUE;
 
-        return RETURN_CONTINUE;
+        QuoteReply quoteReply = this.msg.get(QuoteReply.Key);
+        if (quoteReply == null) return RETURN_CONTINUE;
+        int[] ids = quoteReply.getSource().getIds();
+        int[] internalIds = quoteReply.getSource().getInternalIds();
+        long fromId = quoteReply.getSource().getFromId();
+        MessageChain msgChain = Va.getMessageCache().getMsgChain(
+                StringUtils.toString(ids) + "|" + StringUtils.toString(internalIds),
+                fromId, group.getId(), MSG_TYPE_GROUP);
+
+        ForwardMessage forwardMessage = msgChain.get(ForwardMessage.Key);
+        if (forwardMessage == null) return RETURN_BREAK_TRUE;
+        String type = "";
+        ForwardMessageBuilder forwardMessageBuilder = new ForwardMessageBuilder(group);
+        boolean tf = false;
+        for (ForwardMessage.Node node : forwardMessage.getNodeList()) {
+            String s = node.getMessageChain().contentToString();
+            if (s.startsWith("关键词类型:\n")) {
+                type = s.substring("关键词类型:\n".length()).trim();
+                forwardMessageBuilder.add(bot, node.getMessageChain());
+            }
+            if (s.startsWith("群号: ") && s.contains("\n关键词编号: ")) {
+                tf = true;
+                // long groupId = Long.parseLong(s.substring("群号: ".length(), s.indexOf("\n关键词编号: ")));
+                long keyId = Long.parseLong(s.substring(s.indexOf("\n关键词编号: ") + "\n关键词编号: ".length()));
+                if (Va.getKeywordData().updateStatus(keyId, operand, type) > 0) {
+                    forwardMessageBuilder.add(bot, new PlainText(s + "\n审核" + (operand > 0 ? "通过" : "不通过")));
+                } else {
+                    forwardMessageBuilder.add(bot, new PlainText(s + "\n操作失败"));
+                }
+            }
+        }
+        if (tf) {
+            Api.sendMessage(group, forwardMessageBuilder.build());
+        } else {
+            Api.sendMessage(group, "无法解析该消息");
+        }
+        return RETURN_BREAK_TRUE;
     }
 
     // endregion
@@ -898,13 +937,13 @@ public class InstructionMsgEvent {
     @TimedInsEvent
     public int timedAdd() {
 
-        return RETURN_BREAK_TRUE;
+        return RETURN_CONTINUE;
     }
 
     @TimedInsEvent
     public int timedDel() {
 
-        return RETURN_BREAK_TRUE;
+        return RETURN_CONTINUE;
     }
 
     // endregion

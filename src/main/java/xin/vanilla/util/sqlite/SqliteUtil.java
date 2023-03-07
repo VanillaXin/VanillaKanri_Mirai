@@ -1,6 +1,7 @@
 package xin.vanilla.util.sqlite;
 
 
+import org.sqlite.Function;
 import org.sqlite.JDBC;
 import xin.vanilla.util.StringUtils;
 import xin.vanilla.util.sqlite.statement.Parenthesize;
@@ -56,6 +57,19 @@ public class SqliteUtil {
 
         for (int i = 0; i < poolSize; i++) {
             Connection connect = new JDBC().connect(url, properties);
+            // 注册Sqlite3 的 REGEXP 函数
+            Function.create(connect, "REGEXP", new Function() {
+                @Override
+                protected void xFunc() throws SQLException {
+                    String pattern = value_text(0);
+                    String string = value_text(1);
+                    if (string.matches(pattern)) {
+                        result(1);
+                    } else {
+                        result(0);
+                    }
+                }
+            });
             connect.setAutoCommit(false);
             connectionPool.add(connect);
         }

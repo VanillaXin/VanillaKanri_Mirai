@@ -53,8 +53,11 @@ public class GroupMsgEvent extends BaseMsgEvent {
     }
 
     public void run() {
+        if (rcon()) return;
+        if (hentai()) return;
+        if (keyRep()) return;
         // logger.info("群聊: " + group.getId() + ":" + sender.getId() + " -> " + msg.serializeToMiraiCode());
-//        chatGpt2();
+        // chatGpt2();
         st();
         st2();
         audioTest();
@@ -177,7 +180,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
             return true;
         }
 
-        return true;
+        return false;
     }
 
 
@@ -191,7 +194,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
 
             String bake = Api.chatGPT(command);
             Api.sendMessage(group, bake);
-            String res = Api.fanyi_jp(bake.replace("\n","".replace(" ",""))).replace("\n", "").replace(" ", "");
+            String res = Api.fanyi_jp(bake.replace("\n", "".replace(" ", ""))).replace("\n", "").replace(" ", "");
 //            Api.sendMessage(group,res);
             String path = "E:\\model\\temp\\";
             String id = IdUtil.randomUUID();

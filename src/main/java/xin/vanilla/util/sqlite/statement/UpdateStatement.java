@@ -15,9 +15,11 @@
  */
 package xin.vanilla.util.sqlite.statement;
 
+import xin.vanilla.util.lambda.LambdaUtils;
+import xin.vanilla.util.lambda.SerializedFunction;
+
 /**
  * A statement producer that use to producing <b>UPDATE</b> command of SQL language.
- *
  */
 public class UpdateStatement extends Statement {
     /**
@@ -140,6 +142,13 @@ public class UpdateStatement extends Statement {
     public UpdateStatement set(CharSequence column, Object value) {
         if (++columnCount > 1) statement.append(',');
         statement.append(' ').append(column);
+        eq(value);
+        return this;
+    }
+
+    public <T> UpdateStatement set(SerializedFunction<T, ?> column, Object value) {
+        if (++columnCount > 1) statement.append(',');
+        statement.append(' ').append(LambdaUtils.getFiledName(column));
         eq(value);
         return this;
     }

@@ -23,10 +23,10 @@ public class Api {
     private static final VanillaKanri Va = VanillaKanri.INSTANCE;
 
 
-    /*
-    翻译接口
+    /**
+     * 翻译接口
      */
-    public static String fanyi_jp(String command){
+    public static String fanyi_jp(String command) {
         String appid = "20210126000681992";
         String salt = "112";
         String key = "X3WYhQFwg6O8cPWv7dTe";
@@ -51,7 +51,7 @@ public class Api {
         return res;
     }
 
-    public static String chatGPT(String command){
+    public static String chatGPT(String command) {
         JSONObject jsonObject = JSONUtil.createObj();
         Map<String, Object> map = new HashMap<>();
         List<Map<String, Object>> list = new ArrayList<>();
@@ -75,14 +75,16 @@ public class Api {
             JSONObject jsonObject2 = JSONUtil.parseObj(jsonArray.get(0));
             JSONObject jsonObject3 = JSONUtil.parseObj(jsonObject2.get("message"));
             return (String) jsonObject3.get("content");
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
     }
+
     /**
      * 发送消息
      */
+    @NotNull
     public static MessageReceipt<Contact> sendMessage(@NotNull Contact contact, @NotNull String message) {
         // 反转义事件特殊码
         if (message.contains("\\(:vaevent:\\)"))
@@ -96,7 +98,8 @@ public class Api {
     /**
      * 发送消息
      */
-    public static MessageReceipt<Contact> sendMessage(@NotNull Contact contact,@NotNull  Message message) {
+    @NotNull
+    public static MessageReceipt<Contact> sendMessage(@NotNull Contact contact, @NotNull Message message) {
         // 反转义事件特殊码
         if (message instanceof MessageChain) {
             if (message.contentToString().contains("\\(:vaevent:\\)")) {
