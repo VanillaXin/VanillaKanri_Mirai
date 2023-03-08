@@ -860,6 +860,8 @@ public class InstructionMsgEvent {
             if (groups.length > 1) {
                 Api.sendMessage(group, "表达式有误: 只能同时操作一个群");
             }
+
+            long groupId = groups[0];
             type = reg.getMatcher().group("type");
             try {
                 key = reg.getMatcher().group("key");
@@ -877,7 +879,7 @@ public class InstructionMsgEvent {
 
             ForwardMessageBuilder forwardMessageBuilder = new ForwardMessageBuilder(group).add(sender, msg);
 
-            PaginationList<KeyData> keywordByPage = Va.getKeywordData().getKeywordByPage(key, bot.getId(), group.getId(), type, page, 20);
+            PaginationList<KeyData> keywordByPage = Va.getKeywordData().getKeywordByPage(key, bot.getId(), groupId, type, page, 20);
             if (keywordByPage.size() == 0) {
                 forwardMessageBuilder.add(bot, new PlainText("关键词列表为空"));
             } else {

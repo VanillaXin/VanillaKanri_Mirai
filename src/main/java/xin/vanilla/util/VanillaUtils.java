@@ -486,6 +486,10 @@ public class VanillaUtils {
     @NotNull
     @Contract(pure = true)
     public static String deVanillaCodeMsg(@NotNull String msg) {
+        if (msg.contains("[vacode:image:{")) {
+            msg = msg.replaceAll("\\[vacode:image:\\{", "[mirai:image:{")
+                    .replaceAll("}]", ".mirai}]");
+        }
         return msg;
     }
 
