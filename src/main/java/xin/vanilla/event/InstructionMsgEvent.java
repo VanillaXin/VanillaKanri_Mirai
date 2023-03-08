@@ -891,7 +891,7 @@ public class InstructionMsgEvent {
                             "关键词ID: " + keyData.getId() + "\n" +
                                     "关键词类型: " + keyData.getType() + "\n" +
                                     "关键词权级: " + keyData.getLevel() + "\n" +
-                                    "关键词状态: " + (keyData.getStatus() > 0 ? "未启用" : "已启用") + "\n" +
+                                    "关键词状态: " + (keyData.getStatus() > 0 ? "已启用" : "未启用") + "\n" +
                                     "关键词内容:"
                     ));
                     forwardMessageBuilder.add(bot, MessageChain.deserializeFromMiraiCode(keyData.getWordDecode(), group));
