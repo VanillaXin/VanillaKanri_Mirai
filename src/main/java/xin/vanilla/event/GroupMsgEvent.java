@@ -172,7 +172,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
         // 群内关键词查询
         KeyData keyword = Va.getKeywordData().getKeyword(VanillaUtils.messageToString(msg), bot.getId(), group.getId());
         if (keyword.getId() > 0) {
-            MessageChain rep = MessageChain.deserializeFromMiraiCode(keyword.getMsgDecode(), group);
+            MessageChain rep = MessageChain.deserializeFromMiraiCode(keyword.getRepDecode(), group);
             Api.sendMessage(group, rep);
             return true;
         }
@@ -180,7 +180,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
         // 全局关键词查询
         keyword = Va.getKeywordData().getKeyword(VanillaUtils.messageToString(msg), bot.getId(), -1);
         if (keyword.getId() > 0) {
-            MessageChain rep = MessageChain.deserializeFromMiraiCode(keyword.getMsgDecode(), group);
+            MessageChain rep = MessageChain.deserializeFromMiraiCode(keyword.getRepDecode(), group);
             Api.sendMessage(group, rep);
             return true;
         }

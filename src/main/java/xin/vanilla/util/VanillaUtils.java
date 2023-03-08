@@ -486,8 +486,6 @@ public class VanillaUtils {
     @NotNull
     @Contract(pure = true)
     public static String deVanillaCodeMsg(@NotNull String msg) {
-        // 替换空符
-        msg = msg.replaceAll("\\[vacode:void]", "");
         return msg;
     }
 
@@ -502,6 +500,8 @@ public class VanillaUtils {
      * 词库回复(repMsg)消息解码
      */
     public static String deVanillaCodeRep(@NotNull String msg) {
+        // 替换空符
+        msg = msg.replaceAll("\\[vacode:void]", "");
         return msg;
     }
 

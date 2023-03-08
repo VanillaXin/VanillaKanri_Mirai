@@ -32,9 +32,21 @@ import java.util.List;
 @Setter
 @Getter
 public class PaginationList<T> extends ArrayList<T> {
+    /**
+     * 数据总页数
+     */
     private int totalPageCount;
+    /**
+     * 当前数据数量
+     */
     private int totalItemCount;
+    /**
+     * 每页显示数量
+     */
     private int pageItemCount;
+    /**
+     * 当前页数
+     */
     private int curPageNo;
 
     public PaginationList() {

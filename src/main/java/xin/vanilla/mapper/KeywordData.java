@@ -36,21 +36,21 @@ public interface KeywordData {
 
     PaginationList<KeyData> getKeywordByPage(String word, long bot, long group, String type, int page, int size);
 
-    // PaginationList<KeyData> getKeywordByPage(String word, long bot, long group, int page, int size);
-
     PaginationList<KeyData> getKeywordByPage(String word, long bot, String type, int page, int size);
 
-    // PaginationList<KeyData> getKeywordByPage(String word, long bot, int page, int size);
+    PaginationList<KeyData> getKeywordByPage(long bot, String type, int page, int size);
 
-    int deleteKeywordById(long id, String type);
+    PaginationList<KeyData> getKeywordByPage(long bot, long group, String type, int page, int size);
 
-    int deleteKeyword(String word, long bot, long group, String type);
+    int deleteKeywordById(long id, String type, int level);
 
-    int deleteKeyword(String word, long bot, long group);
+    int deleteKeyword(String word, long bot, long group, String type, int level);
 
-    int deleteKeyword(String word, long bot, String type);
+    int deleteKeyword(String word, long bot, long group, int level);
 
-    int deleteKeyword(String word, long bot);
+    int deleteKeyword(String word, long bot, String type, int level);
+
+    int deleteKeyword(String word, long bot, int level);
 
     int updateStatus(long id, int status, String type);
 }

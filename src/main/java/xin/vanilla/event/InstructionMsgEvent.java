@@ -26,8 +26,10 @@ import xin.vanilla.entity.config.instruction.BaseInstructions;
 import xin.vanilla.entity.config.instruction.KanriInstructions;
 import xin.vanilla.entity.config.instruction.KeywordInstructions;
 import xin.vanilla.entity.config.instruction.TimedTaskInstructions;
+import xin.vanilla.entity.data.KeyData;
 import xin.vanilla.entity.data.MsgCache;
 import xin.vanilla.util.*;
+import xin.vanilla.util.sqlite.PaginationList;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -790,24 +792,8 @@ public class InstructionMsgEvent {
         if (!base.getAdd().contains(prefix)) return RETURN_CONTINUE;
         RegUtils reg = RegExpConfig.keyAddRegExp(prefix);
         if (reg.matcher(this.ins).find()) {
-            long[] groups;
             String type, key, rep;
-            try {
-                String groupString = reg.getMatcher().group("group");
-                if (groupString.startsWith("<") && groupString.endsWith(">")) {
-                    groupString = groupString.substring(1, groupString.length() - 1);
-                }
-                if (base.getGlobal().contains(groupString)) {
-                    groups = new long[]{-1};
-                } else {
-                    groups = VanillaUtils.getGroupFromString(groupString);
-                    if (groups.length == 1 && groups[0] == 0) {
-                        groups[0] = this.group.getId();
-                    }
-                }
-            } catch (IllegalStateException | IllegalArgumentException | NullPointerException e) {
-                groups = new long[]{this.group.getId()};
-            }
+            long[] groups = getGroups(reg);
 
             type = reg.getMatcher().group("type");
             key = reg.getMatcher().group("key");
@@ -852,13 +838,66 @@ public class InstructionMsgEvent {
             } else {
                 forwardMessageBuilder.add(bot, new PlainText("添加失败"));
             }
-            // forwardMessageBuilder.setDisplayStrategy(new ForwardMessage.DisplayStrategy() {
-            //     @NotNull
-            //     @Override
-            //     public String generateTitle(@NotNull RawForwardMessage forward) {
-            //         return ForwardMessage.DisplayStrategy.super.generateTitle(forward);
-            //     }
-            // });
+            Api.sendMessage(group, forwardMessageBuilder.build());
+            return RETURN_BREAK_TRUE;
+        }
+        return RETURN_CONTINUE;
+    }
+
+    /**
+     * 查询关键词回复
+     */
+    @KeywordInsEvent
+    public int keySel(String prefix) {
+        if (!base.getSelect().contains(prefix)) return RETURN_CONTINUE;
+        RegUtils reg = RegExpConfig.keySelRegExp(prefix);
+        if (reg.matcher(this.ins).find()) {
+            long[] groups;
+            String type, rep, key;
+            int page = 1;
+
+            groups = getGroups(reg);
+            if (groups.length > 1) {
+                Api.sendMessage(group, "表达式有误: 只能同时操作一个群");
+            }
+            type = reg.getMatcher().group("type");
+            try {
+                key = reg.getMatcher().group("key");
+            } catch (Exception ignored) {
+                key = "";
+            }
+            try {
+                page = Integer.parseInt(reg.getMatcher().group("page"));
+            } catch (Exception ignored) {
+            }
+
+            if (page < 1) {
+                Api.sendMessage(group, "查询的页数有误");
+            }
+
+            ForwardMessageBuilder forwardMessageBuilder = new ForwardMessageBuilder(group).add(sender, msg);
+
+            PaginationList<KeyData> keywordByPage = Va.getKeywordData().getKeywordByPage(key, bot.getId(), group.getId(), type, page, 20);
+            if (keywordByPage.size() == 0) {
+                forwardMessageBuilder.add(bot, new PlainText("关键词列表为空"));
+            } else {
+                forwardMessageBuilder.add(bot, new PlainText(
+                        "数据条数: " + keywordByPage.getPageItemCount() + "/" + keywordByPage.getTotalItemCount()
+                                + "\n数据页数: " + keywordByPage.getCurPageNo() + "/" + keywordByPage.getTotalPageCount()
+                ));
+                for (KeyData keyData : keywordByPage) {
+                    forwardMessageBuilder.add(bot, new PlainText(
+                            "关键词ID: " + keyData.getId() + "\n" +
+                                    "关键词类型: " + keyData.getType() + "\n" +
+                                    "关键词权级: " + keyData.getLevel() + "\n" +
+                                    "关键词状态: " + (keyData.getStatus() > 0 ? "未启用" : "已启用") + "\n" +
+                                    "关键词内容:"
+                    ));
+                    forwardMessageBuilder.add(bot, MessageChain.deserializeFromMiraiCode(keyData.getWordDecode(), group));
+                    forwardMessageBuilder.add(bot, new PlainText("关键词回复:"));
+                    forwardMessageBuilder.add(bot, MessageChain.deserializeFromMiraiCode(keyData.getRepDecode(), group));
+                }
+            }
             Api.sendMessage(group, forwardMessageBuilder.build());
             return RETURN_BREAK_TRUE;
         }
@@ -868,21 +907,79 @@ public class InstructionMsgEvent {
     /**
      * 删除关键词回复
      * <p>
-     * 通过keyword删除或通过id删除
+     * 通过id删除
      */
     @KeywordInsEvent
     public int keyDel(String prefix) {
         if (!base.getDelete().contains(prefix)) return RETURN_CONTINUE;
         RegUtils reg = RegExpConfig.keyDelRegExp(prefix);
         if (reg.matcher(this.ins).find()) {
+            // 判断发送者是否有删除关键词的权限
+            if (VanillaUtils.hasNotPermissionAndMore(bot, group, sender.getId(), PERMISSION_LEVEL_DEPUTY_ADMIN))
+                return RETURN_CONTINUE;
 
+            long[] groups, keyIds;
+            String type, rep;
+
+            groups = getGroups(reg);
+            if (groups.length > 1) {
+                Api.sendMessage(group, "表达式有误: 只能同时操作一个群");
+            }
+
+            type = reg.getMatcher().group("type");
+            try {
+                String key = reg.getMatcher().group("keyIds");
+                keyIds = Arrays.stream(key.split("\\s")).mapToLong(Long::parseLong).toArray();
+            } catch (Exception ignored) {
+                Api.sendMessage(group, "表达式有误");
+                return RETURN_BREAK_TRUE;
+            }
+
+            ForwardMessageBuilder forwardMessageBuilder = new ForwardMessageBuilder(group)
+                    .add(sender, msg)
+                    .add(bot, new PlainText("关键词类型:\n" + type));
+
+            long groupId = groups[0];
+            for (long keyId : keyIds) {
+                int level = VanillaUtils.getPermissionLevel(bot, groupId, sender.getId()) * Va.getGlobalConfig().getBase().getKeyRadix();
+                int back = Va.getKeywordData().deleteKeywordById(keyId, type, level);
+                if (back > 0) {
+                    forwardMessageBuilder.add(bot, new PlainText("关键词编号: " + keyId + "\n删除成功"));
+                } else if (back == -2) {
+                    forwardMessageBuilder.add(bot, new PlainText("关键词编号: " + keyId + "\n删除失败: 权限不足"));
+                } else {
+                    forwardMessageBuilder.add(bot, new PlainText("关键词编号: " + keyId + "\n删除失败"));
+                }
+            }
+            Api.sendMessage(group, forwardMessageBuilder.build());
             return RETURN_BREAK_TRUE;
         }
         return RETURN_CONTINUE;
     }
 
+    private long[] getGroups(RegUtils reg) {
+        long[] groups;
+        try {
+            String groupString = reg.getMatcher().group("group");
+            if (groupString.startsWith("<") && groupString.endsWith(">")) {
+                groupString = groupString.substring(1, groupString.length() - 1);
+            }
+            if (base.getGlobal().contains(groupString)) {
+                groups = new long[]{-1};
+            } else {
+                groups = VanillaUtils.getGroupFromString(groupString);
+                if (groups.length == 1 && groups[0] == 0) {
+                    groups[0] = this.group.getId();
+                }
+            }
+        } catch (IllegalStateException | IllegalArgumentException | NullPointerException e) {
+            groups = new long[]{this.group.getId()};
+        }
+        return groups;
+    }
+
     /**
-     * 审核用户添加的关键词
+     * 通过回复审核用户添加的关键词
      */
     @KeywordInsEvent
     public int keyExamine(@NotNull String prefix) {
@@ -914,8 +1011,9 @@ public class InstructionMsgEvent {
             }
             if (s.startsWith("群号: ") && s.contains("\n关键词编号: ")) {
                 tf = true;
-                // long groupId = Long.parseLong(s.substring("群号: ".length(), s.indexOf("\n关键词编号: ")));
+                long groupId = Long.parseLong(s.substring("群号: ".length(), s.indexOf("\n关键词编号: ")));
                 long keyId = Long.parseLong(s.substring(s.indexOf("\n关键词编号: ") + "\n关键词编号: ".length()));
+                int level = VanillaUtils.getPermissionLevel(bot, groupId, sender.getId()) * Va.getGlobalConfig().getBase().getKeyRadix();
                 if (operand) {
                     if (Va.getKeywordData().updateStatus(keyId, 1, type) > 0) {
                         forwardMessageBuilder.add(bot, new PlainText(s + "\n操作成功: 已激活关键词"));
@@ -923,8 +1021,11 @@ public class InstructionMsgEvent {
                         forwardMessageBuilder.add(bot, new PlainText(s + "\n操作失败"));
                     }
                 } else {
-                    if (Va.getKeywordData().deleteKeywordById(keyId, type) > 0) {
+                    int back = Va.getKeywordData().deleteKeywordById(keyId, type, level);
+                    if (back > 0) {
                         forwardMessageBuilder.add(bot, new PlainText(s + "\n操作成功: 已删除关键词"));
+                    } else if (back == -2) {
+                        forwardMessageBuilder.add(bot, new PlainText(s + "\n操作失败: 权限不足"));
                     } else {
                         forwardMessageBuilder.add(bot, new PlainText(s + "\n操作失败"));
                     }
@@ -937,6 +1038,54 @@ public class InstructionMsgEvent {
             Api.sendMessage(group, "无法解析该消息");
         }
         return RETURN_BREAK_TRUE;
+    }
+
+    /**
+     * 通过id审核用户添加的关键词
+     */
+    @KeywordInsEvent
+    public int keyExamineById(@NotNull String prefix) {
+        if (!base.getAdd().contains(prefix)) return RETURN_CONTINUE;
+        RegUtils reg = RegExpConfig.keyExamineRegExp(prefix);
+        if (reg.matcher(this.ins).find()) {
+            // 判断发送者是否有审核关键词的权限
+            if (VanillaUtils.hasNotPermissionAndMore(bot, group, sender.getId(), PERMISSION_LEVEL_DEPUTY_ADMIN))
+                return RETURN_CONTINUE;
+
+            long[] groups, keyIds;
+            String type, rep;
+
+            groups = getGroups(reg);
+            if (groups.length > 1) {
+                Api.sendMessage(group, "表达式有误: 只能同时操作一个群");
+            }
+
+            type = reg.getMatcher().group("type");
+            try {
+                String key = reg.getMatcher().group("keyIds");
+                keyIds = Arrays.stream(key.split("\\s")).mapToLong(Long::parseLong).toArray();
+            } catch (Exception ignored) {
+                Api.sendMessage(group, "表达式有误");
+                return RETURN_BREAK_TRUE;
+            }
+
+            ForwardMessageBuilder forwardMessageBuilder = new ForwardMessageBuilder(group)
+                    .add(sender, msg)
+                    .add(bot, new PlainText("关键词类型:\n" + type));
+
+            long groupId = groups[0];
+            for (long keyId : keyIds) {
+                int back = Va.getKeywordData().updateStatus(keyId, 1, type);
+                if (back > 0) {
+                    forwardMessageBuilder.add(bot, new PlainText("关键词编号: " + keyId + "\n操作成功: 已激活关键词"));
+                } else {
+                    forwardMessageBuilder.add(bot, new PlainText("关键词编号: " + keyId + "\n操作失败"));
+                }
+            }
+            Api.sendMessage(group, forwardMessageBuilder.build());
+            return RETURN_BREAK_TRUE;
+        }
+        return RETURN_CONTINUE;
     }
 
     // endregion

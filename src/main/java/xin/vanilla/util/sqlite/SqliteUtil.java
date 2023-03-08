@@ -345,7 +345,9 @@ public class SqliteUtil {
      * @param clazz         实体类
      */
     public <T> PaginationList<T> getPaginationList(Statement sql, int pageNo, int pageItemCount, final Class<T> clazz) {
-        int totalItemCount = getInt(QueryStatement.rowCount().from(new Parenthesize(sql)));
+        Statement queryCount = QueryStatement.rowCount().from(new Parenthesize(sql));
+        queryCount.operands = sql.operands;
+        int totalItemCount = getInt(queryCount);
         if (totalItemCount > 0) {
             PaginationList<T> records = new PaginationList<>();
             getList(sql.copy().limit(pageItemCount, (pageNo - 1) * pageItemCount), records, clazz);
@@ -433,7 +435,7 @@ public class SqliteUtil {
     }
 
     private int[] getInts(ResultSet resultSet) throws SQLException {
-        if (resultSet.first()) {
+        if (resultSet.next()) {
             int columnCount = resultSet.getMetaData().getColumnCount();
             int[] result = new int[columnCount];
             for (int i = 0; i < columnCount; i++) {
@@ -474,7 +476,7 @@ public class SqliteUtil {
         try {
             if (ps == null) return null;
             ResultSet resultSet = ps.executeQuery();
-            if (resultSet.first()) {
+            if (resultSet.next()) {
                 int columnCount = resultSet.getMetaData().getColumnCount();
                 String[] result = new String[columnCount];
                 for (int i = 0; i < columnCount; i++) {

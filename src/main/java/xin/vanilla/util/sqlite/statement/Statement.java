@@ -60,6 +60,15 @@ public class Statement {
         return this;
     }
 
+    public Statement from(Parenthesize... tables) {
+        statement.append(" FROM ");
+        for (int i = 0; i < tables.length; i++) {
+            if (i > 0) statement.append(", ");
+            statement.append(tables[i]);
+        }
+        return this;
+    }
+
     /**
      * Appending the WHERE clause.
      *

@@ -198,24 +198,37 @@ public class RegExpConfig {
     }
 
     /**
+     * 查询关键词回复指令
+     */
+    public static RegUtils keySelRegExp(String prefix) {
+        // /va key sel [<group>] 精准|包含|拼音|正则 [key]
+        return RegUtils.start().groupNon(prefix).separator()
+                .groupIgByName("group", GROUP_CODE).appendIg("?").separator("?")
+                .groupByName("type", keyword.getExactly(), keyword.getContain(), keyword.getPinyin(), keyword.getRegex()).separator("?")
+                .groupIgByName("key", ".*?")
+                .groupIgByName("page", "\\d+").appendIg("?")
+                .end();
+    }
+
+    /**
      * 删除关键词回复指令
      */
     public static RegUtils keyDelRegExp(String prefix) {
-        // /va key del [<group>] 精准|包含|拼音|正则 [key]
+        // /va key del [<group>] 精准|包含|拼音|正则 [keyId keyId]
         return RegUtils.start().groupNon(prefix).separator()
                 .groupIgByName("group", GROUP_CODE).appendIg("?").separator("?")
                 .groupByName("type", keyword.getExactly(), keyword.getContain(), keyword.getPinyin(), keyword.getRegex()).separator()
-                .groupIgByName("key", ".*?").end();
+                .groupIgByName("keyIds", "\\d+\\s?").end();
     }
 
     /**
      * 审核关键词回复指令
      */
     public static RegUtils keyExamineRegExp(String prefix) {
-        // /va key add|del [<group>] 精准|包含|拼音|正则 [key] rep [content]
+        // /va key add|del [<group>] 精准|包含|拼音|正则 [keyId keyId]
         return RegUtils.start().groupNon(prefix).separator()
                 .groupIgByName("group", GROUP_CODE).appendIg("?").separator("?")
                 .groupByName("type", keyword.getExactly(), keyword.getContain(), keyword.getPinyin(), keyword.getRegex()).separator()
-                .groupIgByName("keyIds", "\\d+\\s?").separator().end();
+                .groupIgByName("keyIds", "\\d+\\s?").end();
     }
 }

@@ -80,7 +80,7 @@ public class KeywordDataImpl extends Base implements KeywordData {
         // 根据策略判断是否自动删除最旧的关键词
         if (list.size() >= Va.getGlobalConfig().getBase().getKeyRadix()) {
             if (Va.getGlobalConfig().getBase().getKeyRadixDel()) {
-                if (deleteKeywordById(list.get(0).getId(), type) < 0) {
+                if (deleteKeywordById(list.get(0).getId(), type, level > 0 ? level : 1) < 0) {
                     return -2;
                 }
             } else {
@@ -168,22 +168,7 @@ public class KeywordDataImpl extends Base implements KeywordData {
                 query.and(KeyData::getGroup).eq(group);
 
             assert table != null;
-            // 完全匹配
-            if (table.startsWith(KEYWORD_TYPE_EXACTLY)) {
-                query.and(KeyData::getWord).eq(word);
-            }
-            // 包含匹配
-            else if (table.startsWith(KEYWORD_TYPE_CONTAIN)) {
-                query.andLikeContains(KeyData::getWord, word);
-            }
-            // 拼音包含匹配
-            else if (table.startsWith(KEYWORD_TYPE_PINYIN)) {
-                query.andLikeContains(KeyData::getWord, PinyinHelper.toPinyin(word, PinyinStyleEnum.NORMAL).trim());
-            }
-            // 正则匹配
-            else if (table.startsWith(KEYWORD_TYPE_REGEXP)) {
-                query.andRegexp(KeyData::getWord, word);
-            }
+            andWord(word, table, query);
             List<KeyData> list = sqliteUtil.getList(query, KeyData.class);
             if (list != null) {
                 list.forEach(k -> k.setType(table));
@@ -210,8 +195,6 @@ public class KeywordDataImpl extends Base implements KeywordData {
 
     @Override
     public PaginationList<KeyData> getKeywordByPage(String word, long bot, long group, String type, int page, int size) {
-        word = VanillaUtils.enVanillaCodeMsg(word);
-
         String table = getTable(type);
         createTable(table);
         Statement query = QueryStatement.produce().from(table)
@@ -221,6 +204,18 @@ public class KeywordDataImpl extends Base implements KeywordData {
             query.and(KeyData::getGroup).eq(group);
 
         assert table != null;
+        if (!StringUtils.isNullOrEmpty(word)) {
+            word = VanillaUtils.enVanillaCodeMsg(word);
+            andWord(word, table, query);
+        }
+        PaginationList<KeyData> paginationList = sqliteUtil.getPaginationList(query, page, size, KeyData.class);
+        paginationList.forEach(k -> k.setType(table));
+        if (paginationList.getTotalItemCount() > 0) return paginationList;
+
+        return new PaginationList<>(page, size, 0);
+    }
+
+    private void andWord(String word, @NotNull String table, Statement query) {
         // 完全匹配
         if (table.startsWith(KEYWORD_TYPE_EXACTLY)) {
             query.and(KeyData::getWord).eq(word);
@@ -237,53 +232,55 @@ public class KeywordDataImpl extends Base implements KeywordData {
         else if (table.startsWith(KEYWORD_TYPE_REGEXP)) {
             query.andRegexp(KeyData::getWord, word);
         }
-        PaginationList<KeyData> paginationList = sqliteUtil.getPaginationList(query, page, size, KeyData.class);
-        paginationList.forEach(k -> k.setType(table));
-        if (paginationList.getTotalItemCount() > 0) return paginationList;
-
-        return new PaginationList<>(page, size, 0);
     }
-
-    // @Override
-    // public PaginationList<KeyData> getKeywordByPage(String word, long bot, long group, int page, int size) {
-    //     return getKeywordByPage(word, bot, group, null, page, size);
-    // }
 
     @Override
     public PaginationList<KeyData> getKeywordByPage(String word, long bot, String type, int page, int size) {
         return getKeywordByPage(word, bot, 0, type, page, size);
     }
 
-    // @Override
-    // public PaginationList<KeyData> getKeywordByPage(String word, long bot, int page, int size) {
-    //     return getKeywordByPage(word, bot, 0, null, page, size);
-    // }
+    @Override
+    public PaginationList<KeyData> getKeywordByPage(long bot, String type, int page, int size) {
+        return getKeywordByPage(null, bot, 0, type, page, size);
+    }
 
     @Override
-    public int deleteKeywordById(long id, String type) {
+    public PaginationList<KeyData> getKeywordByPage(long bot, long group, String type, int page, int size) {
+        return getKeywordByPage(null, bot, group, type, page, size);
+    }
+
+    @Override
+    public int deleteKeywordById(long id, String type, int level) {
         String table = getTable(type);
+        // 查询该id的关键词的level
+        Statement query = QueryStatement.produce().from(table)
+                .where(KeyData::getId).eq(id)
+                .orderBy(KeyData::getId).asc();
+        KeyData keyData = sqliteUtil.getEntity(query, KeyData.class);
+        if (keyData.getLevel() > level) return -2;
+
         Statement deleteStatement = DeleteStatement.produce(table)
                 .where(KeyData::getId).eq(id);
         return sqliteUtil.delete(deleteStatement);
     }
 
     @Override
-    public int deleteKeyword(String word, long bot, long group, String type) {
+    public int deleteKeyword(String word, long bot, long group, String type, int level) {
         return 0;
     }
 
     @Override
-    public int deleteKeyword(String word, long bot, long group) {
+    public int deleteKeyword(String word, long bot, long group, int level) {
         return 0;
     }
 
     @Override
-    public int deleteKeyword(String word, long bot, String type) {
+    public int deleteKeyword(String word, long bot, String type, int level) {
         return 0;
     }
 
     @Override
-    public int deleteKeyword(String word, long bot) {
+    public int deleteKeyword(String word, long bot, int level) {
         return 0;
     }
 

@@ -46,14 +46,21 @@ class KeyData {
     var type: String = ""
 
     /**
-     * 权级
+     * 状态
      */
     var status: Int = 0
 
     /**
      * 获取解Va码后的消息
      */
-    fun getMsgDecode(): String {
+    fun getRepDecode(): String {
+        return VanillaUtils.deVanillaCodeRep(this.msg)
+    }
+
+    /**
+     * 获取解Va码后的消息
+     */
+    fun getWordDecode(): String {
         return VanillaUtils.deVanillaCodeMsg(this.msg)
     }
 }
