@@ -172,7 +172,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
         // 群内关键词查询
         KeyData keyword = Va.getKeywordData().getKeyword(VanillaUtils.messageToString(msg), bot.getId(), group.getId());
         if (keyword.getId() > 0) {
-            MessageChain rep = MessageChain.deserializeFromMiraiCode(keyword.getMsg(), group);
+            MessageChain rep = MessageChain.deserializeFromMiraiCode(keyword.getMsgDecode(), group);
             Api.sendMessage(group, rep);
             return true;
         }
@@ -180,7 +180,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
         // 全局关键词查询
         keyword = Va.getKeywordData().getKeyword(VanillaUtils.messageToString(msg), bot.getId(), -1);
         if (keyword.getId() > 0) {
-            MessageChain rep = MessageChain.deserializeFromMiraiCode(keyword.getMsg(), group);
+            MessageChain rep = MessageChain.deserializeFromMiraiCode(keyword.getMsgDecode(), group);
             Api.sendMessage(group, rep);
             return true;
         }
@@ -194,6 +194,14 @@ public class GroupMsgEvent extends BaseMsgEvent {
     private boolean getWife() {
         if (Va.getGlobalConfig().getOther().getWifePrefix().contains(msg.contentToString())) {
             String key = DateUtil.format(new Date(), "yyyy.MM.dd") + "." + group.getId() + "." + sender.getId();
+            String nick = msg.contentToString().substring(1);
+            final String[] nicks = {"老婆", "老公", "男友", "女友"};
+            for (String s : nicks) {
+                if (s.equals(nick)) {
+                    nick = "亲爱的";
+                    break;
+                }
+            }
             long wife = 0;
             try {
                 wife = Va.getPluginData().getWife().get(key);
@@ -210,7 +218,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
             assert normalMember != null;
             Api.sendMessage(group, new MessageChainBuilder()
                     .append(new At(sender.getId()))
-                    .append(" 今天你的群友亲爱的是\n")
+                    .append(" 今天你的群友").append(nick).append("是\n")
                     .append(VanillaUtils.uploadImageByUrl(normalMember.getAvatarUrl(), group))
                     .append("\n『").append(normalMember.getNick()).append("』")
                     .append("(").append(String.valueOf(wife)).append(") 喵!")

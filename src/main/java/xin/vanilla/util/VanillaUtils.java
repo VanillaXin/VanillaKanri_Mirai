@@ -7,6 +7,7 @@ import net.mamoe.mirai.contact.*;
 import net.mamoe.mirai.message.code.MiraiCode;
 import net.mamoe.mirai.message.data.*;
 import net.mamoe.mirai.utils.ExternalResource;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import xin.vanilla.VanillaKanri;
 import xin.vanilla.enumeration.DataCacheKey;
@@ -482,7 +483,11 @@ public class VanillaUtils {
     /**
      * 词库触发(keyWord)消息解码
      */
+    @NotNull
+    @Contract(pure = true)
     public static String deVanillaCodeMsg(@NotNull String msg) {
+        // 替换空符
+        msg = msg.replaceAll("\\[vacode:void]", "");
         return msg;
     }
 

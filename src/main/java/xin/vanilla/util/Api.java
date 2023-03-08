@@ -8,7 +8,6 @@ import cn.hutool.json.JSONUtil;
 import net.mamoe.mirai.contact.Contact;
 import net.mamoe.mirai.message.MessageReceipt;
 import net.mamoe.mirai.message.data.*;
-import org.jetbrains.annotations.NotNull;
 import xin.vanilla.VanillaKanri;
 
 import java.util.ArrayList;
@@ -84,8 +83,9 @@ public class Api {
     /**
      * 发送消息
      */
-    @NotNull
-    public static MessageReceipt<Contact> sendMessage(@NotNull Contact contact, @NotNull String message) {
+    public static MessageReceipt<Contact> sendMessage(Contact contact, String message) {
+        if (contact == null) return null;
+        if (StringUtils.isNullOrEmpty(message)) return null;
         // 反转义事件特殊码
         if (message.contains("\\(:vaevent:\\)"))
             message = message.replace("\\(:vaevent:\\)", "(:vaevent:)");
@@ -98,8 +98,9 @@ public class Api {
     /**
      * 发送消息
      */
-    @NotNull
-    public static MessageReceipt<Contact> sendMessage(@NotNull Contact contact, @NotNull Message message) {
+    public static MessageReceipt<Contact> sendMessage(Contact contact, Message message) {
+        if (contact == null) return null;
+        if (StringUtils.isNullOrEmpty(message.contentToString())) return null;
         // 反转义事件特殊码
         if (message instanceof MessageChain) {
             if (message.contentToString().contains("\\(:vaevent:\\)")) {

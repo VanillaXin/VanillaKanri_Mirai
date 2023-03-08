@@ -1,6 +1,7 @@
 package xin.vanilla.entity.data
 
 import kotlinx.serialization.Serializable
+import xin.vanilla.util.VanillaUtils
 
 /**
  * 关键词数据
@@ -48,4 +49,11 @@ class KeyData {
      * 权级
      */
     var status: Int = 0
+
+    /**
+     * 获取解Va码后的消息
+     */
+    fun getMsgDecode(): String {
+        return VanillaUtils.deVanillaCodeMsg(this.msg)
+    }
 }
