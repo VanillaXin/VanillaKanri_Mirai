@@ -61,6 +61,6 @@ class KeyData {
      * 获取解Va码后的消息
      */
     fun getWordDecode(): String {
-        return VanillaUtils.deVanillaCodeMsg(this.msg)
+        return VanillaUtils.deVanillaCodeMsg(this.word)
     }
 }

@@ -882,8 +882,9 @@ public class InstructionMsgEvent {
                 forwardMessageBuilder.add(bot, new PlainText("关键词列表为空"));
             } else {
                 forwardMessageBuilder.add(bot, new PlainText(
-                        "数据条数: " + keywordByPage.getPageItemCount() + "/" + keywordByPage.getTotalItemCount()
+                        "数据条数: " + keywordByPage.size() + "/" + keywordByPage.getTotalItemCount()
                                 + "\n数据页数: " + keywordByPage.getCurPageNo() + "/" + keywordByPage.getTotalPageCount()
+                                + "\n每页条数: " + keywordByPage.getPageItemCount()
                 ));
                 for (KeyData keyData : keywordByPage) {
                     forwardMessageBuilder.add(bot, new PlainText(
