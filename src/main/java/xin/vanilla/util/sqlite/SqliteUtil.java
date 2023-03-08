@@ -439,7 +439,7 @@ public class SqliteUtil {
             int columnCount = resultSet.getMetaData().getColumnCount();
             int[] result = new int[columnCount];
             for (int i = 0; i < columnCount; i++) {
-                result[i] = resultSet.getInt(i);
+                result[i] = resultSet.getInt(i + 1);
             }
             return result;
         }
@@ -480,7 +480,7 @@ public class SqliteUtil {
                 int columnCount = resultSet.getMetaData().getColumnCount();
                 String[] result = new String[columnCount];
                 for (int i = 0; i < columnCount; i++) {
-                    result[i] = resultSet.getString(i);
+                    result[i] = resultSet.getString(i + 1);
                 }
                 return result;
             }
