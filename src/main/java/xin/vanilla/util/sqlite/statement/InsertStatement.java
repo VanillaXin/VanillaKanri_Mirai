@@ -122,7 +122,7 @@ public class InsertStatement extends Statement {
         createStmt.table = table;
         createStmt.statement.append("INSERT");
         if (clause != null) createStmt.statement.append(" OR ").append(clause);
-        createStmt.statement.append(" INTO ").append("'").append(table).append("'");
+        createStmt.statement.append(" INTO ").append('`').append(table).append('`');
         return createStmt;
     }
 

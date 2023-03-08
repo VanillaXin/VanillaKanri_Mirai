@@ -116,7 +116,7 @@ public class UpdateStatement extends Statement {
         UpdateStatement updateStmt = new UpdateStatement();
         updateStmt.statement.append("UPDATE");
         if (clause != null) updateStmt.statement.append(" OR ").append(clause);
-        updateStmt.statement.append(' ').append(table).append(" SET");
+        updateStmt.statement.append(" `").append(table).append("` SET");
         return updateStmt;
     }
 

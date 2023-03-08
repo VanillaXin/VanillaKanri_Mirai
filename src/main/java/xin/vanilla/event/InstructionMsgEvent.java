@@ -838,11 +838,13 @@ public class InstructionMsgEvent {
                     .add(bot, new PlainText(VanillaUtils.enVanillaCodeRep(rep)));
             boolean tf = false;
             for (long groupId : groups) {
-                int level = VanillaUtils.getPermissionLevel(bot, groupId, sender.getId()) * 10;
+                int level = VanillaUtils.getPermissionLevel(bot, groupId, sender.getId()) * Va.getGlobalConfig().getBase().getKeyRadix();
                 long keyId = Va.getKeywordData().addKeyword(key, rep, bot.getId(), groupId, type, time, level > 0 ? level : 1);
                 if (keyId > 0) {
                     tf = true;
                     forwardMessageBuilder.add(bot, new PlainText("群号: " + (groupId == -1 ? "全局" : groupId) + "\n关键词编号: " + keyId));
+                } else if (keyId == -2) {
+                    forwardMessageBuilder.add(bot, new PlainText("群(" + groupId + ")\n的回复内容已到上限, 请删除后重试"));
                 }
             }
             if (tf) {
@@ -880,14 +882,14 @@ public class InstructionMsgEvent {
     }
 
     /**
-     * 审核普通用户添加的关键词
+     * 审核用户添加的关键词
      */
     @KeywordInsEvent
     public int keyExamine(@NotNull String prefix) {
         if (!prefix.equals(this.ins)) return RETURN_CONTINUE;
 
-        int operand = 0;
-        if (base.getAdd().contains(prefix)) operand = 1;
+        boolean operand = false;
+        if (base.getAdd().contains(prefix)) operand = true;
         else if (!base.getDelete().contains(prefix)) return RETURN_CONTINUE;
 
         QuoteReply quoteReply = this.msg.get(QuoteReply.Key);
@@ -914,10 +916,18 @@ public class InstructionMsgEvent {
                 tf = true;
                 // long groupId = Long.parseLong(s.substring("群号: ".length(), s.indexOf("\n关键词编号: ")));
                 long keyId = Long.parseLong(s.substring(s.indexOf("\n关键词编号: ") + "\n关键词编号: ".length()));
-                if (Va.getKeywordData().updateStatus(keyId, operand, type) > 0) {
-                    forwardMessageBuilder.add(bot, new PlainText(s + "\n审核" + (operand > 0 ? "通过" : "不通过")));
+                if (operand) {
+                    if (Va.getKeywordData().updateStatus(keyId, 1, type) > 0) {
+                        forwardMessageBuilder.add(bot, new PlainText(s + "\n操作成功: 已激活关键词"));
+                    } else {
+                        forwardMessageBuilder.add(bot, new PlainText(s + "\n操作失败"));
+                    }
                 } else {
-                    forwardMessageBuilder.add(bot, new PlainText(s + "\n操作失败"));
+                    if (Va.getKeywordData().deleteKeywordById(keyId, type) > 0) {
+                        forwardMessageBuilder.add(bot, new PlainText(s + "\n操作成功: 已删除关键词"));
+                    } else {
+                        forwardMessageBuilder.add(bot, new PlainText(s + "\n操作失败"));
+                    }
                 }
             }
         }

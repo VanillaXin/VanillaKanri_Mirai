@@ -384,14 +384,8 @@ public class SqliteUtil {
         try {
             if (ps == null) return null;
             ResultSet resultSet = ps.executeQuery();
-            if (resultSet.first()) {
-                int columnCount = resultSet.getMetaData().getColumnCount();
-                int[] result = new int[columnCount];
-                for (int i = 0; i < columnCount; i++) {
-                    result[i] = resultSet.getInt(i);
-                }
-                return result;
-            }
+            int[] result = getInts(resultSet);
+            if (result != null) return result;
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
@@ -401,6 +395,51 @@ public class SqliteUtil {
                 e.printStackTrace();
             }
             this.releaseConn(c);
+        }
+        return null;
+    }
+
+    /**
+     * 执行查询并获取第一行第一列中的int值, 查询失败将返回默认值0
+     */
+    public int getInt(Statement statement) {
+        return getInt(statement, 0);
+    }
+
+    /**
+     * 执行查询并获取第一行第一列中的int值, 查询失败将返回给定的默认值 def
+     *
+     * @param def 默认值
+     */
+    public int getInt(Statement statement, int def) {
+        try {
+            return getInts(statement)[0];
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return def;
+    }
+
+    /**
+     * 执行查询并返回第一行中的所有列的int值数组
+     */
+    public int[] getInts(Statement statement) {
+        try (ResultSet resultSet = select(statement)) {
+            int[] result = getInts(resultSet);
+            if (result != null) return result;
+        } catch (Exception ignored) {
+        }
+        return null;
+    }
+
+    private int[] getInts(ResultSet resultSet) throws SQLException {
+        if (resultSet.first()) {
+            int columnCount = resultSet.getMetaData().getColumnCount();
+            int[] result = new int[columnCount];
+            for (int i = 0; i < columnCount; i++) {
+                result[i] = resultSet.getInt(i);
+            }
+            return result;
         }
         return null;
     }

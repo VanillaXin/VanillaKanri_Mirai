@@ -13,10 +13,7 @@ import xin.vanilla.util.StringUtils;
 import xin.vanilla.util.VanillaUtils;
 import xin.vanilla.util.sqlite.PaginationList;
 import xin.vanilla.util.sqlite.SqliteUtil;
-import xin.vanilla.util.sqlite.statement.InsertStatement;
-import xin.vanilla.util.sqlite.statement.QueryStatement;
-import xin.vanilla.util.sqlite.statement.Statement;
-import xin.vanilla.util.sqlite.statement.UpdateStatement;
+import xin.vanilla.util.sqlite.statement.*;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -36,6 +33,8 @@ public class KeywordDataImpl extends Base implements KeywordData {
     public static String[] KEYWORD_TYPES = {KEYWORD_TYPE_EXACTLY, KEYWORD_TYPE_CONTAIN, KEYWORD_TYPE_PINYIN, KEYWORD_TYPE_REGEXP};
 
     private final SqliteUtil sqliteUtil;
+
+    private final VanillaKanri Va = VanillaKanri.INSTANCE;
 
     public KeywordDataImpl(String path) {
         try {
@@ -68,8 +67,29 @@ public class KeywordDataImpl extends Base implements KeywordData {
         String table = getTable(type);
         createTable(table);
         // TODO 定义特殊码, 转义特殊码
+        String wordCode = VanillaUtils.enVanillaCodeMsg(word);
+
+        // 查询该level创建的关键词数量是否超出限制
+        Statement query = QueryStatement.produce(KeyData::getId).from(table)
+                .where(KeyData::getWord).eq(wordCode)
+                .and(KeyData::getBot).eq(bot)
+                .and(KeyData::getGroup).eq(group)
+                .and(KeyData::getLevel).eq(level > 0 ? level : 1)
+                .orderBy(KeyData::getId).asc();
+        List<KeyData> list = sqliteUtil.getList(query, KeyData.class);
+        // 根据策略判断是否自动删除最旧的关键词
+        if (list.size() >= Va.getGlobalConfig().getBase().getKeyRadix()) {
+            if (Va.getGlobalConfig().getBase().getKeyRadixDel()) {
+                if (deleteKeywordById(list.get(0).getId(), type) < 0) {
+                    return -2;
+                }
+            } else {
+                return -2;
+            }
+        }
+
         InsertStatement insert = InsertStatement.produce(table)
-                .put(KeyData::getWord, VanillaUtils.enVanillaCodeMsg(word))
+                .put(KeyData::getWord, wordCode)
                 .put(KeyData::getMsg, rep)
                 .put(KeyData::getBot, bot)
                 .put(KeyData::getGroup, group)
@@ -241,7 +261,10 @@ public class KeywordDataImpl extends Base implements KeywordData {
 
     @Override
     public int deleteKeywordById(long id, String type) {
-        return 0;
+        String table = getTable(type);
+        Statement deleteStatement = DeleteStatement.produce(table)
+                .where(KeyData::getId).eq(id);
+        return sqliteUtil.delete(deleteStatement);
     }
 
     @Override

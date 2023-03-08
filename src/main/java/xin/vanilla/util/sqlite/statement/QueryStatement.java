@@ -15,6 +15,11 @@
  */
 package xin.vanilla.util.sqlite.statement;
 
+import xin.vanilla.util.lambda.LambdaUtils;
+import xin.vanilla.util.lambda.SerializedFunction;
+
+import java.util.Arrays;
+
 /**
  * A statement producer that use to producing <b>SELECT</b> command of SQL language. The completed SQL
  */
@@ -32,6 +37,13 @@ public class QueryStatement extends Statement {
         QueryStatement queryStmt = new QueryStatement();
         queryStmt.statement.append("SELECT");
         return queryStmt.processColumns(columns);
+    }
+
+    @SafeVarargs
+    public static <T> Statement produce(SerializedFunction<T, ?>... columns) {
+        QueryStatement queryStmt = new QueryStatement();
+        queryStmt.statement.append("SELECT");
+        return queryStmt.processColumns(Arrays.stream(columns).map(LambdaUtils::getFiledName).toArray(Object[]::new));
     }
 
     /**
