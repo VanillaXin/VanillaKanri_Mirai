@@ -16,6 +16,7 @@ import net.mamoe.mirai.contact.Member;
 import net.mamoe.mirai.contact.NormalMember;
 import net.mamoe.mirai.message.data.*;
 import net.mamoe.mirai.utils.ExternalResource;
+import xin.vanilla.common.RegExpConfig;
 import xin.vanilla.entity.data.KeyData;
 import xin.vanilla.entity.event.events.GroupMessageEvents;
 import xin.vanilla.enumeration.PermissionLevel;
@@ -66,7 +67,6 @@ public class GroupMsgEvent extends BaseMsgEvent {
         st2();
         audioTest();
         chartGPTVoice();
-        fileTest();
         // test();
     }
 
@@ -170,22 +170,13 @@ public class GroupMsgEvent extends BaseMsgEvent {
      * 解析关键词回复
      */
     private boolean keyRep() {
-        // 群内关键词查询
-        KeyData keyword = Va.getKeywordData().getKeyword(VanillaUtils.messageToString(msg), bot.getId(), group.getId());
+        // 关键词查询
+        KeyData keyword = Va.getKeywordData().getKeyword(VanillaUtils.messageToString(msg), bot.getId(), -group.getId());
         if (keyword.getId() > 0) {
-            MessageChain rep = MessageChain.deserializeFromMiraiCode(keyword.getRepDecode(), group);
+            MessageChain rep = RegExpConfig.VaCode.exeReply(keyword.getRepDecode(group, bot, sender, msg), msg, group);
             Api.sendMessage(group, rep);
             return true;
         }
-
-        // 全局关键词查询
-        keyword = Va.getKeywordData().getKeyword(VanillaUtils.messageToString(msg), bot.getId(), -1);
-        if (keyword.getId() > 0) {
-            MessageChain rep = MessageChain.deserializeFromMiraiCode(keyword.getRepDecode(), group);
-            Api.sendMessage(group, rep);
-            return true;
-        }
-
         return false;
     }
 
@@ -247,28 +238,21 @@ public class GroupMsgEvent extends BaseMsgEvent {
         final String prefix = "chatGPTVoice";
         if (msg.contentToString().startsWith(prefix)) {
 
-//            String key =  Va.getGlobalConfig().getChatGptKey().get();
 
-//            Api.sendMessage(group,key);
             String command = msg.contentToString().substring(prefix.length());
 
             String bake = Api.chatGPT(command);
-            // Api.sendMessage(group, bake);
             Api.sendMessage(group, new MessageChainBuilder()
                     .append(new At(sender.getId()))
                     .append(bake).build());
             String res = Api.fanyi_jp(bake.replace("\n", "".replace(" ", ""))).replace("\n", "").replace(" ", "");
-//            Api.sendMessage(group,res);
-//             String path = "C:\\Users\\Administrator\\Desktop\\model\\temp\\";
             String path = Va.getGlobalConfig().getOther().getVoiceSavePath()+"\\";
             String id = IdUtil.randomUUID();
             path = path + id + ".wav";
 
             try {
                 Process process = Runtime.getRuntime().exec(Va.getGlobalConfig().getOther().getPythonPath() + " " + Va.getGlobalConfig().getOther().getMoeGoePath() + " " + res + " " + path);
-                // Api.sendMessage(group, "消息执行");
                 process.waitFor();
-//                Path path = Paths.get("E:\\model\\dd.wav");
                 File file = new File(path);
                 ExternalResource externalResource = ExternalResource.create(file);
                 OfflineAudio offlineAudio = group.uploadAudio(externalResource);
@@ -292,7 +276,6 @@ public class GroupMsgEvent extends BaseMsgEvent {
             String command = msg.contentToString().substring(prefix.length());
 
             String res = Api.fanyi_jp(command);
-            // String path = "C:\\Users\\Administrator\\Desktop\\model\\temp\\";
             String path = Va.getGlobalConfig().getOther().getVoiceSavePath()+"\\";
             String id = IdUtil.randomUUID();
             path = path + id + ".wav";
@@ -301,12 +284,9 @@ public class GroupMsgEvent extends BaseMsgEvent {
                     .append(res)
                     .build());
             try {
-                // Process process = Runtime.getRuntime().exec("C:\\ProgramData\\Anaconda3\\envs\\vits\\python.exe C:\\Users\\Administrator\\Desktop\\MoeGoe\\MoeGoe.py " + res + " " + path);
                 Process process = Runtime.getRuntime().exec(Va.getGlobalConfig().getOther().getPythonPath() + " " + Va.getGlobalConfig().getOther().getMoeGoePath() + " " + res + " " + path);
 
-                // Api.sendMessage(group, "消息执行");
                 process.waitFor();
-//                Path path = Paths.get("E:\\model\\dd.wav");
                 File file = new File(path);
                 ExternalResource externalResource = ExternalResource.create(file);
                 OfflineAudio offlineAudio = group.uploadAudio(externalResource);
@@ -346,9 +326,6 @@ public class GroupMsgEvent extends BaseMsgEvent {
                 JSONArray jsonArray = JSONUtil.parseArray(jsonObject1.get("choices"));
                 JSONObject jsonObject2 = JSONUtil.parseObj(jsonArray.get(0));
                 JSONObject jsonObject3 = JSONUtil.parseObj(jsonObject2.get("message"));
-                // System.out.println(jsonObject3.get("content"));
-                // System.out.println(jsonObject2.get("text"));
-
                 String bake = (String) jsonObject3.get("content");
                 bake = ReUtil.delFirst("^\n+", bake);
                 Api.sendMessage(group, bake);

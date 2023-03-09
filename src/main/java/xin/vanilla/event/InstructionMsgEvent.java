@@ -815,11 +815,11 @@ public class InstructionMsgEvent {
 
             ForwardMessageBuilder forwardMessageBuilder = new ForwardMessageBuilder(group)
                     .add(sender, msg)
-                    .add(bot, new PlainText("关键词类型:\n" + type))
+                    .add(bot, new PlainText("关键词类型:\n" + StringUtils.getKeywordTypeName(type)))
                     .add(bot, new MessageChainBuilder().append("触发内容:\n").append(keyFormat).build())
                     .add(bot, new MessageChainBuilder().append("回复内容:\n").append(repFormat).build())
                     .add(bot, new PlainText("触发内容文本:"))
-                    .add(bot, new PlainText(VanillaUtils.enVanillaCodeMsg(key)))
+                    .add(bot, new PlainText(VanillaUtils.enVanillaCodeKey(key)))
                     .add(bot, new PlainText("回复内容文本:"))
                     .add(bot, new PlainText(VanillaUtils.enVanillaCodeRep(rep)));
             boolean tf = false;
@@ -1009,7 +1009,7 @@ public class InstructionMsgEvent {
         for (ForwardMessage.Node node : forwardMessage.getNodeList()) {
             String s = node.getMessageChain().contentToString();
             if (s.startsWith("关键词类型:\n")) {
-                type = s.substring("关键词类型:\n".length()).trim();
+                type = StringUtils.getKeywordType(s.substring("关键词类型:\n".length()).trim());
                 forwardMessageBuilder.add(bot, node.getMessageChain());
             }
             if (s.startsWith("群号: ") && s.contains("\n关键词编号: ")) {

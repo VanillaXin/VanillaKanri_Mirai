@@ -11,6 +11,7 @@ import xin.vanilla.entity.data.KeyData;
 import xin.vanilla.mapper.KeywordData;
 import xin.vanilla.util.StringUtils;
 import xin.vanilla.util.VanillaUtils;
+import xin.vanilla.util.lambda.LambdaUtils;
 import xin.vanilla.util.sqlite.PaginationList;
 import xin.vanilla.util.sqlite.SqliteUtil;
 import xin.vanilla.util.sqlite.statement.*;
@@ -49,16 +50,23 @@ public class KeywordDataImpl extends Base implements KeywordData {
         if (!sqliteUtil.containsTable(table)) {
             sqliteUtil.executeSql(
                     "CREATE TABLE IF NOT EXISTS `" + table + "` (" +
-                            " `id`     INTEGER     PRIMARY KEY AUTOINCREMENT NOT NULL," +
-                            " `word`   TEXT                                  NOT NULL," +
-                            " `msg`    TEXT                                  NOT NULL," +
-                            " `bot`    INTEGER(10)                           NOT NULL," +
-                            " `group`  INTEGER(10)                           NOT NULL," +
-                            " `time`   INTEGER(10)                           NOT NULL," +
-                            " `level`  INTEGER(4)                            NOT NULL DEFAULT 1," +
-                            " `status` INTEGER(1)                            NOT NULL DEFAULT 0" +
+                            " `" + LambdaUtils.getFiledName(KeyData::getId) + "`     INTEGER     PRIMARY KEY AUTOINCREMENT NOT NULL," +
+                            " `" + LambdaUtils.getFiledName(KeyData::getWord) + "`   TEXT                                  NOT NULL," +
+                            " `" + LambdaUtils.getFiledName(KeyData::getRep) + "`    TEXT                                  NOT NULL," +
+                            " `" + LambdaUtils.getFiledName(KeyData::getBot) + "`    INTEGER(10)                           NOT NULL," +
+                            " `" + LambdaUtils.getFiledName(KeyData::getGroup) + "`  INTEGER(10)                           NOT NULL," +
+                            " `" + LambdaUtils.getFiledName(KeyData::getTime) + "`   INTEGER(10)                           NOT NULL," +
+                            " `" + LambdaUtils.getFiledName(KeyData::getLevel) + "`  INTEGER(4)                            NOT NULL DEFAULT 1," +
+                            " `" + LambdaUtils.getFiledName(KeyData::getStatus) + "` INTEGER(1)                            NOT NULL DEFAULT 0" +
                             ")");
-            sqliteUtil.executeSql("CREATE UNIQUE INDEX IF NOT EXISTS `word_msg_group_unique`" + " ON `" + table + "` ('word', 'group', 'msg')");
+            sqliteUtil.executeSql("CREATE UNIQUE INDEX IF NOT EXISTS `"
+                    + LambdaUtils.getFiledName(KeyData::getWord)
+                    + "_" + LambdaUtils.getFiledName(KeyData::getRep)
+                    + "_" + LambdaUtils.getFiledName(KeyData::getGroup)
+                    + "_unique`" + " ON `" + table + "` (" +
+                    "`" + LambdaUtils.getFiledName(KeyData::getWord) + "`, " +
+                    "`" + LambdaUtils.getFiledName(KeyData::getRep) + "`, " +
+                    "`" + LambdaUtils.getFiledName(KeyData::getGroup) + "`)");
         }
     }
 
@@ -67,14 +75,20 @@ public class KeywordDataImpl extends Base implements KeywordData {
         String table = getTable(type);
         createTable(table);
         // TODO 定义特殊码, 转义特殊码
-        String wordCode = VanillaUtils.enVanillaCodeMsg(word);
+        String wordCode = VanillaUtils.enVanillaCodeKey(word);
 
         // 查询该level创建的关键词数量是否超出限制
         Statement query = QueryStatement.produce(KeyData::getId).from(table)
                 .where(KeyData::getWord).eq(wordCode)
-                .and(KeyData::getBot).eq(bot)
-                .and(KeyData::getGroup).eq(group)
-                .and(KeyData::getLevel).eq(level > 0 ? level : 1)
+                .and(KeyData::getBot).eq(bot);
+
+        if (group < -1000) {
+            query.and(KeyData::getGroup).in(-1, Math.abs(group));
+        } else {
+            query.and(KeyData::getGroup).eq(group);
+        }
+
+        query.and(KeyData::getLevel).eq(level > 0 ? level : 1)
                 .orderBy(KeyData::getId).asc();
         List<KeyData> list = sqliteUtil.getList(query, KeyData.class);
         // 根据策略判断是否自动删除最旧的关键词
@@ -90,7 +104,7 @@ public class KeywordDataImpl extends Base implements KeywordData {
 
         InsertStatement insert = InsertStatement.produce(table)
                 .put(KeyData::getWord, wordCode)
-                .put(KeyData::getMsg, rep)
+                .put(KeyData::getRep, rep)
                 .put(KeyData::getBot, bot)
                 .put(KeyData::getGroup, group)
                 .put(KeyData::getTime, time)
@@ -155,7 +169,7 @@ public class KeywordDataImpl extends Base implements KeywordData {
         if (StringUtils.isNullOrEmpty(type)) types = KEYWORD_TYPES;
         else types = new String[]{type};
 
-        word = VanillaUtils.enVanillaCodeMsg(word);
+        word = VanillaUtils.enVanillaCodeKey(word);
 
         List<KeyData> keys = new ArrayList<>();
         for (String typeString : types) {
@@ -164,8 +178,12 @@ public class KeywordDataImpl extends Base implements KeywordData {
             Statement query = QueryStatement.produce().from(table)
                     .where(KeyData::getBot).eq(bot)
                     .and(KeyData::getStatus).gt(0);
-            if (group != 0)
+
+            if (group < -1000) {
+                query.and(KeyData::getGroup).in(-1, Math.abs(group));
+            } else if (group != 0) {
                 query.and(KeyData::getGroup).eq(group);
+            }
 
             assert table != null;
             andWord(word, table, query);
@@ -200,12 +218,15 @@ public class KeywordDataImpl extends Base implements KeywordData {
         Statement query = QueryStatement.produce().from(table)
                 .where(KeyData::getBot).eq(bot)
                 .and(KeyData::getStatus).gt(0);
-        if (group != 0)
+        if (group < -1000) {
+            query.and(KeyData::getGroup).in(-1, Math.abs(group));
+        } else if (group != 0) {
             query.and(KeyData::getGroup).eq(group);
+        }
 
         assert table != null;
         if (!StringUtils.isNullOrEmpty(word)) {
-            word = VanillaUtils.enVanillaCodeMsg(word);
+            word = VanillaUtils.enVanillaCodeKey(word);
             andWord(word, table, query);
         }
         PaginationList<KeyData> paginationList = sqliteUtil.getPaginationList(query, page, size, KeyData.class);

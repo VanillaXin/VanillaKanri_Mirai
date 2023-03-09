@@ -1,7 +1,9 @@
 package xin.vanilla.common;
 
-import net.mamoe.mirai.message.data.At;
-import net.mamoe.mirai.message.data.AtAll;
+import net.mamoe.mirai.contact.Contact;
+import net.mamoe.mirai.contact.NormalMember;
+import net.mamoe.mirai.message.data.*;
+import org.jetbrains.annotations.NotNull;
 import xin.vanilla.VanillaKanri;
 import xin.vanilla.entity.config.instruction.BaseInstructions;
 import xin.vanilla.entity.config.instruction.KanriInstructions;
@@ -10,7 +12,11 @@ import xin.vanilla.entity.config.instruction.TimedTaskInstructions;
 import xin.vanilla.util.RegUtils;
 import xin.vanilla.util.StringUtils;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
+import java.util.Random;
+import java.util.regex.Matcher;
 
 import static xin.vanilla.util.RegUtils.REG_SEPARATOR;
 
@@ -42,6 +48,9 @@ public class RegExpConfig {
                     .groupIgByName("max", "\\d{1,2}").separator()
                     .append("players").separator().append("online:").separator()
                     .groupIgByName("player", "[\\S ]*?").separator();
+
+
+    // region 群管指令
 
     public static RegUtils defaultRegExp(String prefix) {
         return RegUtils.start().groupNon(prefix).separator("?")
@@ -184,6 +193,11 @@ public class RegExpConfig {
                 .groupIgByName("operation", ".*?").end();
     }
 
+    // endregion 群管指令
+
+
+    // region 关键词指令
+
     /**
      * 添加关键词回复指令
      */
@@ -230,5 +244,158 @@ public class RegExpConfig {
                 .groupIgByName("group", GROUP_CODE).appendIg("?").separator("?")
                 .groupByName("type", keyword.getExactly(), keyword.getContain(), keyword.getPinyin(), keyword.getRegex()).separator()
                 .groupIgByName("keyIds", "\\d+\\s?").end();
+    }
+
+    // endregion
+
+
+    /**
+     * Va特殊码
+     */
+    public static class VaCode {
+        /**
+         * 禁言特殊码
+         */
+        public static RegUtils MUTE = new RegUtils().append("[vacode:mute:")
+                .groupIgByName("time1", "\\d{1,5}(?:\\.\\d{1,2})?")
+                .groupIgByName("time2", "-\\d{1,5}(?:\\.\\d{1,2})?").appendIg("?")
+                .append("]");
+
+        /**
+         * 撤回特殊码
+         */
+        public static RegUtils RECALL = new RegUtils().append("[vacode:recall]");
+
+        /**
+         * 踢出特殊码
+         */
+        public static RegUtils KICK = new RegUtils().append("[vacode:kick")
+                .groupIgByName("bool", ":(?:0|1|真|假|是|否|true|false|y|n|Y|N)")
+                .groupIgByName("reason", ":[^:\\[\\]]*?")
+                .append("]");
+
+        /**
+         * 回复特殊码
+         */
+        public static RegUtils REPLY = new RegUtils().append("[vacode:reply]");
+
+        /**
+         * 关键词 回复内容编码
+         */
+        public static Map<String, String> EN_REP = new HashMap<String, String>() {{
+            put("\\[mirai:at:@(?<qq>\\d{6,10})]", "[vacode:${qq}]");
+            put("\\[mirai:atall]", "[vacode:@@]");
+        }};
+
+        /**
+         * 关键词 回复内容解码
+         */
+        public static Map<String, String> DE_REP = new HashMap<String, String>() {{
+            put("\\[vacode:void]", "");
+            put("\\[vacode:@(?<qq>\\d{6,10})]", "[mirai:at:${qq}]");
+            put("\\[vacode:@@]", AtAll.INSTANCE.serializeToMiraiCode());
+        }};
+
+        /**
+         * 关键词 触发内容编码
+         */
+        public static Map<String, String> EN_KEY = new HashMap<String, String>() {{
+            put("\\[mirai:image:\\{(?<code>[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12})}\\.\\w{3,5}]", "[vacode:image:{${code}}]");
+        }};
+
+        /**
+         * 关键词 触发内容解码
+         */
+        public static Map<String, String> DE_KEY = new HashMap<String, String>() {{
+            put("\\[vacode:image:\\{(?<code>[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12})}]", "[mirai:image:{${code}}.mirai]");
+        }};
+
+        /**
+         * 禁言
+         */
+        @NotNull
+        public static String exeMute(String msg, NormalMember member) {
+            Matcher matcher = MUTE.matcher(msg);
+            try {
+                if (matcher.find()) {
+                    float time1 = Float.parseFloat(matcher.group("time1"));
+                    float time2;
+                    try {
+                        time2 = Math.abs(Float.parseFloat(matcher.group("time2")));
+                        if (time2 < time1) time2 = time1 + 0.01F;
+                    } catch (Exception ignored) {
+                        time2 = time1 + 0.01F;
+                    }
+                    double time = new Random().nextDouble(time1, time2);
+                    member.mute((int) (time * 60));
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return msg.replaceAll(MUTE.build(), "");
+        }
+
+        /**
+         * 撤回
+         */
+        @NotNull
+        public static String exeRecall(String msg, MessageChain messageChain) {
+            Matcher matcher = RECALL.matcher(msg);
+            try {
+                if (matcher.find()) {
+                    try {
+                        MessageSource recall = messageChain.get(MessageSource.Key);
+                        if (recall != null) MessageSource.recall(recall);
+                    } catch (Exception ignored) {
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return msg.replaceAll(RECALL.build(), "");
+        }
+
+        /**
+         * 踢出
+         */
+        @NotNull
+        public static String exeKick(String word, String msg, NormalMember member) {
+            Matcher matcher = KICK.matcher(msg);
+            try {
+                if (matcher.find()) {
+                    boolean bool = StringUtils.stringToBoolean(matcher.group("bool"));
+                    String reason;
+                    try {
+                        reason = (matcher.group("reason"));
+                    } catch (Exception ignored) {
+                        reason = "触发了关键词: " + word;
+                    }
+                    member.kick(reason, bool);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return msg.replaceAll(KICK.build(), "");
+        }
+
+        /**
+         * 引用回复
+         */
+        @NotNull
+        public static MessageChain exeReply(String msg, MessageChain messageChain, Contact contact) {
+            Matcher matcher = REPLY.matcher(msg);
+            String result = msg.replaceAll(REPLY.build(), "");
+            MessageChain messages = MessageChain.deserializeFromMiraiCode(result, contact);
+            try {
+                if (matcher.find()) {
+                    MessageChainBuilder builder = new MessageChainBuilder();
+                    builder.append(messages).append(new QuoteReply(messageChain));
+                    messages = builder.build();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return messages;
+        }
     }
 }

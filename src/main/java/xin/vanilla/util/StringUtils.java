@@ -1,6 +1,8 @@
 package xin.vanilla.util;
 
 import org.jetbrains.annotations.NotNull;
+import xin.vanilla.VanillaKanri;
+import xin.vanilla.entity.config.instruction.KeywordInstructions;
 
 import java.util.Collection;
 
@@ -209,6 +211,42 @@ public class StringUtils {
             case "f":
             default:
                 return false;
+        }
+    }
+
+    /**
+     * 通过关键词类型获取关键词类型名称
+     */
+    public static String getKeywordTypeName(String type) {
+        KeywordInstructions keyword = VanillaKanri.INSTANCE.getGlobalConfig().getInstructions().getKeyword();
+        if (keyword.getExactly().contains(type)) {
+            return "完全匹配";
+        } else if (keyword.getContain().contains(type)) {
+            return "包含匹配";
+        } else if (keyword.getPinyin().contains(type)) {
+            return "拼音包含匹配";
+        } else if (keyword.getRegex().contains(type)) {
+            return "正则匹配";
+        } else {
+            return "未知类型";
+        }
+    }
+
+    /**
+     * 通过关键词类型名称获取关键词类型
+     */
+    public static String getKeywordType(String typeName) {
+        KeywordInstructions keyword = VanillaKanri.INSTANCE.getGlobalConfig().getInstructions().getKeyword();
+        if ("完全匹配".equals(typeName)) {
+            return keyword.getExactly().iterator().next();
+        } else if ("包含匹配".equals(typeName)) {
+            return keyword.getContain().iterator().next();
+        } else if ("拼音包含匹配".equals(typeName)) {
+            return keyword.getPinyin().iterator().next();
+        } else if ("正则匹配".equals(typeName)) {
+            return keyword.getRegex().iterator().next();
+        } else {
+            return "";
         }
     }
 }

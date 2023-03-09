@@ -43,7 +43,7 @@ public class QueryStatement extends Statement {
     public static <T> Statement produce(SerializedFunction<T, ?>... columns) {
         QueryStatement queryStmt = new QueryStatement();
         queryStmt.statement.append("SELECT");
-        return queryStmt.processColumns(Arrays.stream(columns).map(LambdaUtils::getFiledName).toArray(Object[]::new));
+        return queryStmt.processColumns(columns);
     }
 
     /**
@@ -72,6 +72,17 @@ public class QueryStatement extends Statement {
         statement.append(' ');
         if (columns != null && columns.length > 0) {
             appendClauses(columns);
+        } else {
+            statement.append('*');
+        }
+        return this;
+    }
+
+    @SafeVarargs
+    public final <T> Statement processColumns(SerializedFunction<T, ?>... columns) {
+        statement.append(' ');
+        if (columns != null && columns.length > 0) {
+            appendClauses(Arrays.stream(columns).map(LambdaUtils::getFiledName).toArray(Object[]::new));
         } else {
             statement.append('*');
         }

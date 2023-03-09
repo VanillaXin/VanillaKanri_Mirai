@@ -151,7 +151,7 @@ public class EventHandlers extends SimpleListenerHost {
                         long[] qqs;
                         try {
                             operation = reg.getMatcher().group("operation");
-                        } catch (IllegalStateException e) {
+                        } catch (Exception e) {
                             operation = "";
                         }
                         try {
@@ -161,7 +161,7 @@ public class EventHandlers extends SimpleListenerHost {
                             } else {
                                 groups = VanillaUtils.getGroupFromString(groupString);
                             }
-                        } catch (IllegalStateException | IllegalArgumentException | NullPointerException e) {
+                        } catch (Exception e) {
                             groups = new long[]{};
                         }
 
@@ -183,7 +183,7 @@ public class EventHandlers extends SimpleListenerHost {
                             } else {
                                 qqs = VanillaUtils.getQQFromString(qqString);
                             }
-                        } catch (IllegalStateException | IllegalArgumentException | NullPointerException e) {
+                        } catch (Exception e) {
                             qqs = new long[]{};
                         }
 
