@@ -178,8 +178,12 @@ public class KeywordDataImpl extends Base implements KeywordData {
             Statement query = QueryStatement.produce().from(table)
                     .where(KeyData::getBot).eq(bot)
                     .and(KeyData::getStatus).gt(0);
-            if (group != 0)
+
+            if (group < -1000) {
+                query.and(KeyData::getGroup).in(-1, Math.abs(group));
+            } else if (group != 0) {
                 query.and(KeyData::getGroup).eq(group);
+            }
 
             assert table != null;
             andWord(word, table, query);
@@ -214,8 +218,11 @@ public class KeywordDataImpl extends Base implements KeywordData {
         Statement query = QueryStatement.produce().from(table)
                 .where(KeyData::getBot).eq(bot)
                 .and(KeyData::getStatus).gt(0);
-        if (group != 0)
+        if (group < -1000) {
+            query.and(KeyData::getGroup).in(-1, Math.abs(group));
+        } else if (group != 0) {
             query.and(KeyData::getGroup).eq(group);
+        }
 
         assert table != null;
         if (!StringUtils.isNullOrEmpty(word)) {
