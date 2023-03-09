@@ -318,7 +318,7 @@ public class RegExpConfig {
                     float time1 = Float.parseFloat(matcher.group("time1"));
                     float time2;
                     try {
-                        time2 = Float.parseFloat(matcher.group("time2"));
+                        time2 = Math.abs(Float.parseFloat(matcher.group("time2")));
                         if (time2 < time1) time2 = time1 + 0.01F;
                     } catch (Exception ignored) {
                         time2 = time1 + 0.01F;
