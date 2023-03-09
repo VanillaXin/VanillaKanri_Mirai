@@ -1,6 +1,10 @@
 package xin.vanilla.entity.data
 
 import kotlinx.serialization.Serializable
+import net.mamoe.mirai.Bot
+import net.mamoe.mirai.contact.Contact
+import net.mamoe.mirai.contact.Group
+import net.mamoe.mirai.message.data.MessageChain
 import xin.vanilla.util.VanillaUtils
 
 /**
@@ -18,7 +22,7 @@ class KeyData {
     /**
      * 回复词
      */
-    var msg: String = ""
+    var rep: String = ""
 
     /**
      * 机器人ID
@@ -52,15 +56,26 @@ class KeyData {
 
     /**
      * 获取解Va码后的消息
+     *
+     * 不执行群管操作
      */
     fun getRepDecode(): String {
-        return VanillaUtils.deVanillaCodeRep(this.msg)
+        return VanillaUtils.deVanillaCodeRep(this.rep)
+    }
+
+    /**
+     * 获取解Va码后的消息
+     *
+     * 执行群管操作
+     */
+    fun getRepDecode(group: Group, bot: Bot, contact: Contact, messageChain: MessageChain): String {
+        return VanillaUtils.deVanillaCodeIns(this.word, this.rep, bot, group, contact, messageChain)
     }
 
     /**
      * 获取解Va码后的消息
      */
     fun getWordDecode(): String {
-        return VanillaUtils.deVanillaCodeMsg(this.word)
+        return VanillaUtils.deVanillaCodeKey(this.word)
     }
 }

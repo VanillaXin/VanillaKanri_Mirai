@@ -16,6 +16,7 @@ import net.mamoe.mirai.contact.Member;
 import net.mamoe.mirai.contact.NormalMember;
 import net.mamoe.mirai.message.data.*;
 import net.mamoe.mirai.utils.ExternalResource;
+import xin.vanilla.common.RegExpConfig;
 import xin.vanilla.entity.data.KeyData;
 import xin.vanilla.entity.event.events.GroupMessageEvents;
 import xin.vanilla.enumeration.PermissionLevel;
@@ -169,22 +170,13 @@ public class GroupMsgEvent extends BaseMsgEvent {
      * 解析关键词回复
      */
     private boolean keyRep() {
-        // 群内关键词查询
-        KeyData keyword = Va.getKeywordData().getKeyword(VanillaUtils.messageToString(msg), bot.getId(), group.getId());
+        // 关键词查询
+        KeyData keyword = Va.getKeywordData().getKeyword(VanillaUtils.messageToString(msg), bot.getId(), -group.getId());
         if (keyword.getId() > 0) {
-            MessageChain rep = MessageChain.deserializeFromMiraiCode(keyword.getRepDecode(), group);
+            MessageChain rep = RegExpConfig.VaCode.exeReply(keyword.getRepDecode(group, bot, sender, msg), msg, group);
             Api.sendMessage(group, rep);
             return true;
         }
-
-        // 全局关键词查询
-        keyword = Va.getKeywordData().getKeyword(VanillaUtils.messageToString(msg), bot.getId(), -1);
-        if (keyword.getId() > 0) {
-            MessageChain rep = MessageChain.deserializeFromMiraiCode(keyword.getRepDecode(), group);
-            Api.sendMessage(group, rep);
-            return true;
-        }
-
         return false;
     }
 

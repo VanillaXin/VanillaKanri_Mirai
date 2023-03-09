@@ -10,6 +10,7 @@ import net.mamoe.mirai.utils.ExternalResource;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import xin.vanilla.VanillaKanri;
+import xin.vanilla.common.RegExpConfig;
 import xin.vanilla.enumeration.DataCacheKey;
 import xin.vanilla.enumeration.PermissionLevel;
 
@@ -17,6 +18,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import static xin.vanilla.enumeration.PermissionLevel.*;
@@ -472,12 +474,13 @@ public class VanillaUtils {
      * 词库触发(keyWord)消息转码
      */
     @NotNull
-    public static String enVanillaCodeMsg(@NotNull String msg) {
-        if (msg.contains("[mirai:image:{")) {
-            msg = msg.replaceAll("\\[mirai:image:\\{", "[vacode:image:{")
-                    .replaceAll("}\\.\\w{3,5}]", "}]");
+    public static String enVanillaCodeKey(@NotNull String word) {
+        Map<String, String> keyCode = RegExpConfig.VaCode.EN_KEY;
+        String result = word;
+        for (String key : keyCode.keySet()) {
+            result = result.replaceAll(key, keyCode.get(key));
         }
-        return msg;
+        return result;
     }
 
     /**
@@ -485,28 +488,62 @@ public class VanillaUtils {
      */
     @NotNull
     @Contract(pure = true)
-    public static String deVanillaCodeMsg(@NotNull String msg) {
-        if (msg.contains("[vacode:image:{")) {
-            msg = msg.replaceAll("\\[vacode:image:\\{", "[mirai:image:{")
-                    .replaceAll("}]", "}.mirai]");
+    public static String deVanillaCodeKey(@NotNull String word) {
+        Map<String, String> keyCode = RegExpConfig.VaCode.DE_KEY;
+        String result = word;
+        for (String key : keyCode.keySet()) {
+            result = result.replaceAll(key, keyCode.get(key));
         }
-        return msg;
+        return result;
     }
 
     /**
      * 词库回复(repMsg)消息转码
      */
     public static String enVanillaCodeRep(@NotNull String msg) {
-        return msg;
+        Map<String, String> repCode = RegExpConfig.VaCode.EN_REP;
+        String result = msg;
+        for (String key : repCode.keySet()) {
+            result = result.replaceAll(key, repCode.get(key));
+        }
+        return result;
     }
 
     /**
      * 词库回复(repMsg)消息解码
      */
     public static String deVanillaCodeRep(@NotNull String msg) {
-        // 替换空符
-        msg = msg.replaceAll("\\[vacode:void]", "");
-        return msg;
+        Map<String, String> repCode = RegExpConfig.VaCode.DE_REP;
+        String result = msg;
+        for (String key : repCode.keySet()) {
+            result = result.replaceAll(key, repCode.get(key));
+        }
+        return result;
+    }
+
+    /**
+     * 解析并执行群管操作
+     *
+     * @param group        群聊对象
+     * @param sender       消息发送对象
+     * @param messageChain 原消息
+     */
+    public static String deVanillaCodeIns(@NotNull final String word, @NotNull final String rep, Bot bot, Group group, @NotNull Contact sender, MessageChain messageChain) {
+        String result;
+        try {
+            // 非操作特殊码解码
+            result = deVanillaCodeRep(rep);
+            // 禁言
+            result = RegExpConfig.VaCode.exeMute(result, group != null ? (NormalMember) sender : null);
+            // 撤回
+            result = RegExpConfig.VaCode.exeRecall(result, messageChain);
+            // 踢出
+            result = RegExpConfig.VaCode.exeKick(word, result, group != null ? (NormalMember) sender : null);
+        } catch (Exception e) {
+            e.printStackTrace();
+            result = "";
+        }
+        return result;
     }
 
     // endregion 消息转码

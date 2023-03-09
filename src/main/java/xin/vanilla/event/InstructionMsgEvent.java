@@ -819,7 +819,7 @@ public class InstructionMsgEvent {
                     .add(bot, new MessageChainBuilder().append("触发内容:\n").append(keyFormat).build())
                     .add(bot, new MessageChainBuilder().append("回复内容:\n").append(repFormat).build())
                     .add(bot, new PlainText("触发内容文本:"))
-                    .add(bot, new PlainText(VanillaUtils.enVanillaCodeMsg(key)))
+                    .add(bot, new PlainText(VanillaUtils.enVanillaCodeKey(key)))
                     .add(bot, new PlainText("回复内容文本:"))
                     .add(bot, new PlainText(VanillaUtils.enVanillaCodeRep(rep)));
             boolean tf = false;

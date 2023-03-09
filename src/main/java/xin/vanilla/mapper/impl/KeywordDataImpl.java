@@ -67,14 +67,20 @@ public class KeywordDataImpl extends Base implements KeywordData {
         String table = getTable(type);
         createTable(table);
         // TODO 定义特殊码, 转义特殊码
-        String wordCode = VanillaUtils.enVanillaCodeMsg(word);
+        String wordCode = VanillaUtils.enVanillaCodeKey(word);
 
         // 查询该level创建的关键词数量是否超出限制
         Statement query = QueryStatement.produce(KeyData::getId).from(table)
                 .where(KeyData::getWord).eq(wordCode)
-                .and(KeyData::getBot).eq(bot)
-                .and(KeyData::getGroup).eq(group)
-                .and(KeyData::getLevel).eq(level > 0 ? level : 1)
+                .and(KeyData::getBot).eq(bot);
+
+        if (group < -1000) {
+            query.and(KeyData::getGroup).in(-1, Math.abs(group));
+        } else {
+            query.and(KeyData::getGroup).eq(group);
+        }
+
+        query.and(KeyData::getLevel).eq(level > 0 ? level : 1)
                 .orderBy(KeyData::getId).asc();
         List<KeyData> list = sqliteUtil.getList(query, KeyData.class);
         // 根据策略判断是否自动删除最旧的关键词
@@ -90,7 +96,7 @@ public class KeywordDataImpl extends Base implements KeywordData {
 
         InsertStatement insert = InsertStatement.produce(table)
                 .put(KeyData::getWord, wordCode)
-                .put(KeyData::getMsg, rep)
+                .put(KeyData::getRep, rep)
                 .put(KeyData::getBot, bot)
                 .put(KeyData::getGroup, group)
                 .put(KeyData::getTime, time)
@@ -155,7 +161,7 @@ public class KeywordDataImpl extends Base implements KeywordData {
         if (StringUtils.isNullOrEmpty(type)) types = KEYWORD_TYPES;
         else types = new String[]{type};
 
-        word = VanillaUtils.enVanillaCodeMsg(word);
+        word = VanillaUtils.enVanillaCodeKey(word);
 
         List<KeyData> keys = new ArrayList<>();
         for (String typeString : types) {
@@ -205,7 +211,7 @@ public class KeywordDataImpl extends Base implements KeywordData {
 
         assert table != null;
         if (!StringUtils.isNullOrEmpty(word)) {
-            word = VanillaUtils.enVanillaCodeMsg(word);
+            word = VanillaUtils.enVanillaCodeKey(word);
             andWord(word, table, query);
         }
         PaginationList<KeyData> paginationList = sqliteUtil.getPaginationList(query, page, size, KeyData.class);
