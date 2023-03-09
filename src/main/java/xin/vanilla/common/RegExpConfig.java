@@ -387,7 +387,9 @@ public class RegExpConfig {
             MessageChain messages = MessageChain.deserializeFromMiraiCode(result, contact);
             try {
                 if (matcher.find()) {
-                    messages.add(new QuoteReply(messageChain));
+                    MessageChainBuilder builder = new MessageChainBuilder();
+                    builder.append(messages).append(new QuoteReply(messageChain));
+                    messages = builder.build();
                 }
             } catch (Exception e) {
                 e.printStackTrace();
