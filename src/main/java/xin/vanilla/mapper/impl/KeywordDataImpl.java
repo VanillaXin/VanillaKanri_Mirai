@@ -59,7 +59,14 @@ public class KeywordDataImpl extends Base implements KeywordData {
                             " `" + LambdaUtils.getFiledName(KeyData::getLevel) + "`  INTEGER(4)                            NOT NULL DEFAULT 1," +
                             " `" + LambdaUtils.getFiledName(KeyData::getStatus) + "` INTEGER(1)                            NOT NULL DEFAULT 0" +
                             ")");
-            sqliteUtil.executeSql("CREATE UNIQUE INDEX IF NOT EXISTS `word_msg_group_unique`" + " ON `" + table + "` ('word', 'group', 'msg')");
+            sqliteUtil.executeSql("CREATE UNIQUE INDEX IF NOT EXISTS `"
+                    + LambdaUtils.getFiledName(KeyData::getWord)
+                    + "_" + LambdaUtils.getFiledName(KeyData::getRep)
+                    + "_" + LambdaUtils.getFiledName(KeyData::getGroup)
+                    + "_unique`" + " ON `" + table + "` (" +
+                    "`" + LambdaUtils.getFiledName(KeyData::getWord) + "`, " +
+                    "`" + LambdaUtils.getFiledName(KeyData::getRep) + "`, " +
+                    "`" + LambdaUtils.getFiledName(KeyData::getGroup) + "`)");
         }
     }
 
