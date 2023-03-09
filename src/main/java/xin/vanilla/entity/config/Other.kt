@@ -40,4 +40,35 @@ class Other {
      */
     var wifePrefix: Set<String> = mutableSetOf("抽老婆")
 
+    /**
+     * chatGTP 秘钥
+     */
+    var chatGPTKey: String = ""
+
+    /**
+     * 百度翻译key
+     */
+    var fanyi_baidu_key:String = ""
+
+    /**
+     * 百度翻译appid
+     */
+    var fanyi_baidu_id:String = ""
+
+    /**
+     * python路径
+     */
+    var pythonPath:String = ""
+
+    /**
+     * ，MoGoe路径
+     */
+    var moeGoePath:String = ""
+
+    /**
+     * 语音缓存路径
+     */
+    var voiceSavePath:String = ""
+
+
 }

@@ -26,9 +26,9 @@ public class Api {
      * 翻译接口
      */
     public static String fanyi_jp(String command) {
-        String appid = "20210126000681992";
+        String appid = Va.getGlobalConfig().getOther().getFanyi_baidu_id();
         String salt = "112";
-        String key = "X3WYhQFwg6O8cPWv7dTe";
+        String key = Va.getGlobalConfig().getOther().getFanyi_baidu_key();
         String q = command;
         String sign = SecureUtil.md5(appid + q + salt + key);
         System.out.println(sign);
@@ -50,7 +50,9 @@ public class Api {
         return res;
     }
 
-    public static String chatGPT(String command) {
+    public static String chatGPT(String command){
+
+        String key = Va.getGlobalConfig().getOther().getChatGPTKey();
         JSONObject jsonObject = JSONUtil.createObj();
         Map<String, Object> map = new HashMap<>();
         List<Map<String, Object>> list = new ArrayList<>();
@@ -60,10 +62,10 @@ public class Api {
         jsonObject.set("model", "gpt-3.5-turbo").set("messages", list);
 
         try {
-            String res = HttpRequest.post("https://api.openai.com/v1/chat/completions")
+            String res = HttpRequest.post("http://35.201.187.84:8888/v1/chat/completions")
                     .setHttpProxy("localhost", 10808)
                     .header("Content-Type", "application/json")
-                    .header("Authorization", "Bearer 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")
+                    .header("Authorization", key)
                     .body(JSONUtil.toJsonStr(jsonObject))
                     .timeout(40000)
                     .execute()
@@ -74,12 +76,11 @@ public class Api {
             JSONObject jsonObject2 = JSONUtil.parseObj(jsonArray.get(0));
             JSONObject jsonObject3 = JSONUtil.parseObj(jsonObject2.get("message"));
             return (String) jsonObject3.get("content");
-        } catch (Exception e) {
+        }catch (Exception e){
             e.printStackTrace();
             return null;
         }
     }
-
     /**
      * 发送消息
      */

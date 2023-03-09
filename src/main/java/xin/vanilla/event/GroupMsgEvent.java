@@ -56,16 +56,17 @@ public class GroupMsgEvent extends BaseMsgEvent {
     }
 
     public void run() {
-        if (rcon()) return;
-        if (hentai()) return;
-        if (getWife()) return;
-        if (keyRep()) return;
+//        if (rcon()) return;
+//        if (hentai()) return;
+//        if (getWife()) return;
+//        if (keyRep()) return;
         // logger.info("群聊: " + group.getId() + ":" + sender.getId() + " -> " + msg.serializeToMiraiCode());
         // chatGpt2();
         st();
         st2();
         audioTest();
         chartGPTVoice();
+        fileTest();
         // test();
     }
 
@@ -228,6 +229,17 @@ public class GroupMsgEvent extends BaseMsgEvent {
         return false;
     }
 
+    private void fileTest(){
+        final String prefix = "filetest";
+
+        if (msg.contentToString().startsWith(prefix)){
+            String s = Va.getGlobalConfig().getChatGptKey().get();
+            Api.sendMessage(group,s);
+            String chatGPTKey = Va.getGlobalConfig().getOther().getChatGPTKey();
+
+            Api.sendMessage(group,new MessageChainBuilder().append(new At(sender.getId())).append(chatGPTKey).build());
+        }
+    }
 
     private void chartGPTVoice() {
 
@@ -235,20 +247,26 @@ public class GroupMsgEvent extends BaseMsgEvent {
         final String prefix = "chatGPTVoice";
         if (msg.contentToString().startsWith(prefix)) {
 
+//            String key =  Va.getGlobalConfig().getChatGptKey().get();
+
+//            Api.sendMessage(group,key);
             String command = msg.contentToString().substring(prefix.length());
 
             String bake = Api.chatGPT(command);
-            Api.sendMessage(group, bake);
+            // Api.sendMessage(group, bake);
+            Api.sendMessage(group, new MessageChainBuilder()
+                    .append(new At(sender.getId()))
+                    .append(bake).build());
             String res = Api.fanyi_jp(bake.replace("\n", "".replace(" ", ""))).replace("\n", "").replace(" ", "");
 //            Api.sendMessage(group,res);
-            String path = "E:\\model\\temp\\";
+//             String path = "C:\\Users\\Administrator\\Desktop\\model\\temp\\";
+            String path = Va.getGlobalConfig().getOther().getVoiceSavePath()+"\\";
             String id = IdUtil.randomUUID();
             path = path + id + ".wav";
-            Api.sendMessage(group, res);
-            try {
-                Process process = Runtime.getRuntime().exec("C:\\ProgramData\\Anaconda3\\envs\\vits\\python.exe C:\\Users\\Administrator\\Desktop\\MoeGoe-master\\MoeGoe.py " + res + " " + path);
 
-                Api.sendMessage(group, "消息执行");
+            try {
+                Process process = Runtime.getRuntime().exec(Va.getGlobalConfig().getOther().getPythonPath() + " " + Va.getGlobalConfig().getOther().getMoeGoePath() + " " + res + " " + path);
+                // Api.sendMessage(group, "消息执行");
                 process.waitFor();
 //                Path path = Paths.get("E:\\model\\dd.wav");
                 File file = new File(path);
@@ -273,37 +291,21 @@ public class GroupMsgEvent extends BaseMsgEvent {
 
             String command = msg.contentToString().substring(prefix.length());
 
-            String appid = "20210126000681992";
-            String salt = "112";
-            String key = "X3WYhQFwg6O8cPWv7dTe";
-            String q = command;
-            String sign = SecureUtil.md5(appid + q + salt + key);
-            System.out.println(sign);
-            Map<String, Object> map = new HashMap<>();
-            map.put("from", "auto");
-            map.put("to", "jp");
-            map.put("appid", appid);
-            map.put("q", q);
-            map.put("salt", salt);
-            map.put("sign", sign);
-
-            String body = HttpRequest.post("https://fanyi-api.baidu.com/api/trans/vip/translate")
-                    .form(map)
-                    .execute().body();
-            JSONObject jsonObject1 = JSONUtil.parseObj(body);
-            JSONArray jsonArray = JSONUtil.parseArray(jsonObject1.get("trans_result"));
-            JSONObject jsonObject2 = JSONUtil.parseObj(jsonArray.get(0));
-            String res = (String) jsonObject2.get("dst");
-            String path = "E:\\model\\temp\\";
+            String res = Api.fanyi_jp(command);
+            // String path = "C:\\Users\\Administrator\\Desktop\\model\\temp\\";
+            String path = Va.getGlobalConfig().getOther().getVoiceSavePath()+"\\";
             String id = IdUtil.randomUUID();
             path = path + id + ".wav";
-            Api.sendMessage(group, res);
+            Api.sendMessage(group, new MessageChainBuilder()
+                    .append(new At(sender.getId()))
+                    .append(res)
+                    .build());
             try {
-                Process process = Runtime.getRuntime().exec("C:\\ProgramData\\Anaconda3\\envs\\vits\\python.exe C:\\Users\\Administrator\\Desktop\\MoeGoe-master\\MoeGoe.py " + res + " " + path);
+                // Process process = Runtime.getRuntime().exec("C:\\ProgramData\\Anaconda3\\envs\\vits\\python.exe C:\\Users\\Administrator\\Desktop\\MoeGoe\\MoeGoe.py " + res + " " + path);
+                Process process = Runtime.getRuntime().exec(Va.getGlobalConfig().getOther().getPythonPath() + " " + Va.getGlobalConfig().getOther().getMoeGoePath() + " " + res + " " + path);
 
-                Api.sendMessage(group, "消息执行");
+                // Api.sendMessage(group, "消息执行");
                 process.waitFor();
-                Thread.sleep(1000 * 10);
 //                Path path = Paths.get("E:\\model\\dd.wav");
                 File file = new File(path);
                 ExternalResource externalResource = ExternalResource.create(file);
