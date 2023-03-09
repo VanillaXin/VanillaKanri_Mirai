@@ -11,6 +11,7 @@ import xin.vanilla.entity.data.KeyData;
 import xin.vanilla.mapper.KeywordData;
 import xin.vanilla.util.StringUtils;
 import xin.vanilla.util.VanillaUtils;
+import xin.vanilla.util.lambda.LambdaUtils;
 import xin.vanilla.util.sqlite.PaginationList;
 import xin.vanilla.util.sqlite.SqliteUtil;
 import xin.vanilla.util.sqlite.statement.*;
@@ -49,14 +50,14 @@ public class KeywordDataImpl extends Base implements KeywordData {
         if (!sqliteUtil.containsTable(table)) {
             sqliteUtil.executeSql(
                     "CREATE TABLE IF NOT EXISTS `" + table + "` (" +
-                            " `id`     INTEGER     PRIMARY KEY AUTOINCREMENT NOT NULL," +
-                            " `word`   TEXT                                  NOT NULL," +
-                            " `msg`    TEXT                                  NOT NULL," +
-                            " `bot`    INTEGER(10)                           NOT NULL," +
-                            " `group`  INTEGER(10)                           NOT NULL," +
-                            " `time`   INTEGER(10)                           NOT NULL," +
-                            " `level`  INTEGER(4)                            NOT NULL DEFAULT 1," +
-                            " `status` INTEGER(1)                            NOT NULL DEFAULT 0" +
+                            " `" + LambdaUtils.getFiledName(KeyData::getId) + "`     INTEGER     PRIMARY KEY AUTOINCREMENT NOT NULL," +
+                            " `" + LambdaUtils.getFiledName(KeyData::getWord) + "`   TEXT                                  NOT NULL," +
+                            " `" + LambdaUtils.getFiledName(KeyData::getRep) + "`    TEXT                                  NOT NULL," +
+                            " `" + LambdaUtils.getFiledName(KeyData::getBot) + "`    INTEGER(10)                           NOT NULL," +
+                            " `" + LambdaUtils.getFiledName(KeyData::getGroup) + "`  INTEGER(10)                           NOT NULL," +
+                            " `" + LambdaUtils.getFiledName(KeyData::getTime) + "`   INTEGER(10)                           NOT NULL," +
+                            " `" + LambdaUtils.getFiledName(KeyData::getLevel) + "`  INTEGER(4)                            NOT NULL DEFAULT 1," +
+                            " `" + LambdaUtils.getFiledName(KeyData::getStatus) + "` INTEGER(1)                            NOT NULL DEFAULT 0" +
                             ")");
             sqliteUtil.executeSql("CREATE UNIQUE INDEX IF NOT EXISTS `word_msg_group_unique`" + " ON `" + table + "` ('word', 'group', 'msg')");
         }
