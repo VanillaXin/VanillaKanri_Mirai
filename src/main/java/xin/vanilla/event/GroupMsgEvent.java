@@ -57,11 +57,11 @@ public class GroupMsgEvent extends BaseMsgEvent {
     }
 
     public void run() {
+        // logger.info("群聊: " + group.getId() + ":" + sender.getId() + " -> " + msg.serializeToMiraiCode());
         if (rcon()) return;
         if (hentai()) return;
         if (getWife()) return;
         if (keyRep()) return;
-        // logger.info("群聊: " + group.getId() + ":" + sender.getId() + " -> " + msg.serializeToMiraiCode());
         // chatGpt2();
         st();
         st2();
