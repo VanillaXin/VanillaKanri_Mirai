@@ -283,7 +283,8 @@ public class RegExpConfig {
          * 关键词 回复内容编码
          */
         public static Map<String, String> EN_REP = new HashMap<String, String>() {{
-
+            put("\\[mirai:at:@(?<qq>\\d{6,10})]", "[vacode:${qq}]");
+            put("\\[mirai:atall]", "[vacode:@@]");
         }};
 
         /**
@@ -291,6 +292,8 @@ public class RegExpConfig {
          */
         public static Map<String, String> DE_REP = new HashMap<String, String>() {{
             put("\\[vacode:void]", "");
+            put("\\[vacode:@(?<qq>\\d{6,10})]", "[mirai:at:${qq}]");
+            put("\\[vacode:@@]", AtAll.INSTANCE.serializeToMiraiCode());
         }};
 
         /**
@@ -308,8 +311,7 @@ public class RegExpConfig {
         }};
 
         /**
-         * 解析并执行
-         * <p>禁言</p>
+         * 禁言
          */
         @NotNull
         public static String exeMute(String msg, NormalMember member) {
@@ -334,8 +336,7 @@ public class RegExpConfig {
         }
 
         /**
-         * 解析并执行
-         * <p>撤回</p>
+         * 撤回
          */
         @NotNull
         public static String exeRecall(String msg, MessageChain messageChain) {
@@ -343,7 +344,8 @@ public class RegExpConfig {
             try {
                 if (matcher.find()) {
                     try {
-                        MessageSource.recall(messageChain.get(MessageSource.Key));
+                        MessageSource recall = messageChain.get(MessageSource.Key);
+                        if (recall != null) MessageSource.recall(recall);
                     } catch (Exception ignored) {
                     }
                 }
@@ -354,8 +356,7 @@ public class RegExpConfig {
         }
 
         /**
-         * 解析并执行
-         * <p>踢出</p>
+         * 踢出
          */
         @NotNull
         public static String exeKick(String word, String msg, NormalMember member) {
@@ -378,8 +379,7 @@ public class RegExpConfig {
         }
 
         /**
-         * 解析并创建
-         * <p>引用回复</p>
+         * 引用回复
          */
         @NotNull
         public static MessageChain exeReply(String msg, MessageChain messageChain, Contact contact) {

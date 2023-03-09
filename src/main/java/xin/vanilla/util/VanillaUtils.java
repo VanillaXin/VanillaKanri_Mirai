@@ -533,12 +533,26 @@ public class VanillaUtils {
         try {
             // 非操作特殊码解码
             result = deVanillaCodeRep(rep);
+
             // 禁言
             result = RegExpConfig.VaCode.exeMute(result, group != null ? (NormalMember) sender : null);
             // 撤回
             result = RegExpConfig.VaCode.exeRecall(result, messageChain);
             // 踢出
             result = RegExpConfig.VaCode.exeKick(word, result, group != null ? (NormalMember) sender : null);
+
+            // 转义艾特
+            result = result.replaceAll("\\[vacode:@]", new At(sender.getId()).serializeToMiraiCode());
+            // 取发送者qq
+            result = result.replaceAll("\\[vacode:qnumber]", String.valueOf(sender.getId()));
+            if (group != null) {
+                // 取群号
+                result = result.replaceAll("\\[vacode:gnumber]", String.valueOf(group.getId()));
+                // 取群名
+                result = result.replaceAll("\\[vacode:gname]", group.getName());
+            }
+
+
         } catch (Exception e) {
             e.printStackTrace();
             result = "";
