@@ -9,6 +9,7 @@ import xin.vanilla.VanillaKanri;
 import xin.vanilla.entity.config.instruction.KeywordInstructions;
 import xin.vanilla.entity.data.KeyData;
 import xin.vanilla.mapper.KeywordData;
+import xin.vanilla.util.SettingsUtils;
 import xin.vanilla.util.StringUtils;
 import xin.vanilla.util.VanillaUtils;
 import xin.vanilla.util.lambda.LambdaUtils;
@@ -92,8 +93,8 @@ public class KeywordDataImpl extends Base implements KeywordData {
                 .orderBy(KeyData::getId).asc();
         List<KeyData> list = sqliteUtil.getList(query, KeyData.class);
         // 根据策略判断是否自动删除最旧的关键词
-        if (list.size() >= Va.getGlobalConfig().getBase().getKeyRadix()) {
-            if (Va.getGlobalConfig().getBase().getKeyRadixDel()) {
+        if (list.size() >= SettingsUtils.getKeyRadix(group)) {
+            if (SettingsUtils.getKeyRadixAutoDel(group)) {
                 if (deleteKeywordById(list.get(0).getId(), type, level > 0 ? level : 1) < 0) {
                     return -2;
                 }
@@ -110,7 +111,7 @@ public class KeywordDataImpl extends Base implements KeywordData {
                 .put(KeyData::getTime, time)
                 .put(KeyData::getLevel, level > 0 ? level : 1);
         // 判断是否非普通群员添加的关键词
-        if (level > 1) {
+        if (level > 1 || SettingsUtils.getKeyAutoExamine(group)) {
             insert.put(KeyData::getStatus, 1);
         }
         if (sqliteUtil.insert(insert) > 0) {

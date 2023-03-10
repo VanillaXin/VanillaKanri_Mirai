@@ -10,10 +10,11 @@ import net.mamoe.mirai.message.data.*;
 import xin.vanilla.VanillaKanri;
 import xin.vanilla.util.Api;
 import xin.vanilla.util.DateUtils;
+import xin.vanilla.util.SettingsUtils;
 import xin.vanilla.util.StringUtils;
 
 import java.util.Date;
-import java.util.List;
+import java.util.Set;
 
 import static xin.vanilla.mapper.impl.MessageCacheImpl.MSG_TYPE_GROUP;
 
@@ -56,7 +57,7 @@ public class MsgRecallEvent extends BaseMsgEvent {
 
     public void run() {
         if (sender.getId() == bot.getId()) return;
-        List<Long> groups = Va.getGlobalConfig().getBase().getBackGroup();
+        Set<Long> groups = SettingsUtils.getBackGroup(group.getId());
         // 后台管理群撤回的消息不进行转发
         if (this.group != null && groups.contains(this.group.getId())) return;
         for (Long groupId : groups) {

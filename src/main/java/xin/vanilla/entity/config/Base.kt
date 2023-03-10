@@ -10,7 +10,7 @@ class Base {
     /**
      * 后台管理群
      */
-    var backGroup: List<Long> = mutableListOf()
+    var backGroup: Set<Long> = mutableSetOf()
 
     /**
      * 关键词基数
@@ -23,6 +23,15 @@ class Base {
      * 关键词基数删除策略
      *
      * 当添加的关键词满了之后是否自动删除最旧的关键词
+     *
+     * 1启用 0默认 -1禁用
      */
-    var keyRadixDel: Boolean = true
+    var keyRadixAutoDel: Int = 0
+
+    /**
+     * 自动通过权级为 1 的关键词
+     *
+     * 1启用 0默认 -1禁用
+     */
+    var keyAutoExamine: Int = 0
 }

@@ -824,7 +824,7 @@ public class InstructionMsgEvent {
                     .add(bot, new PlainText(VanillaUtils.enVanillaCodeRep(rep)));
             boolean tf = false;
             for (long groupId : groups) {
-                int level = VanillaUtils.getPermissionLevel(bot, groupId, sender.getId()) * Va.getGlobalConfig().getBase().getKeyRadix();
+                int level = VanillaUtils.getPermissionLevel(bot, groupId, sender.getId()) * SettingsUtils.getKeyRadix(group.getId());
                 long keyId = Va.getKeywordData().addKeyword(key, rep, bot.getId(), groupId, type, time, level > 0 ? level : 1);
                 if (keyId > 0) {
                     tf = true;
@@ -944,7 +944,7 @@ public class InstructionMsgEvent {
 
             long groupId = groups[0];
             for (long keyId : keyIds) {
-                int level = VanillaUtils.getPermissionLevel(bot, groupId, sender.getId()) * Va.getGlobalConfig().getBase().getKeyRadix();
+                int level = VanillaUtils.getPermissionLevel(bot, groupId, sender.getId()) * SettingsUtils.getKeyRadix(group.getId());
                 int back = Va.getKeywordData().deleteKeywordById(keyId, type, level);
                 if (back > 0) {
                     forwardMessageBuilder.add(bot, new PlainText("关键词编号: " + keyId + "\n删除成功"));
@@ -1016,7 +1016,7 @@ public class InstructionMsgEvent {
                 tf = true;
                 long groupId = Long.parseLong(s.substring("群号: ".length(), s.indexOf("\n关键词编号: ")));
                 long keyId = Long.parseLong(s.substring(s.indexOf("\n关键词编号: ") + "\n关键词编号: ".length()));
-                int level = VanillaUtils.getPermissionLevel(bot, groupId, sender.getId()) * Va.getGlobalConfig().getBase().getKeyRadix();
+                int level = VanillaUtils.getPermissionLevel(bot, groupId, sender.getId()) * SettingsUtils.getKeyRadix(group.getId());
                 if (operand) {
                     if (Va.getKeywordData().updateStatus(keyId, 1, type) > 0) {
                         forwardMessageBuilder.add(bot, new PlainText(s + "\n操作成功: 已激活关键词"));
