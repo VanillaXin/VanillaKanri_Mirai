@@ -14,18 +14,18 @@ public class PluginDataFile extends JavaAutoSavePluginData {
     /**
      * 抽老婆记录
      */
-    public SerializerAwareValue<Map<String, Long>> wife = typedValue("wife",
-            createKType(HashMap.class, createKType(String.class), createKType(Long.class))); // QQ:QQ
+    public SerializerAwareValue<Map<String, String>> wife = typedValue("wife",
+            createKType(HashMap.class, createKType(String.class), createKType(String.class)));
 
     public PluginDataFile() {
         super("plugin_data");
     }
 
-    public Map<String, Long> getWife() {
+    public Map<String, String> getWife() {
         return wife.get();
     }
 
-    public void setWife(Map<String, Long> wife) {
+    public void setWife(Map<String, String> wife) {
         this.wife.set(wife);
     }
 }

@@ -5,7 +5,6 @@ import cn.hutool.core.io.IORuntimeException;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.ReUtil;
-import cn.hutool.crypto.SecureUtil;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
@@ -184,51 +183,66 @@ public class GroupMsgEvent extends BaseMsgEvent {
      * 抽老婆
      */
     private boolean getWife() {
-        if (Va.getGlobalConfig().getOther().getWifePrefix().contains(msg.contentToString())) {
-            String key = DateUtil.format(new Date(), "yyyy.MM.dd") + "." + group.getId() + "." + sender.getId();
+        if (msg.contentToString().startsWith("抽")) {
+            // 角色名称
             String nick = msg.contentToString().substring(1);
-            final String[] nicks = {"老婆", "老公", "男友", "女友"};
-            for (String s : nicks) {
-                if (s.equals(nick)) {
-                    nick = "亲爱的";
-                    break;
+            String nickKey = nick;
+            if (Va.getGlobalConfig().getOther().getWifePrefix().contains(nick)) {
+                String key = DateUtil.format(new Date(), "yyyy.MM.dd") + "." + group.getId() + "." + sender.getId();
+                long wife = 0;
+                try {
+                    // 今天已抽过的角色名称及角色
+                    String[] wifeVal = Va.getPluginData().getWife().get(key).split(":");
+                    wife = Long.parseLong(wifeVal[1]);
+                    // 判断有无抽过其他角色
+                    if (!nick.equals(wifeVal[0])) {
+                        Api.sendMessage(group, new MessageChainBuilder()
+                                .append(new At(sender.getId()))
+                                .append(" 今天你已经有 ").append(wifeVal[0]).append(" 啦!").build());
+                        return true;
+                    }
+                } catch (Exception ignored) {
                 }
+
+                final String[] nicks = {"老婆", "老公", "男友", "女友"};
+                for (String s : nicks) {
+                    if (s.equals(nick)) {
+                        nick = "亲爱的";
+                        break;
+                    }
+                }
+
+                if (wife == 0) {
+                    ContactList<NormalMember> members = group.getMembers();
+                    List<Long> qqs = members.stream().map(NormalMember::getId).collect(Collectors.toList());
+                    qqs.add(bot.getId());
+                    wife = qqs.get((int) (Math.random() * qqs.size()));
+                    Va.getPluginData().getWife().put(key, nickKey + ":" + wife);
+                }
+                NormalMember normalMember = group.get(wife);
+                assert normalMember != null;
+                Api.sendMessage(group, new MessageChainBuilder()
+                        .append(new At(sender.getId()))
+                        .append(" 今天你的群友").append(nick).append("是\n")
+                        .append(VanillaUtils.uploadImageByUrl(normalMember.getAvatarUrl(), group))
+                        .append("\n『").append(normalMember.getNick()).append("』")
+                        .append("(").append(String.valueOf(wife)).append(") 喵!")
+                        .build());
+                return true;
             }
-            long wife = 0;
-            try {
-                wife = Va.getPluginData().getWife().get(key);
-            } catch (NullPointerException ignored) {
-            }
-            if (wife == 0) {
-                ContactList<NormalMember> members = group.getMembers();
-                List<Long> qqs = members.stream().map(NormalMember::getId).collect(Collectors.toList());
-                qqs.add(bot.getId());
-                wife = qqs.get((int) (Math.random() * qqs.size()));
-                Va.getPluginData().getWife().put(key, wife);
-            }
-            NormalMember normalMember = group.get(wife);
-            assert normalMember != null;
-            Api.sendMessage(group, new MessageChainBuilder()
-                    .append(new At(sender.getId()))
-                    .append(" 今天你的群友").append(nick).append("是\n")
-                    .append(VanillaUtils.uploadImageByUrl(normalMember.getAvatarUrl(), group))
-                    .append("\n『").append(normalMember.getNick()).append("』")
-                    .append("(").append(String.valueOf(wife)).append(") 喵!")
-                    .build());
-            return true;
         }
         return false;
     }
 
-    private void fileTest(){
+    private void fileTest() {
         final String prefix = "filetest";
 
-        if (msg.contentToString().startsWith(prefix)){
+        if (msg.contentToString().startsWith(prefix)) {
             String s = Va.getGlobalConfig().getChatGptKey().get();
-            Api.sendMessage(group,s);
+            Api.sendMessage(group, s);
             String chatGPTKey = Va.getGlobalConfig().getOther().getChatGPTKey();
 
-            Api.sendMessage(group,new MessageChainBuilder().append(new At(sender.getId())).append(chatGPTKey).build());
+            Api.sendMessage(group, new MessageChainBuilder().append(new At(sender.getId())).append(chatGPTKey).build());
         }
     }
 
@@ -246,7 +260,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
                     .append(new At(sender.getId()))
                     .append(bake).build());
             String res = Api.fanyi_jp(bake.replace("\n", "".replace(" ", ""))).replace("\n", "").replace(" ", "");
-            String path = Va.getGlobalConfig().getOther().getVoiceSavePath()+"\\";
+            String path = Va.getGlobalConfig().getOther().getVoiceSavePath() + "\\";
             String id = IdUtil.randomUUID();
             path = path + id + ".wav";
 
@@ -276,7 +290,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
             String command = msg.contentToString().substring(prefix.length());
 
             String res = Api.fanyi_jp(command);
-            String path = Va.getGlobalConfig().getOther().getVoiceSavePath()+"\\";
+            String path = Va.getGlobalConfig().getOther().getVoiceSavePath() + "\\";
             String id = IdUtil.randomUUID();
             path = path + id + ".wav";
             Api.sendMessage(group, new MessageChainBuilder()
