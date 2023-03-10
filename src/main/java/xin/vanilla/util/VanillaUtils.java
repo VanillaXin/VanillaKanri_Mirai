@@ -16,6 +16,7 @@ import xin.vanilla.enumeration.PermissionLevel;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.Proxy;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
@@ -569,6 +570,39 @@ public class VanillaUtils {
     public static Image uploadImageByUrl(String url, Contact contact) {
         ExternalResource resource;
         try (HttpResponse response = HttpRequest.get(url).execute()) {
+            try (InputStream inputStream = response.bodyStream()) {
+                resource = ExternalResource.Companion.create(inputStream);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return ExternalResource.uploadAsImage(resource, contact);
+    }
+
+    /**
+     * 通过图片链接构建图片对象
+     */
+    @NotNull
+    public static Image uploadImageByUrl(String url, Proxy proxy, Contact contact) {
+        ExternalResource resource;
+        try (HttpResponse response = HttpRequest.get(url).setProxy(proxy).execute()) {
+            try (InputStream inputStream = response.bodyStream()) {
+                resource = ExternalResource.Companion.create(inputStream);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return ExternalResource.uploadAsImage(resource, contact);
+    }
+
+    /**
+     * 通过图片链接构建图片对象
+     */
+    @NotNull
+    public static Image uploadImageByUrl(String url, String proxy, Contact contact) {
+        ExternalResource resource;
+        String[] split = proxy.split(":");
+        try (HttpResponse response = HttpRequest.get(url).setHttpProxy(split[0], Integer.parseInt(split[1])).execute()) {
             try (InputStream inputStream = response.bodyStream()) {
                 resource = ExternalResource.Companion.create(inputStream);
             }

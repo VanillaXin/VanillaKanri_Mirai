@@ -7,7 +7,7 @@ plugins {
 }
 
 group = 'xin.vanilla'
-version = '2.0.0'
+version = '2.0.0-dev'
 
 repositories {
     maven { url 'https://maven.aliyun.com/repository/public' }
