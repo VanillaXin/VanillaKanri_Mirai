@@ -75,7 +75,7 @@ public class KeywordDataImpl extends Base implements KeywordData {
     public long addKeyword(String word, String rep, long bot, long group, String type, long time, int level) {
         String table = getTable(type);
         createTable(table);
-        // TODO 定义特殊码, 转义特殊码
+        // TODO 定义特殊码, 转义特殊码, 判断普通群员的消息中是否有群管操作特殊码
         String wordCode = VanillaUtils.enVanillaCodeKey(word);
 
         // 查询该level创建的关键词数量是否超出限制
