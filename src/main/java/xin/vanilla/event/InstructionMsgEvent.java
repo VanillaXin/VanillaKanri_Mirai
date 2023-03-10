@@ -875,19 +875,19 @@ public class InstructionMsgEvent {
 
             if (page < 1) {
                 Api.sendMessage(group, "查询的页数有误");
+                return RETURN_BREAK_TRUE;
             }
 
             ForwardMessageBuilder forwardMessageBuilder = new ForwardMessageBuilder(group).add(sender, msg);
 
             PaginationList<KeyData> keywordByPage = Va.getKeywordData().getKeywordByPage(key, bot.getId(), groupId, type, page, 20);
-            if (keywordByPage.size() == 0) {
-                forwardMessageBuilder.add(bot, new PlainText("关键词列表为空"));
-            } else {
-                forwardMessageBuilder.add(bot, new PlainText(
-                        "数据条数: " + keywordByPage.size() + "/" + keywordByPage.getTotalItemCount()
-                                + "\n数据页数: " + keywordByPage.getCurPageNo() + "/" + keywordByPage.getTotalPageCount()
-                                + "\n每页条数: " + keywordByPage.getPageItemCount()
-                ));
+
+            forwardMessageBuilder.add(bot, new PlainText(
+                    "数据条数: " + keywordByPage.size() + "/" + keywordByPage.getTotalItemCount()
+                            + "\n数据页数: " + keywordByPage.getCurPageNo() + "/" + keywordByPage.getTotalPageCount()
+                            + "\n每页条数: " + keywordByPage.getPageItemCount()
+            ));
+            if (keywordByPage.size() > 0) {
                 for (KeyData keyData : keywordByPage) {
                     forwardMessageBuilder.add(bot, new PlainText(
                             "关键词ID: " + keyData.getId() + "\n" +
