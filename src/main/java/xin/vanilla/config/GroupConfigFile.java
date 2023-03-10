@@ -25,6 +25,7 @@ public class GroupConfigFile extends JavaAutoSavePluginConfig {
         super("group_config");
     }
 
+
     public Map<Long, Set<Long>> getDeputyAdmin() {
         return deputyAdmin.get();
     }

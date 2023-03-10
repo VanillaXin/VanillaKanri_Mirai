@@ -1,5 +1,7 @@
 package xin.vanilla.config;
 
+import lombok.Getter;
+import lombok.Setter;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.console.data.PluginDataHolder;
 import net.mamoe.mirai.console.data.PluginDataStorage;
@@ -26,6 +28,10 @@ import java.util.stream.Collectors;
  * 请使用getter/setter
  */
 public class GlobalConfigFile extends JavaAutoSavePluginConfig {
+
+
+    public SerializerAwareValue<String> chatGptKey = value("chatGptKey", "");
+
 
     /**
      * 超人
@@ -186,6 +192,13 @@ public class GlobalConfigFile extends JavaAutoSavePluginConfig {
             return new Permissions();
         }
         return permissions.get().get(bot);
+    }
+    public SerializerAwareValue<String> getChatGptKey() {
+        return chatGptKey;
+    }
+
+    public void setChatGptKey(SerializerAwareValue<String> chatGptKey) {
+        this.chatGptKey = chatGptKey;
     }
 
     public void setPermissions(Map<Long, Permissions> permissions) {
