@@ -40,6 +40,13 @@ class Other {
      */
     var wifePrefix: Set<String> = mutableSetOf("抽老婆")
 
+
+    /**
+     * chatGPTurl
+     */
+    var chatGPTUrl:String = ""
+
+
     /**
      * chatGTP 秘钥
      */
@@ -69,6 +76,17 @@ class Other {
      * 语音缓存路径
      */
     var voiceSavePath:String = ""
+
+    /**
+     * ai绘画url
+     */
+    var aiDrawUrl:String = ""
+
+    /**
+     * ai绘画认证 如果没设置就没有
+     */
+    var aiDrawKey:String = ""
+
 
 
 }

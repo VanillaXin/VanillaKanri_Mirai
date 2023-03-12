@@ -1,5 +1,6 @@
 package xin.vanilla.util;
 
+import cn.hutool.core.util.IdUtil;
 import cn.hutool.crypto.SecureUtil;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.json.JSONArray;
@@ -50,9 +51,137 @@ public class Api {
         return res;
     }
 
+    public static String AiPicture(String prompt,String unPrompt){
+
+        String key = Va.getGlobalConfig().getOther().getAiDrawKey();
+        String aiDrawUrl = Va.getGlobalConfig().getOther().getAiDrawUrl();
+
+        String task = "task("+ IdUtil.randomUUID()+")";
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.set("fn_index",100);
+
+        JSONArray jsonArray = new JSONArray();
+        jsonArray.add(task);
+
+        jsonArray.add(prompt);
+        jsonArray.add(unPrompt);
+        jsonArray.add("[]");
+        jsonArray.add(20);
+        jsonArray.add("Euler a");
+        jsonArray.add(false);
+        jsonArray.add(false);
+        jsonArray.add(1);
+        jsonArray.add(1);
+        jsonArray.add(7);
+        jsonArray.add(-1);
+        jsonArray.add(-1);
+        jsonArray.add(0);
+        jsonArray.add(0);
+        jsonArray.add(0);
+        jsonArray.add(false);
+        jsonArray.add(1200);
+        jsonArray.add(680);
+        jsonArray.add(false);
+        jsonArray.add(0.7);
+        jsonArray.add(2);
+        jsonArray.add("Latent");
+        jsonArray.add(0);
+        jsonArray.add(0);
+        jsonArray.add(0);
+        jsonArray.add("None");
+        jsonArray.add("");
+        jsonArray.add(false);
+        jsonArray.add("none");
+        jsonArray.add("None");
+        jsonArray.add(1);
+        jsonArray.add("");
+        jsonArray.add(false);
+        jsonArray.add("Scale to Fit (Inner Fit)");
+        jsonArray.add(false);
+        jsonArray.add(false);
+        jsonArray.add(64);
+        jsonArray.add(64);
+        jsonArray.add(64);
+        jsonArray.add(0);
+        jsonArray.add(1);
+        jsonArray.add(false);
+        jsonArray.add(false);
+        jsonArray.add("none");
+        jsonArray.add("None");
+        jsonArray.add(1);
+        jsonArray.add("");
+        jsonArray.add(false);
+        jsonArray.add("Scale to Fit (Inner Fit)");
+        jsonArray.add(false);
+        jsonArray.add(false);
+        jsonArray.add(64);
+        jsonArray.add(64);
+        jsonArray.add(64);
+        jsonArray.add(0);
+        jsonArray.add(1);
+        jsonArray.add(false);
+        jsonArray.add(false);
+        jsonArray.add("none");
+        jsonArray.add("None");
+        jsonArray.add(1);
+        jsonArray.add("");
+        jsonArray.add(false);
+        jsonArray.add("Scale to Fit (Inner Fit)");
+        jsonArray.add(false);
+        jsonArray.add(false);
+        jsonArray.add(64);
+        jsonArray.add(64);
+        jsonArray.add(64);
+        jsonArray.add(0);
+        jsonArray.add(1);
+        jsonArray.add(false);
+        jsonArray.add(false);
+        jsonArray.add(false);
+        jsonArray.add(false);
+        jsonArray.add(false);
+        jsonArray.add("");
+        jsonArray.add("Seed");
+        jsonArray.add("");
+        jsonArray.add("Nothing");
+        jsonArray.add("");
+        jsonArray.add("Nothing");
+        jsonArray.add("");
+        jsonArray.add(true);
+        jsonArray.add(false);
+        jsonArray.add(false);
+        jsonArray.add(false);
+        jsonArray.add(null);
+        jsonArray.add(null);
+        jsonArray.add(null);
+        jsonArray.add(50);
+        jsonArray.add("[]");
+        jsonArray.add("");
+        jsonArray.add("");
+        jsonArray.add("");
+
+        jsonObject.set("data", jsonArray);
+
+        System.out.println(com.alibaba.fastjson2.JSONObject.toJSONString(jsonObject));
+        String res = HttpRequest.post(aiDrawUrl+"/run/predict/")
+                .header("Content-Type", "application/json")
+                .header("authorization", key)
+                .body(com.alibaba.fastjson2.JSONObject.toJSONString(jsonObject))
+                .timeout(100000)
+                .execute()
+                .body();
+
+        JSONObject jsonObject1 = JSONUtil.parseObj(res);
+        JSONArray jsonArray1 = JSONUtil.parseArray(jsonObject1.get("data"));
+        JSONArray jsonArray2 = JSONUtil.parseArray(jsonArray1.get(0));
+        JSONObject jsonObject2 = JSONUtil.parseObj(jsonArray2.get(0));
+
+        return (String)jsonObject2.get("name");
+    }
+
     public static String chatGPT(String command){
 
         String key = Va.getGlobalConfig().getOther().getChatGPTKey();
+        String chatGPTUrl = Va.getGlobalConfig().getOther().getChatGPTUrl();
         JSONObject jsonObject = JSONUtil.createObj();
         Map<String, Object> map = new HashMap<>();
         List<Map<String, Object>> list = new ArrayList<>();
@@ -62,7 +191,7 @@ public class Api {
         jsonObject.set("model", "gpt-3.5-turbo").set("messages", list);
 
         try {
-            String res = HttpRequest.post("http://35.201.187.84:8888/v1/chat/completions")
+            String res = HttpRequest.post(chatGPTUrl)
                     .setHttpProxy("localhost", 10808)
                     .header("Content-Type", "application/json")
                     .header("Authorization", key)

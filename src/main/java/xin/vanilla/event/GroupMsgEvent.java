@@ -5,6 +5,7 @@ import cn.hutool.core.io.IORuntimeException;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.ReUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
@@ -66,6 +67,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
         st2();
         audioTest();
         chartGPTVoice();
+        AiPicture();
         // test();
     }
 
@@ -446,6 +448,50 @@ public class GroupMsgEvent extends BaseMsgEvent {
                 throw new RuntimeException(e);
             }
             group.sendMessage(forwardMessageBuilder.build());
+        }
+    }
+
+
+    /**
+     * ai绘画
+     * prompt后接taf
+     * UnPrompt 后接反向tag
+     */
+    private void  AiPicture(){
+        if (msg.contentToString().startsWith("/va ai draw Prompt:")){
+
+            String key = Va.getGlobalConfig().getOther().getAiDrawKey();
+            String aiDrawUrl = Va.getGlobalConfig().getOther().getAiDrawUrl();
+            // Api.sendMessage(group,msg.contentToString().substring("/va ai draw Prompt:".length(),msg.contentToString().indexOf("/UnPrompt:")));
+            String prompt = "";
+            String unprompt = "";
+
+
+            if (msg.contentToString().indexOf("/UnPrompt")!=-1){
+                // Api.sendMessage(group, StrUtil.sub(msg.contentToString(),msg.contentToString().indexOf("/UnPrompt:")+10,-1));
+                prompt = msg.contentToString().substring("/va ai draw Prompt:".length(),msg.contentToString().indexOf("/UnPrompt:"));
+                unprompt =  StrUtil.sub(msg.contentToString(),msg.contentToString().indexOf("/UnPrompt:")+10,-1);
+            }else {
+                prompt =  msg.contentToString().substring("/va ai draw Prompt:".length());
+            }
+            String uri = null;
+            try {
+                uri = Api.AiPicture(prompt, unprompt);
+                // Api.sendMessage(group,uri);
+            } catch (Exception e) {
+                Api.sendMessage(group,"请求出错");
+            }
+
+            InputStream inputStream = HttpRequest.get(aiDrawUrl+"/file=" + uri)
+                    .header("authorization", key).timeout(1000000).execute().bodyStream();
+            ExternalResource externalResource = null;
+            try {
+                externalResource = ExternalResource.Companion.create(inputStream);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            Image image = ExternalResource.uploadAsImage(externalResource, event.getSubject());
+            Api.sendMessage(group,new MessageChainBuilder().append(new At(sender.getId())).append(image).build());
         }
     }
 
