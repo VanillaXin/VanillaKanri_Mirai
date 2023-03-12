@@ -67,7 +67,7 @@ public class Api {
         jsonArray.add(unPrompt);
         jsonArray.add("[]");
         jsonArray.add(20);
-        jsonArray.add("Euler a");
+        jsonArray.add("DPM++ 2M Karras");
         jsonArray.add(false);
         jsonArray.add(false);
         jsonArray.add(1);
@@ -79,8 +79,8 @@ public class Api {
         jsonArray.add(0);
         jsonArray.add(0);
         jsonArray.add(false);
-        jsonArray.add(1200);
-        jsonArray.add(680);
+        jsonArray.add(824);
+        jsonArray.add(624);
         jsonArray.add(false);
         jsonArray.add(0.7);
         jsonArray.add(2);
