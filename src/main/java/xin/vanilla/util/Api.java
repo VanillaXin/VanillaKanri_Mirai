@@ -3,14 +3,20 @@ package xin.vanilla.util;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.crypto.SecureUtil;
 import cn.hutool.http.HttpRequest;
+import cn.hutool.http.HttpResponse;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import net.mamoe.mirai.contact.Contact;
 import net.mamoe.mirai.message.MessageReceipt;
 import net.mamoe.mirai.message.data.*;
+import net.mamoe.mirai.utils.ExternalResource;
+import org.jetbrains.annotations.NotNull;
 import xin.vanilla.VanillaKanri;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.Proxy;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -30,14 +36,13 @@ public class Api {
         String appid = Va.getGlobalConfig().getOther().getFanyi_baidu_id();
         String salt = "112";
         String key = Va.getGlobalConfig().getOther().getFanyi_baidu_key();
-        String q = command;
-        String sign = SecureUtil.md5(appid + q + salt + key);
+        String sign = SecureUtil.md5(appid + command + salt + key);
         System.out.println(sign);
         Map<String, Object> map = new HashMap<>();
         map.put("from", "auto");
         map.put("to", "jp");
         map.put("appid", appid);
-        map.put("q", q);
+        map.put("q", command);
         map.put("salt", salt);
         map.put("sign", sign);
 
@@ -51,14 +56,14 @@ public class Api {
         return res;
     }
 
-    public static String AiPicture(String prompt,String unPrompt){
+    public static String AiPicture(String prompt, String unPrompt) {
 
         String key = Va.getGlobalConfig().getOther().getAiDrawKey();
         String aiDrawUrl = Va.getGlobalConfig().getOther().getAiDrawUrl();
 
-        String task = "task("+ IdUtil.randomUUID()+")";
+        String task = "task(" + IdUtil.randomUUID() + ")";
         JSONObject jsonObject = new JSONObject();
-        jsonObject.set("fn_index",100);
+        jsonObject.set("fn_index", 100);
 
         JSONArray jsonArray = new JSONArray();
         jsonArray.add(task);
@@ -162,7 +167,7 @@ public class Api {
         jsonObject.set("data", jsonArray);
 
         System.out.println(com.alibaba.fastjson2.JSONObject.toJSONString(jsonObject));
-        String res = HttpRequest.post(aiDrawUrl+"/run/predict/")
+        String res = HttpRequest.post(aiDrawUrl + "/run/predict/")
                 .header("Content-Type", "application/json")
                 .header("authorization", key)
                 .body(com.alibaba.fastjson2.JSONObject.toJSONString(jsonObject))
@@ -175,10 +180,10 @@ public class Api {
         JSONArray jsonArray2 = JSONUtil.parseArray(jsonArray1.get(0));
         JSONObject jsonObject2 = JSONUtil.parseObj(jsonArray2.get(0));
 
-        return (String)jsonObject2.get("name");
+        return (String) jsonObject2.get("name");
     }
 
-    public static String chatGPT(String command){
+    public static String chatGPT(String command) {
 
         String key = Va.getGlobalConfig().getOther().getChatGPTKey();
         String chatGPTUrl = Va.getGlobalConfig().getOther().getChatGPTUrl();
@@ -205,11 +210,61 @@ public class Api {
             JSONObject jsonObject2 = JSONUtil.parseObj(jsonArray.get(0));
             JSONObject jsonObject3 = JSONUtil.parseObj(jsonObject2.get("message"));
             return (String) jsonObject3.get("content");
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
     }
+
+    /**
+     * 通过图片链接构建图片对象
+     */
+    @NotNull
+    public static Image uploadImageByUrl(String url, Contact contact) {
+        ExternalResource resource;
+        try (HttpResponse response = HttpRequest.get(url).execute()) {
+            try (InputStream inputStream = response.bodyStream()) {
+                resource = ExternalResource.Companion.create(inputStream);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return ExternalResource.uploadAsImage(resource, contact);
+    }
+
+    /**
+     * 通过图片链接构建图片对象
+     */
+    @NotNull
+    public static Image uploadImageByUrl(String url, Proxy proxy, Contact contact) {
+        ExternalResource resource;
+        try (HttpResponse response = HttpRequest.get(url).setProxy(proxy).execute()) {
+            try (InputStream inputStream = response.bodyStream()) {
+                resource = ExternalResource.Companion.create(inputStream);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return ExternalResource.uploadAsImage(resource, contact);
+    }
+
+    /**
+     * 通过图片链接构建图片对象
+     */
+    @NotNull
+    public static Image uploadImageByUrl(String url, String proxy, Contact contact) {
+        ExternalResource resource;
+        String[] split = proxy.split(":");
+        try (HttpResponse response = HttpRequest.get(url).setHttpProxy(split[0], Integer.parseInt(split[1])).execute()) {
+            try (InputStream inputStream = response.bodyStream()) {
+                resource = ExternalResource.Companion.create(inputStream);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return ExternalResource.uploadAsImage(resource, contact);
+    }
+
     /**
      * 发送消息
      */

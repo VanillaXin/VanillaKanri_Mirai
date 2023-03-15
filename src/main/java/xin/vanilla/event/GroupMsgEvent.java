@@ -226,7 +226,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
                 Api.sendMessage(group, new MessageChainBuilder()
                         .append(new At(sender.getId()))
                         .append(" 今天你的群友").append(nick).append("是\n")
-                        .append(VanillaUtils.uploadImageByUrl(normalMember.getAvatarUrl(), group))
+                        .append(Api.uploadImageByUrl(normalMember.getAvatarUrl(), group))
                         .append("\n『").append(normalMember.getNick()).append("』")
                         .append("(").append(String.valueOf(wife)).append(") 喵!")
                         .build());
