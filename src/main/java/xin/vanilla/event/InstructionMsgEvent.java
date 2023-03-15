@@ -1014,7 +1014,14 @@ public class InstructionMsgEvent {
             }
             if (s.startsWith("群号: ") && s.contains("\n关键词编号: ")) {
                 tf = true;
-                long groupId = Long.parseLong(s.substring("群号: ".length(), s.indexOf("\n关键词编号: ")));
+                long groupId;
+                try {
+                    String groupIdString = s.substring("群号: ".length(), s.indexOf("\n关键词编号: "));
+                    groupId = Long.parseLong(groupIdString.equals("全局") ? "-1" : groupIdString);
+                } catch (Exception e) {
+                    Api.sendMessage(group, "无法解析该消息");
+                    return RETURN_BREAK_TRUE;
+                }
                 long keyId = Long.parseLong(s.substring(s.indexOf("\n关键词编号: ") + "\n关键词编号: ".length()));
                 int level = VanillaUtils.getPermissionLevel(bot, groupId, sender.getId()) * SettingsUtils.getKeyRadix(group.getId());
                 if (operand) {
