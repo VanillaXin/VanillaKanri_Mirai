@@ -3,10 +3,9 @@ package xin.vanilla;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.IORuntimeException;
 import cn.hutool.core.io.IoUtil;
-import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.ReUtil;
-import cn.hutool.crypto.SecureUtil;
 import cn.hutool.http.HttpRequest;
+import cn.hutool.http.HttpResponse;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
@@ -22,10 +21,14 @@ import xin.vanilla.util.sqlite.statement.InsertStatement;
 import xin.vanilla.util.sqlite.statement.QueryStatement;
 import xin.vanilla.util.sqlite.statement.Statement;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.security.SecureRandom;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class VanillaTest {
     @Test
@@ -126,16 +129,16 @@ public class VanillaTest {
 
             JSONObject jsonObject = JSONUtil.createObj();
             String[] list = {"Human:", "AI:"};
-            jsonObject.put("model", "text-davinci-003")
-                    .put("prompt", "用Java实现以下功能: 给定一个对象集合, 对象中的属性有: 姓名, 地址, 权级。以每个对象中的权级大小为概率随机抽取一个对象")
-                    .put("max_tokens", 4000)
-                    .put("temperature", 0)
-                    .put("top_p", 1)
-                    .put("frequency_penalty", 0)
-                    .put("presence_penalty", 0.6)
-                    .put("stop", list);
+            jsonObject.set("model", "text-davinci-003")
+                    .set("prompt", "用Java实现以下功能: 给定一个对象集合, 对象中的属性有: 姓名, 地址, 权级。以每个对象中的权级大小为概率随机抽取一个对象")
+                    .set("max_tokens", 4000)
+                    .set("temperature", 0)
+                    .set("top_p", 1)
+                    .set("frequency_penalty", 0)
+                    .set("presence_penalty", 0.6)
+                    .set("stop", list);
 
-            String result = HttpRequest.post("https://api.openai.com/v1/completions").setHttpProxy("localhost", 10808)
+            try (HttpResponse response = HttpRequest.post("https://api.openai.com/v1/completions").setHttpProxy("localhost", 10808)
                     .header("Content-Type", "application/json")
                     .header("Accept-Encoding", "gzip,deflate")
                     .header("Content-Length", "1024")
@@ -143,23 +146,22 @@ public class VanillaTest {
                     .header("Authorization", "Bearer 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")
                     .body(JSONUtil.toJsonStr(jsonObject))
                     .timeout(40000)
-                    .execute()
-                    .body();
+                    .execute()) {
 
-            JSONObject jsonObject1 = JSONUtil.parseObj(result);
-            JSONArray jsonArray = JSONUtil.parseArray(jsonObject1.get("choices"));
-            JSONObject jsonObject2 = JSONUtil.parseObj(jsonArray.get(0));
-            System.out.println(jsonObject2);
-            System.out.println(jsonObject2.get("text"));
+                String result = response.body();
 
-            String bake = (String) jsonObject2.get("text");
-            bake = ReUtil.delFirst("^\n+", bake);
-            // bake = StrUtil.replace(bake,"\n","");
-            // StrUtil.trim(bake);
-            System.out.println(bake);
+                JSONObject jsonObject1 = JSONUtil.parseObj(result);
+                JSONArray jsonArray = JSONUtil.parseArray(jsonObject1.get("choices"));
+                JSONObject jsonObject2 = JSONUtil.parseObj(jsonArray.get(0));
+                System.out.println(jsonObject2);
+                System.out.println(jsonObject2.get("text"));
+
+                String bake = (String) jsonObject2.get("text");
+                bake = ReUtil.delFirst("^\n+", bake);
+                System.out.println(bake);
+            }
         } catch (Exception e) {
             throw new RuntimeException(e);
-
         }
     }
 
@@ -167,10 +169,13 @@ public class VanillaTest {
     public void test04() {
         // https://picture.yinux.workers.dev
 
-        try {
-            InputStream localhost = HttpRequest.post("https://picture.yinux.workers.dev").setHttpProxy("localhost", 10808).execute().bodyStream();
-            byte[] bytes = IoUtil.readBytes(localhost);
-            IoUtil.write(FileUtil.getOutputStream("d:/test2.jpg"), true, bytes);
+        try (HttpResponse response = HttpRequest.post("https://picture.yinux.workers.dev").setHttpProxy("localhost", 10808).execute()) {
+            try (InputStream localhost = response.bodyStream()) {
+                byte[] bytes = IoUtil.readBytes(localhost);
+                IoUtil.write(FileUtil.getOutputStream("d:/test2.jpg"), true, bytes);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         } catch (IORuntimeException e) {
             throw new RuntimeException(e);
         }
@@ -180,29 +185,26 @@ public class VanillaTest {
     public void test05() {
 
         JSONObject jsonObject = JSONUtil.createObj();
-        Map<String, Object> map = new HashMap<String, Object>();
-        List list = new ArrayList<Map<String, Object>>();
+        Map<String, Object> map = new HashMap<>();
+        List<Map<String, Object>> list = new ArrayList<>();
         list.add(map);
         map.put("role", "user");
         map.put("content", "用Java实现以下功能: 给定一个对象集合, 对象中的属性有: 姓名, 地址, 权级。以每个对象中的权级大小为概率随机抽取一个对象");
-        jsonObject.put("model", "gpt-3.5-turbo")
-                .put("messages", list);
+        jsonObject.set("model", "gpt-3.5-turbo")
+                .set("messages", list);
 
-        try {
-            String res = HttpRequest.post("https://api.openai.com/v1/chat/completions").setHttpProxy("localhost", 10808)
-                    .header("Content-Type", "application/json")
-                    .header("Authorization", "Bearer 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")
-                    .body(JSONUtil.toJsonStr(jsonObject))
-                    .timeout(40000)
-                    .execute()
-                    .body();
+        try (HttpResponse execute = HttpRequest.post("https://api.openai.com/v1/chat/completions").setHttpProxy("localhost", 10808)
+                .header("Content-Type", "application/json")
+                .header("Authorization", "Bearer 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")
+                .body(JSONUtil.toJsonStr(jsonObject))
+                .timeout(40000)
+                .execute()) {
+            String body = execute.body();
 
-            JSONObject jsonObject1 = JSONUtil.parseObj(res);
+            JSONObject jsonObject1 = JSONUtil.parseObj(body);
             JSONArray jsonArray = JSONUtil.parseArray(jsonObject1.get("choices"));
             JSONObject jsonObject2 = JSONUtil.parseObj(jsonArray.get(0));
             JSONObject jsonObject3 = JSONUtil.parseObj(jsonObject2.get("message"));
-            // System.out.println(jsonObject3.get("content"));
-            // System.out.println(jsonObject2.get("text"));
 
             String bake = (String) jsonObject3.get("content");
             bake = ReUtil.delFirst("^\n+", bake);
