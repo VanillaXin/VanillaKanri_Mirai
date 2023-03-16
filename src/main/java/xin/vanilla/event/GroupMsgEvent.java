@@ -56,18 +56,41 @@ public class GroupMsgEvent extends BaseMsgEvent {
     }
 
     public void run() {
-//        if (rcon()) return;
-//        if (hentai()) return;
-//        if (getWife()) return;
-//        if (keyRep()) return;
         // logger.info("群聊: " + group.getId() + ":" + sender.getId() + " -> " + msg.serializeToMiraiCode());
-        // chatGpt2();
-        st();
-        st2();
-        audioTest();
-        chartGPTVoice();
-        aiPicture();
+
+        HashMap<String, Boolean> capability = Va.getGlobalConfig().getBase().getCapability();
+
+        if (capability.get("rcon")) if (rcon()) return;
+
+        if (capability.get("localRandomPic")) if (localRandomPic()) return;
+        if (capability.get("getWife")) if (getWife()) return;
+
+        if (capability.get("chatGpt")) chatGpt();
+        if (capability.get("chartGPTVoice")) chartGPTVoice();
+        if (capability.get("onlineRandomPic")) onlineRandomPic();
+        if (capability.get("onlineAiPic")) onlineAiPic();
+        if (capability.get("onlineCosPic")) onlineCosPic();
+
+        // 测试
+        // audioTest();
         // test();
+
+        // 核心功能: 关键词回复
+        if (capability.get("keyRep")) keyRep();
+    }
+
+    /**
+     * 解析关键词回复
+     */
+    private boolean keyRep() {
+        // 关键词查询
+        KeyData keyword = Va.getKeywordData().getKeyword(VanillaUtils.messageToString(msg), bot.getId(), -group.getId());
+        if (keyword.getId() > 0) {
+            MessageChain rep = RegExpConfig.VaCode.exeReply(keyword.getRepDecode(group, bot, sender, msg), msg, group);
+            Api.sendMessage(group, rep);
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -120,17 +143,17 @@ public class GroupMsgEvent extends BaseMsgEvent {
     }
 
     /**
-     * 涩图
+     * 本地随机涩图
      *
      * @return 是否不继续执行
      */
-    private boolean hentai() {
+    private boolean localRandomPic() {
         if (msg.contentToString().matches(".*?(来.?|.*?不够)[射蛇色涩瑟铯\uD83D\uDC0D].*?")) {
             String path = Va.getGlobalConfig().getOther().getHentaiPath();
             if (!StringUtils.isNullOrEmpty(path)) {
                 List<Path> paths;
                 if (!Va.getDataCache().containsKey(path)) {
-                    getHentaiList(path);
+                    getLocalPicList(path);
                 }
                 paths = (List<Path>) Va.getDataCache().get(path);
                 long index = VanillaUtils.getDataCacheAsLong(path + "!index");
@@ -138,7 +161,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
                 index += i1;
                 VanillaUtils.setDateCache(path + "!index", index);
                 if (paths.size() <= index) {
-                    getHentaiList(path);
+                    getLocalPicList(path);
                 } else {
                     ForwardMessageBuilder forwardMessageBuilder = new ForwardMessageBuilder(group)
                             .add(sender, msg);
@@ -155,7 +178,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
         return false;
     }
 
-    private void getHentaiList(String path) {
+    private void getLocalPicList(String path) {
         List<Path> files;
         try (Stream<Path> paths = Files.walk(Paths.get(path))) {
             files = paths.filter(Files::isRegularFile).collect(Collectors.toList());
@@ -164,20 +187,6 @@ public class GroupMsgEvent extends BaseMsgEvent {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    /**
-     * 解析关键词回复
-     */
-    private boolean keyRep() {
-        // 关键词查询
-        KeyData keyword = Va.getKeywordData().getKeyword(VanillaUtils.messageToString(msg), bot.getId(), -group.getId());
-        if (keyword.getId() > 0) {
-            MessageChain rep = RegExpConfig.VaCode.exeReply(keyword.getRepDecode(group, bot, sender, msg), msg, group);
-            Api.sendMessage(group, rep);
-            return true;
-        }
-        return false;
     }
 
     /**
@@ -235,18 +244,6 @@ public class GroupMsgEvent extends BaseMsgEvent {
         return false;
     }
 
-    private void fileTest() {
-        final String prefix = "filetest";
-
-        if (msg.contentToString().startsWith(prefix)) {
-            String s = Va.getGlobalConfig().getChatGptKey().get();
-            Api.sendMessage(group, s);
-            String chatGPTKey = Va.getGlobalConfig().getOther().getChatGPTKey();
-
-            Api.sendMessage(group, new MessageChainBuilder().append(new At(sender.getId())).append(chatGPTKey).build());
-        }
-    }
-
     private void chartGPTVoice() {
         final String prefix = "chatGPTVoice";
         if (msg.contentToString().startsWith(prefix)) {
@@ -276,35 +273,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
         }
     }
 
-    private void audioTest() {
-        final String prefix = "audio";
-        if (msg.contentToString().startsWith(prefix)) {
-            String command = msg.contentToString().substring(prefix.length());
-            String res = Api.translateToJP(command);
-            String path = Va.getGlobalConfig().getOther().getVoiceSavePath() + "\\";
-            String id = IdUtil.randomUUID();
-            path = path + id + ".wav";
-            Api.sendMessage(group, new MessageChainBuilder()
-                    .append(new At(sender.getId()))
-                    .append(res)
-                    .build());
-            try {
-                Process process = Runtime.getRuntime().exec(Va.getGlobalConfig().getOther().getPythonPath() + " " + Va.getGlobalConfig().getOther().getMoeGoePath() + " " + res + " " + path);
-
-                process.waitFor();
-                File file = new File(path);
-                ExternalResource externalResource = ExternalResource.create(file);
-                OfflineAudio offlineAudio = group.uploadAudio(externalResource);
-                Api.sendMessage(group, offlineAudio);
-            } catch (Exception e) {
-                Api.sendMessage(group, "可能是请求太快也可能是模型使用超时总之挂了，后续在改");
-                // throw new RuntimeException(e);
-            }
-        }
-
-    }
-
-    private void chatGpt2() {
+    private void chatGpt() {
         final String prefix = "chatGPT";
         if (msg.contentToString().startsWith(prefix)) {
             String command = msg.contentToString().substring(prefix.length());
@@ -341,54 +310,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
         }
     }
 
-    private void chatGpt() {
-        final String prefix = "chatGPT";
-        if (msg.contentToString().startsWith(prefix)) {
-            try {
-                String command = msg.contentToString().substring(prefix.length());
-                JSONObject jsonObject = JSONUtil.createObj();
-                String[] list = {"Human:", "AI:"};
-                jsonObject.set("model", "text-davinci-003")
-                        .set("prompt", command)
-                        .set("max_tokens", 4000)
-                        .set("temperature", 0)
-                        .set("top_p", 1)
-                        .set("frequency_penalty", 0)
-                        .set("presence_penalty", 0.6)
-                        .set("stop", list);
-
-                try (HttpResponse response = HttpRequest.post("https://api.openai.com/v1/completions")
-                        .setHttpProxy("127.0.0.1", 10808)
-                        .header("Content-Type", "application/json")
-                        .header("Accept-Encoding", " gzip,deflate")
-                        .header("Content-Length", "1024")
-                        .header("Transfer-Encoding", " chunked")
-                        .header("Authorization", "Bearer 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")
-                        .body(JSONUtil.toJsonStr(jsonObject))
-                        .timeout(40000)
-                        .execute()) {
-                    String result = response.body();
-
-                    JSONObject jsonObject1 = JSONUtil.parseObj(result);
-                    JSONArray jsonArray = JSONUtil.parseArray(jsonObject1.get("choices"));
-                    JSONObject jsonObject2 = JSONUtil.parseObj(jsonArray.get(0));
-                    System.out.println(jsonObject2);
-                    System.out.println(jsonObject2.get("text"));
-
-                    String bake = (String) jsonObject2.get("text");
-                    bake = ReUtil.delFirst("^\n+", bake);
-                    // bake = StrUtil.replace(bake,"\n","");
-                    // StrUtil.trim(bake);
-                    Api.sendMessage(group, bake);
-                }
-            } catch (Exception e) {
-                Api.sendMessage(group, "可能是请求太快也可能是模型使用超时总之挂了，后续在改");
-                // throw new RuntimeException(e);
-            }
-        }
-    }
-
-    public void st() {
+    public void onlineRandomPic() {
         if (msg.contentToString().matches("(来.?|.*?不够)[射蛇色涩瑟铯\uD83D\uDC0D].*?")) {
             ForwardMessageBuilder forwardMessageBuilder = new ForwardMessageBuilder(group).add(sender, msg);
             try {
@@ -416,7 +338,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
         }
     }
 
-    public void st2() {
+    public void onlineCosPic() {
         if (msg.contentToString().matches(".*?cos.*?")) {
             ForwardMessageBuilder forwardMessageBuilder = new ForwardMessageBuilder(group).add(sender, msg);
             try {
@@ -442,13 +364,12 @@ public class GroupMsgEvent extends BaseMsgEvent {
         }
     }
 
-
     /**
      * ai绘画
      * Prompt 后接tag
      * UnPrompt 后接反向tag
      */
-    private void aiPicture() {
+    private void onlineAiPic() {
         final String msgString = msg.contentToString();
         if (msgString.startsWith("/va ai draw Prompt:")) {
             String key = Va.getGlobalConfig().getOther().getAiDrawKey();
@@ -484,6 +405,46 @@ public class GroupMsgEvent extends BaseMsgEvent {
         }
     }
 
+
+    private void fileTest() {
+        final String prefix = "filetest";
+
+        if (msg.contentToString().startsWith(prefix)) {
+            String s = Va.getGlobalConfig().getChatGptKey().get();
+            Api.sendMessage(group, s);
+            String chatGPTKey = Va.getGlobalConfig().getOther().getChatGPTKey();
+
+            Api.sendMessage(group, new MessageChainBuilder().append(new At(sender.getId())).append(chatGPTKey).build());
+        }
+    }
+
+    private void audioTest() {
+        final String prefix = "audio";
+        if (msg.contentToString().startsWith(prefix)) {
+            String command = msg.contentToString().substring(prefix.length());
+            String res = Api.translateToJP(command);
+            String path = Va.getGlobalConfig().getOther().getVoiceSavePath() + "\\";
+            String id = IdUtil.randomUUID();
+            path = path + id + ".wav";
+            Api.sendMessage(group, new MessageChainBuilder()
+                    .append(new At(sender.getId()))
+                    .append(res)
+                    .build());
+            try {
+                Process process = Runtime.getRuntime().exec(Va.getGlobalConfig().getOther().getPythonPath() + " " + Va.getGlobalConfig().getOther().getMoeGoePath() + " " + res + " " + path);
+
+                process.waitFor();
+                File file = new File(path);
+                ExternalResource externalResource = ExternalResource.create(file);
+                OfflineAudio offlineAudio = group.uploadAudio(externalResource);
+                Api.sendMessage(group, offlineAudio);
+            } catch (Exception e) {
+                Api.sendMessage(group, "可能是请求太快也可能是模型使用超时总之挂了，后续在改");
+                // throw new RuntimeException(e);
+            }
+        }
+
+    }
 
     private void test() {
 

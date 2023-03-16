@@ -34,4 +34,30 @@ class Base {
      * 1启用 0默认 -1禁用
      */
     var keyAutoExamine: Int = 0
+
+
+    /**
+     * 可选功能开关
+     */
+    var capability = hashMapOf(
+        // 关键词回复
+        "keyRep" to true,
+        // MC RCON
+        "rcon" to false,
+        // 本地随机涩图
+        "localRandomPic" to false,
+        // 抽老婆
+        "getWife" to false,
+        // chatGpt
+        "chatGpt" to false,
+        // chatGPT Voice
+        "chartGPTVoice" to false,
+        // 在线随机涩图
+        "onlineRandomPic" to false,
+        // 在线COS涩图
+        "onlineCosPic" to false,
+        // 在线AI画图
+        "onlineAiPic" to false
+    )
+
 }
