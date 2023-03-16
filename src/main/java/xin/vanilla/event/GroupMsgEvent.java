@@ -65,8 +65,8 @@ public class GroupMsgEvent extends BaseMsgEvent {
         if (capability.get("localRandomPic")) if (localRandomPic()) return;
         if (capability.get("getWife")) if (getWife()) return;
 
-        if (capability.get("chatGpt")) chatGpt();
-        if (capability.get("chartGPTVoice")) chartGPTVoice();
+        if (capability.get("chatGPT")) chatGPT();
+        if (capability.get("chatGPTVoice")) chatGPTVoice();
         if (capability.get("onlineRandomPic")) onlineRandomPic();
         if (capability.get("onlineAiPic")) onlineAiPic();
         if (capability.get("onlineCosPic")) onlineCosPic();
@@ -244,7 +244,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
         return false;
     }
 
-    private void chartGPTVoice() {
+    private void chatGPTVoice() {
         final String prefix = "chatGPTVoice";
         if (msg.contentToString().startsWith(prefix)) {
             String command = msg.contentToString().substring(prefix.length());
@@ -273,7 +273,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
         }
     }
 
-    private void chatGpt() {
+    private void chatGPT() {
         final String prefix = "chatGPT";
         if (msg.contentToString().startsWith(prefix)) {
             String command = msg.contentToString().substring(prefix.length());

@@ -49,9 +49,9 @@ class Base {
         // 抽老婆
         "getWife" to false,
         // chatGpt
-        "chatGpt" to false,
+        "chatGPT" to false,
         // chatGPT Voice
-        "chartGPTVoice" to false,
+        "chatGPTVoice" to false,
         // 在线随机涩图
         "onlineRandomPic" to false,
         // 在线COS涩图
