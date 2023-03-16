@@ -5,8 +5,8 @@ import cn.hutool.core.io.IORuntimeException;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.ReUtil;
-import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpRequest;
+import cn.hutool.http.HttpResponse;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
@@ -38,7 +38,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static xin.vanilla.common.RegExpConfig.RCON_RESULT_LIST;
-import static xin.vanilla.mapper.impl.MessageCacheImpl.MSG_TYPE_GROUP;
 
 public class GroupMsgEvent extends BaseMsgEvent {
     private final GroupMessageEvents event;
@@ -67,7 +66,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
         st2();
         audioTest();
         chartGPTVoice();
-        AiPicture();
+        aiPicture();
         // test();
     }
 
@@ -249,23 +248,19 @@ public class GroupMsgEvent extends BaseMsgEvent {
     }
 
     private void chartGPTVoice() {
-
-
         final String prefix = "chatGPTVoice";
         if (msg.contentToString().startsWith(prefix)) {
-
-
             String command = msg.contentToString().substring(prefix.length());
 
-            String bake = Api.chatGPT(command);
+            String back = Api.chatGPT(command);
             Api.sendMessage(group, new MessageChainBuilder()
                     .append(new At(sender.getId()))
-                    .append(bake).build());
-            String res = Api.fanyi_jp(bake.replace("\n", "".replace(" ", ""))).replace("\n", "").replace(" ", "");
+                    .append(back).build());
+
+            String res = Api.translateToJP(back.replace("\r", "")).replace("\n", "").replace(" ", "");
             String path = Va.getGlobalConfig().getOther().getVoiceSavePath() + "\\";
             String id = IdUtil.randomUUID();
             path = path + id + ".wav";
-
             try {
                 Process process = Runtime.getRuntime().exec(Va.getGlobalConfig().getOther().getPythonPath() + " " + Va.getGlobalConfig().getOther().getMoeGoePath() + " " + res + " " + path);
                 process.waitFor();
@@ -276,22 +271,16 @@ public class GroupMsgEvent extends BaseMsgEvent {
                 externalResource.close();
             } catch (Exception e) {
                 Api.sendMessage(group, "可能是请求太快也可能是模型使用超时总之挂了，后续在改");
-                throw new RuntimeException(e);
-
+                // throw new RuntimeException(e);
             }
         }
-
     }
 
     private void audioTest() {
-
-
         final String prefix = "audio";
         if (msg.contentToString().startsWith(prefix)) {
-
             String command = msg.contentToString().substring(prefix.length());
-
-            String res = Api.fanyi_jp(command);
+            String res = Api.translateToJP(command);
             String path = Va.getGlobalConfig().getOther().getVoiceSavePath() + "\\";
             String id = IdUtil.randomUUID();
             path = path + id + ".wav";
@@ -309,8 +298,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
                 Api.sendMessage(group, offlineAudio);
             } catch (Exception e) {
                 Api.sendMessage(group, "可能是请求太快也可能是模型使用超时总之挂了，后续在改");
-                throw new RuntimeException(e);
-
+                // throw new RuntimeException(e);
             }
         }
 
@@ -328,17 +316,17 @@ public class GroupMsgEvent extends BaseMsgEvent {
             map.put("content", command);
             jsonObject.set("model", "gpt-3.5-turbo").set("messages", list);
 
-            try {
-                String res = HttpRequest.post("https://api.openai.com/v1/chat/completions")
-                        .setHttpProxy("localhost", 10808)
-                        .header("Content-Type", "application/json")
-                        .header("Authorization", "Bearer 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")
-                        .body(JSONUtil.toJsonStr(jsonObject))
-                        .timeout(40000)
-                        .execute()
-                        .body();
+            try (HttpResponse response = HttpRequest.post("https://api.openai.com/v1/chat/completions")
+                    .setHttpProxy("localhost", 10808)
+                    .header("Content-Type", "application/json")
+                    .header("Authorization", "Bearer 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")
+                    .body(JSONUtil.toJsonStr(jsonObject))
+                    .timeout(40000)
+                    .execute()) {
 
-                JSONObject jsonObject1 = JSONUtil.parseObj(res);
+                String body = response.body();
+
+                JSONObject jsonObject1 = JSONUtil.parseObj(body);
                 JSONArray jsonArray = JSONUtil.parseArray(jsonObject1.get("choices"));
                 JSONObject jsonObject2 = JSONUtil.parseObj(jsonArray.get(0));
                 JSONObject jsonObject3 = JSONUtil.parseObj(jsonObject2.get("message"));
@@ -348,7 +336,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
                 // System.out.println(bake);
             } catch (IORuntimeException e) {
                 Api.sendMessage(group, "可能是请求太快也可能是模型使用超时总之挂了，后续在改");
-                throw new RuntimeException(e);
+                // throw new RuntimeException(e);
             }
         }
     }
@@ -356,7 +344,6 @@ public class GroupMsgEvent extends BaseMsgEvent {
     private void chatGpt() {
         final String prefix = "chatGPT";
         if (msg.contentToString().startsWith(prefix)) {
-
             try {
                 String command = msg.contentToString().substring(prefix.length());
                 JSONObject jsonObject = JSONUtil.createObj();
@@ -370,7 +357,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
                         .set("presence_penalty", 0.6)
                         .set("stop", list);
 
-                String result = HttpRequest.post("https://api.openai.com/v1/completions")
+                try (HttpResponse response = HttpRequest.post("https://api.openai.com/v1/completions")
                         .setHttpProxy("127.0.0.1", 10808)
                         .header("Content-Type", "application/json")
                         .header("Accept-Encoding", " gzip,deflate")
@@ -379,22 +366,24 @@ public class GroupMsgEvent extends BaseMsgEvent {
                         .header("Authorization", "Bearer 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")
                         .body(JSONUtil.toJsonStr(jsonObject))
                         .timeout(40000)
-                        .execute().body();
+                        .execute()) {
+                    String result = response.body();
 
-                JSONObject jsonObject1 = JSONUtil.parseObj(result);
-                JSONArray jsonArray = JSONUtil.parseArray(jsonObject1.get("choices"));
-                JSONObject jsonObject2 = JSONUtil.parseObj(jsonArray.get(0));
-                System.out.println(jsonObject2);
-                System.out.println(jsonObject2.get("text"));
+                    JSONObject jsonObject1 = JSONUtil.parseObj(result);
+                    JSONArray jsonArray = JSONUtil.parseArray(jsonObject1.get("choices"));
+                    JSONObject jsonObject2 = JSONUtil.parseObj(jsonArray.get(0));
+                    System.out.println(jsonObject2);
+                    System.out.println(jsonObject2.get("text"));
 
-                String bake = (String) jsonObject2.get("text");
-                bake = ReUtil.delFirst("^\n+", bake);
-                // bake = StrUtil.replace(bake,"\n","");
-                // StrUtil.trim(bake);
-                Api.sendMessage(group, bake);
+                    String bake = (String) jsonObject2.get("text");
+                    bake = ReUtil.delFirst("^\n+", bake);
+                    // bake = StrUtil.replace(bake,"\n","");
+                    // StrUtil.trim(bake);
+                    Api.sendMessage(group, bake);
+                }
             } catch (Exception e) {
                 Api.sendMessage(group, "可能是请求太快也可能是模型使用超时总之挂了，后续在改");
-                throw new RuntimeException(e);
+                // throw new RuntimeException(e);
             }
         }
     }
@@ -407,7 +396,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
                     URL url = new URL("https://api.jrsgslb.cn/cos/url.php?return=img");
                     InputStream inputStream = url.openConnection().getInputStream();
                     ExternalResource ex = ExternalResource.Companion.create(inputStream);
-                    Image img = ExternalResource.uploadAsImage(ex, event.getSubject());
+                    Image img = ExternalResource.uploadAsImage(ex, group);
 
                     forwardMessageBuilder.add(sender, new MessageChainBuilder().append(img).build());
                     ex.close();
@@ -433,16 +422,18 @@ public class GroupMsgEvent extends BaseMsgEvent {
             try {
                 for (int i = 0; i <= 10; i++) {
                     ExternalResource ex;
-                    try (InputStream inputStream = HttpRequest.get("https://picture.yinux.workers.dev")
-                            .setHttpProxy("127.0.0.1", 10808).execute().bodyStream()) {
-                        // URL url = new URL("https://api.jrsgslb.cn/cos/url.php?return=img");
-                        // InputStream inputStream = url.openConnection().getInputStream();
-                        ex = ExternalResource.Companion.create(inputStream);
-                    }
-                    Image img = ExternalResource.uploadAsImage(ex, event.getSubject());
+                    try (HttpResponse execute = HttpRequest.get("https://picture.yinux.workers.dev")
+                            .setHttpProxy("127.0.0.1", 10808).execute()) {
+                        try (InputStream inputStream = execute.bodyStream()) {
+                            // URL url = new URL("https://api.jrsgslb.cn/cos/url.php?return=img");
+                            // InputStream inputStream = url.openConnection().getInputStream();
+                            ex = ExternalResource.Companion.create(inputStream);
+                        }
+                        Image img = ExternalResource.uploadAsImage(ex, group);
 
-                    forwardMessageBuilder.add(sender, new MessageChainBuilder().append(img).build());
-                    ex.close();
+                        forwardMessageBuilder.add(sender, new MessageChainBuilder().append(img).build());
+                        ex.close();
+                    }
                 }
             } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -454,143 +445,47 @@ public class GroupMsgEvent extends BaseMsgEvent {
 
     /**
      * ai绘画
-     * prompt后接taf
+     * Prompt 后接tag
      * UnPrompt 后接反向tag
      */
-    private void  AiPicture(){
-        if (msg.contentToString().startsWith("/va ai draw Prompt:")){
-
+    private void aiPicture() {
+        final String msgString = msg.contentToString();
+        if (msgString.startsWith("/va ai draw Prompt:")) {
             String key = Va.getGlobalConfig().getOther().getAiDrawKey();
             String aiDrawUrl = Va.getGlobalConfig().getOther().getAiDrawUrl();
             // Api.sendMessage(group,msg.contentToString().substring("/va ai draw Prompt:".length(),msg.contentToString().indexOf("/UnPrompt:")));
-            String prompt = "";
+
+            String prompt;
             String unprompt = "";
 
+            String[] split = msgString.substring("/va ai draw Prompt:".length()).split("/UnPrompt:");
+            prompt = split[0];
+            if (split.length == 2) unprompt = split[1];
 
-            if (msg.contentToString().indexOf("/UnPrompt")!=-1){
-                // Api.sendMessage(group, StrUtil.sub(msg.contentToString(),msg.contentToString().indexOf("/UnPrompt:")+10,-1));
-                prompt = msg.contentToString().substring("/va ai draw Prompt:".length(),msg.contentToString().indexOf("/UnPrompt:"));
-                unprompt =  StrUtil.sub(msg.contentToString(),msg.contentToString().indexOf("/UnPrompt:")+10,-1);
-            }else {
-                prompt =  msg.contentToString().substring("/va ai draw Prompt:".length());
-            }
             String uri = null;
             try {
-                uri = Api.AiPicture(prompt, unprompt);
+                uri = Api.aiPicture(prompt, unprompt);
                 // Api.sendMessage(group,uri);
             } catch (Exception e) {
-                Api.sendMessage(group,"请求出错");
+                Api.sendMessage(group, "请求出错");
             }
 
-            InputStream inputStream = HttpRequest.get(aiDrawUrl+"/file=" + uri)
-                    .header("authorization", key).timeout(1000000).execute().bodyStream();
-            ExternalResource externalResource = null;
-            try {
-                externalResource = ExternalResource.Companion.create(inputStream);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+            InputStream inputStream;
+            try (HttpResponse authorization = HttpRequest.get(aiDrawUrl + "/file=" + uri)
+                    .header("authorization", key).timeout(1000000).execute()) {
+                inputStream = authorization.bodyStream();
+                try (ExternalResource externalResource = ExternalResource.Companion.create(inputStream)) {
+                    Image image = ExternalResource.uploadAsImage(externalResource, group);
+                    Api.sendMessage(group, new MessageChainBuilder().append(new At(sender.getId())).append(image).build());
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
             }
-            Image image = ExternalResource.uploadAsImage(externalResource, event.getSubject());
-            Api.sendMessage(group,new MessageChainBuilder().append(new At(sender.getId())).append(image).build());
         }
     }
 
 
     private void test() {
-        // 构造消息
-        MessageChain chain = new MessageChainBuilder()
-                .append(new PlainText("string"))
-                .append("string") // 会被构造成 PlainText 再添加, 相当于上一行
-                .append(AtAll.INSTANCE)
-                .append(Image.fromId("{f8f1ab55-bf8e-4236-b55e-955848d7069f}.png"))
-                .build();
 
-        // 取某类型消息
-        Image image = (Image) msg.stream().filter(Image.class::isInstance).findFirst().orElse(null);
-
-        // 撤回指定消息
-        QuoteReply quote = msg.get(QuoteReply.Key);
-        if (quote != null && msg.contentToString().equals("recall"))
-            MessageSource.recall(quote.getSource());
-
-        // 利用缓存的ids与internalIds撤回消息
-        if (group.getId() == 851159783L) {
-            // MessageSource source = msg.get(MessageSource.Key);
-            // logger.info(Arrays.toString(source.getIds()));
-            // logger.info(Arrays.toString(source.getInternalIds()));
-
-            if (msg.contentToString().startsWith("/va recall by ")) {
-                String s = msg.contentToString().substring("/va recall by ".length());
-
-                int[] ids = Arrays.stream(s.substring(0, s.indexOf("|")).split(","))
-                        .mapToInt(Integer::parseInt).toArray();
-                int[] internalIds = Arrays.stream(s.substring(s.indexOf("|") + 1).split(","))
-                        .mapToInt(Integer::parseInt).toArray();
-
-                MessageSource.recall(new MessageSourceBuilder()
-                        .sender(3085477411L)
-                        .target(group.getId())
-                        .id(ids)
-                        .internalId(internalIds)
-                        .build(bot.getId(), MessageSourceKind.GROUP));
-            }
-        }
-
-        // 序列化转码消息
-        if (msg.contentToString().startsWith("/va to string "))
-            Api.sendMessage(group, msg.serializeToMiraiCode());
-
-        if (msg.contentToString().startsWith("/va get msgcache ")) {
-            int no = Integer.parseInt(msg.contentToString().substring("/va get msgcache ".length()));
-            MessageSource source = msg.get(MessageSource.Key);
-            assert source != null;
-            no = source.getIds()[0] - no;
-            String msgCache = Va.getMessageCache().getMsgJsonCode(String.valueOf(no), group.getId(), MSG_TYPE_GROUP);
-            Api.sendMessage(group, msgCache);
-        }
-
-        // if (msg.contentToString().equals("/va get string")) {
-        //     Api.sendMessage(group, "testString is: " + Va.getGlobalConfig().getMc_rcon_ip());
-        // }
-        // if (msg.contentToString().startsWith("/va set string ")) {
-        //     String s = msg.contentToString().substring("/va set string ".length());
-        //     Va.getGlobalConfig().setMc_rcon_ip(s);
-        //     Api.sendMessage(group, "testString now is: " + Va.getGlobalConfig().getMc_rcon_ip());
-        // }
-
-        // if (msg.contentToString().equals("/va get int")) {
-        //     Api.sendMessage(group, "testInt is: " + Va.getGlobalConfig().getMc_rcon_port());
-        // }
-        // if (msg.contentToString().startsWith("/va set int ")) {
-        //     int s = Integer.parseInt(msg.contentToString().substring("/va set int ".length()));
-        //     Va.getGlobalConfig().setMc_rcon_port(s);
-        //     Api.sendMessage(group, "testInt now is: " + Va.getGlobalConfig().getMc_rcon_port());
-        // }
-
-        if (msg.contentToString().equals("/va get owner")) {
-            Api.sendMessage(group, "botOwner is: " + Va.getGlobalConfig().getPermissions().get(bot.getId()).getBotOwner());
-        }
-        // if (msg.contentToString().startsWith("/va set owner ")) {
-        //     String s = msg.contentToString().substring("/va set owner ".length());
-        //     Va.getGlobalConfig().getPermissions().get(bot.getId()).setBotOwner(Long.parseLong(s));
-        //     Api.sendMessage(group, "botOwner now is: " + Va.getGlobalConfig().getPermissions().get(bot.getId()).getBotOwner());
-        // }
-
-        if (msg.contentToString().equals("/va get superAdmin")) {
-            Api.sendMessage(group, "superAdmin is: " + Va.getGlobalConfig().getPermissions().get(bot.getId()).getSuperAdmin());
-        }
-        // if (msg.contentToString().startsWith("/va set superAdmin ")) {
-        //     String s = msg.contentToString().substring("/va set superAdmin ".length());
-        //     Va.getGlobalConfig().getPermissions().get(bot.getId()).setSuperAdmin(new HashSet<Long>() {{
-        //         addAll(Arrays.stream(s.split(" ")).map(Long::parseLong).collect(Collectors.toList()));
-        //     }});
-        //     Api.sendMessage(group, "superAdmin now is: " + Va.getGlobalConfig().getPermissions().get(bot.getId()).getSuperAdmin());
-        // }
-
-        // Va.config.refreshSource();
-
-        if (msg.contentToString().equals("/va get secondaryPrefix")) {
-            Api.sendMessage(group, Va.getGlobalConfig().getInstructions().getSecondaryPrefix().toString());
-        }
     }
 }

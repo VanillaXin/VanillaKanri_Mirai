@@ -40,12 +40,10 @@ class Other {
      */
     var wifePrefix: Set<String> = mutableSetOf("抽老婆")
 
-
     /**
-     * chatGPTurl
+     * chatGPT url
      */
-    var chatGPTUrl:String = ""
-
+    var chatGPTUrl: String = ""
 
     /**
      * chatGTP 秘钥
@@ -55,38 +53,37 @@ class Other {
     /**
      * 百度翻译key
      */
-    var fanyi_baidu_key:String = ""
+    var translateBaiduKey: String = ""
 
     /**
      * 百度翻译appid
      */
-    var fanyi_baidu_id:String = ""
+    var translateBaiduId: String = ""
 
     /**
      * python路径
      */
-    var pythonPath:String = ""
+    var pythonPath: String = ""
 
     /**
-     * ，MoGoe路径
+     * MoGoe路径
      */
-    var moeGoePath:String = ""
+    var moeGoePath: String = ""
 
     /**
      * 语音缓存路径
      */
-    var voiceSavePath:String = ""
+    var voiceSavePath: String = ""
 
     /**
      * ai绘画url
      */
-    var aiDrawUrl:String = ""
+    var aiDrawUrl: String = ""
 
     /**
      * ai绘画认证 如果没设置就没有
      */
-    var aiDrawKey:String = ""
-
+    var aiDrawKey: String = ""
 
 
 }

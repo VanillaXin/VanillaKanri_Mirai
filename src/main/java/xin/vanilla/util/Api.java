@@ -32,10 +32,10 @@ public class Api {
     /**
      * 翻译接口
      */
-    public static String fanyi_jp(String command) {
-        String appid = Va.getGlobalConfig().getOther().getFanyi_baidu_id();
+    public static String translateToJP(String command) {
+        String appid = Va.getGlobalConfig().getOther().getTranslateBaiduId();
         String salt = "112";
-        String key = Va.getGlobalConfig().getOther().getFanyi_baidu_key();
+        String key = Va.getGlobalConfig().getOther().getTranslateBaiduKey();
         String sign = SecureUtil.md5(appid + command + salt + key);
         System.out.println(sign);
         Map<String, Object> map = new HashMap<>();
@@ -46,17 +46,18 @@ public class Api {
         map.put("salt", salt);
         map.put("sign", sign);
 
-        String body = HttpRequest.post("https://fanyi-api.baidu.com/api/trans/vip/translate")
+        try (HttpResponse response = HttpRequest.post("https://fanyi-api.baidu.com/api/trans/vip/translate")
                 .form(map)
-                .execute().body();
-        JSONObject jsonObject1 = JSONUtil.parseObj(body);
-        JSONArray jsonArray = JSONUtil.parseArray(jsonObject1.get("trans_result"));
-        JSONObject jsonObject2 = JSONUtil.parseObj(jsonArray.get(0));
-        String res = (String) jsonObject2.get("dst");
-        return res;
+                .execute()) {
+            String body = response.body();
+            JSONObject jsonObject1 = JSONUtil.parseObj(body);
+            JSONArray jsonArray = JSONUtil.parseArray(jsonObject1.get("trans_result"));
+            JSONObject jsonObject2 = JSONUtil.parseObj(jsonArray.get(0));
+            return (String) jsonObject2.get("dst");
+        }
     }
 
-    public static String AiPicture(String prompt, String unPrompt) {
+    public static String aiPicture(String prompt, String unPrompt) {
 
         String key = Va.getGlobalConfig().getOther().getAiDrawKey();
         String aiDrawUrl = Va.getGlobalConfig().getOther().getAiDrawUrl();
@@ -167,22 +168,23 @@ public class Api {
         jsonObject.set("data", jsonArray);
 
         System.out.println(com.alibaba.fastjson2.JSONObject.toJSONString(jsonObject));
-        String res = HttpRequest.post(aiDrawUrl + "/run/predict/")
+        try (HttpResponse response = HttpRequest.post(aiDrawUrl + "/run/predict/")
                 .header("Content-Type", "application/json")
                 .header("authorization", key)
                 .body(com.alibaba.fastjson2.JSONObject.toJSONString(jsonObject))
                 .timeout(100000)
-                .execute()
-                .body();
+                .execute()) {
+            String body = response.body();
+            JSONObject jsonObject1 = JSONUtil.parseObj(body);
+            JSONArray jsonArray1 = JSONUtil.parseArray(jsonObject1.get("data"));
+            JSONArray jsonArray2 = JSONUtil.parseArray(jsonArray1.get(0));
+            JSONObject jsonObject2 = JSONUtil.parseObj(jsonArray2.get(0));
 
-        JSONObject jsonObject1 = JSONUtil.parseObj(res);
-        JSONArray jsonArray1 = JSONUtil.parseArray(jsonObject1.get("data"));
-        JSONArray jsonArray2 = JSONUtil.parseArray(jsonArray1.get(0));
-        JSONObject jsonObject2 = JSONUtil.parseObj(jsonArray2.get(0));
-
-        return (String) jsonObject2.get("name");
+            return (String) jsonObject2.get("name");
+        }
     }
 
+    @NotNull
     public static String chatGPT(String command) {
 
         String key = Va.getGlobalConfig().getOther().getChatGPTKey();
@@ -195,24 +197,24 @@ public class Api {
         map.put("content", command);
         jsonObject.set("model", "gpt-3.5-turbo").set("messages", list);
 
-        try {
-            String res = HttpRequest.post(chatGPTUrl)
-                    .setHttpProxy("localhost", 10808)
-                    .header("Content-Type", "application/json")
-                    .header("Authorization", key)
-                    .body(JSONUtil.toJsonStr(jsonObject))
-                    .timeout(40000)
-                    .execute()
-                    .body();
+        try (HttpResponse response = HttpRequest.post(chatGPTUrl)
+                .setHttpProxy("localhost", 10808)
+                .header("Content-Type", "application/json")
+                .header("Authorization", key)
+                .body(JSONUtil.toJsonStr(jsonObject))
+                .timeout(40000)
+                .execute()) {
+            String body = response.body();
 
-            JSONObject jsonObject1 = JSONUtil.parseObj(res);
+            JSONObject jsonObject1 = JSONUtil.parseObj(body);
             JSONArray jsonArray = JSONUtil.parseArray(jsonObject1.get("choices"));
             JSONObject jsonObject2 = JSONUtil.parseObj(jsonArray.get(0));
             JSONObject jsonObject3 = JSONUtil.parseObj(jsonObject2.get("message"));
-            return (String) jsonObject3.get("content");
+            String content = (String) jsonObject3.get("content");
+            return content == null ? "" : content;
         } catch (Exception e) {
             e.printStackTrace();
-            return null;
+            return "";
         }
     }
 

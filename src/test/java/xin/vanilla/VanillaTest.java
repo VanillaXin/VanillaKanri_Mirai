@@ -25,10 +25,7 @@ import xin.vanilla.util.sqlite.statement.Statement;
 import java.io.InputStream;
 import java.security.SecureRandom;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class VanillaTest {
     @Test
@@ -217,13 +214,6 @@ public class VanillaTest {
 
     @Test
     public void test06() {
-        System.out.println("111");
-    }
-
-    @Test
-    public void test07() {
-
 
     }
-
 }
