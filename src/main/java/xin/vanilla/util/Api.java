@@ -13,6 +13,7 @@ import net.mamoe.mirai.message.MessageReceipt;
 import net.mamoe.mirai.message.data.*;
 import net.mamoe.mirai.utils.ExternalResource;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import xin.vanilla.VanillaKanri;
 import xin.vanilla.entity.KeyRepEntity;
 
@@ -271,6 +272,8 @@ public class Api {
         return ExternalResource.uploadAsImage(resource, contact);
     }
 
+    // region 发送消息
+
     /**
      * 发送消息
      */
@@ -320,23 +323,28 @@ public class Api {
 
     private static MessageReceipt<Contact> sendMessage(KeyRepEntity rep) {
         if (rep.getDelayMillis() > 0) {
-            CompletableFuture<MessageReceipt<Contact>> delayed = Va.delayed(rep.getDelayMillis(), () -> {
-                MessageReceipt<Contact> contactMessageReceipt = rep.getContact().sendMessage(rep.getRep());
-                Va.addMsgSendCount();
-                Va.getMessageCache().addMsg(rep.getContact(), contactMessageReceipt.getSource(), rep.getRep());
-                return contactMessageReceipt;
-            });
+            CompletableFuture<MessageReceipt<Contact>> delayed = Va.delayed(rep.getDelayMillis(), () -> getContactMessageReceipt(rep));
             try {
                 return delayed.get();
             } catch (InterruptedException | ExecutionException e) {
                 throw new RuntimeException(e);
             }
         } else {
-            MessageReceipt<Contact> contactMessageReceipt = rep.getContact().sendMessage(rep.getRep());
+            return getContactMessageReceipt(rep);
+        }
+    }
+
+    @Nullable
+    private static MessageReceipt<Contact> getContactMessageReceipt(KeyRepEntity rep) {
+        MessageReceipt<Contact> contactMessageReceipt = null;
+        try {
+            contactMessageReceipt = rep.getContact().sendMessage(rep.getRep());
             Va.addMsgSendCount();
             Va.getMessageCache().addMsg(rep.getContact(), contactMessageReceipt.getSource(), rep.getRep());
-            return contactMessageReceipt;
+        } catch (Exception e) {
+            Va.getLogger().error(e);
         }
+        return contactMessageReceipt;
     }
 
     @NotNull
@@ -390,4 +398,6 @@ public class Api {
         }
         return textMsg;
     }
+
+    // endregion 发送消息
 }
