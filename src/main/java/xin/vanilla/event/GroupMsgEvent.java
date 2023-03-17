@@ -178,6 +178,9 @@ public class GroupMsgEvent extends BaseMsgEvent {
         return false;
     }
 
+    /**
+     * 遍历路径及子路径下所有文件
+     */
     private void getLocalPicList(String path) {
         List<Path> files;
         try (Stream<Path> paths = Files.walk(Paths.get(path))) {

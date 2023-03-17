@@ -13,6 +13,7 @@ import net.mamoe.mirai.message.data.*;
 import net.mamoe.mirai.utils.ExternalResource;
 import org.jetbrains.annotations.NotNull;
 import xin.vanilla.VanillaKanri;
+import xin.vanilla.entity.KeyRepEntity;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,6 +22,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 /**
  * 整合部分接口
@@ -276,10 +279,13 @@ public class Api {
         // 反转义事件特殊码
         if (message.contains("\\(:vaevent:\\)"))
             message = message.replace("\\(:vaevent:\\)", "(:vaevent:)");
-        MessageReceipt<Contact> contactMessageReceipt = contact.sendMessage(message);
-        Va.addMsgSendCount();
-        Va.getMessageCache().addMsg(contact, contactMessageReceipt.getSource(), MessageUtils.newChain(new PlainText(message)));
-        return contactMessageReceipt;
+
+        KeyRepEntity rep = new KeyRepEntity();
+        // 判断是否包含延时特殊码
+        message = decodeDelay(rep, message);
+
+        rep.setRep(MessageUtils.newChain(new PlainText(message)));
+        return sendMessage(contact, rep);
     }
 
     /**
@@ -288,6 +294,7 @@ public class Api {
     public static MessageReceipt<Contact> sendMessage(Contact contact, Message message) {
         if (contact == null) return null;
         if (StringUtils.isNullOrEmpty(message.contentToString())) return null;
+        KeyRepEntity rep = new KeyRepEntity();
         // 反转义事件特殊码
         if (message instanceof MessageChain) {
             if (message.contentToString().contains("\\(:vaevent:\\)")) {
@@ -296,7 +303,9 @@ public class Api {
                 for (SingleMessage singleMessage : messageChain) {
                     if (singleMessage instanceof PlainText) {
                         PlainText plainText = (PlainText) singleMessage;
-                        messages.add(plainText.contentToString().replace("\\(:vaevent:\\)", "(:vaevent:)"));
+                        String textMsg = plainText.contentToString().replace("\\(:vaevent:\\)", "(:vaevent:)");
+                        textMsg = decodeDelay(rep, textMsg);
+                        messages.add(textMsg);
                     } else {
                         messages.add(singleMessage);
                     }
@@ -304,9 +313,44 @@ public class Api {
                 message = messages.build();
             }
         }
-        MessageReceipt<Contact> contactMessageReceipt = contact.sendMessage(message);
-        Va.addMsgSendCount();
-        Va.getMessageCache().addMsg(contact, contactMessageReceipt.getSource(), message);
-        return contactMessageReceipt;
+        rep.setRep(message);
+        return sendMessage(contact, rep);
+    }
+
+    private static MessageReceipt<Contact> sendMessage(Contact contact, KeyRepEntity rep) {
+        if (rep.getDelayMillis() > 0) {
+            CompletableFuture<MessageReceipt<Contact>> delayed = Va.delayed(rep.getDelayMillis(), () -> {
+                MessageReceipt<Contact> contactMessageReceipt = contact.sendMessage(rep.getRep());
+                Va.addMsgSendCount();
+                Va.getMessageCache().addMsg(contact, contactMessageReceipt.getSource(), rep.getRep());
+                return contactMessageReceipt;
+            });
+            try {
+                return delayed.get();
+            } catch (InterruptedException | ExecutionException e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            MessageReceipt<Contact> contactMessageReceipt = contact.sendMessage(rep.getRep());
+            Va.addMsgSendCount();
+            Va.getMessageCache().addMsg(contact, contactMessageReceipt.getSource(), rep.getRep());
+            return contactMessageReceipt;
+        }
+    }
+
+    @NotNull
+    private static String decodeDelay(KeyRepEntity rep, String textMsg) {
+        if (textMsg.contains("[vacode:delay:")) {
+            RegUtils regUtils = new RegUtils()
+                    .appendIg(".*?\\[vacode:delay:")
+                    .groupIgByName("time", "\\d{1,6}")
+                    .appendIg("].*?");
+            if (regUtils.matcher(textMsg).find()) {
+                String millis = regUtils.getMatcher().group("time");
+                textMsg = textMsg.replace("[vacode:delay:" + millis + "]", "");
+                rep.setDelayMillis(Integer.parseInt(millis));
+            }
+        }
+        return textMsg;
     }
 }
