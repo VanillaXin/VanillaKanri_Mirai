@@ -297,7 +297,7 @@ public class Api {
         KeyRepEntity rep = new KeyRepEntity(contact);
         // 反转义事件特殊码
         if (message instanceof MessageChain) {
-            if (message.contentToString().contains("\\(:vaevent:\\)")) {
+            if (message.contentToString().contains("\\(:vaevent:\\)") || message.contentToString().contains("[vacode:")) {
                 MessageChain messageChain = (MessageChain) message;
                 MessageChainBuilder messages = new MessageChainBuilder();
                 for (SingleMessage singleMessage : messageChain) {
