@@ -8,6 +8,7 @@ import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import net.mamoe.mirai.contact.Contact;
+import net.mamoe.mirai.contact.Group;
 import net.mamoe.mirai.message.MessageReceipt;
 import net.mamoe.mirai.message.data.*;
 import net.mamoe.mirai.utils.ExternalResource;
@@ -350,7 +351,14 @@ public class Api {
             while (regUtils.matcher(textMsg).find()) {
                 long qq = Long.parseLong(regUtils.getMatcher().group("qq"));
                 textMsg = textMsg.replace("[vacode:tofriend:" + qq + "]", "");
-                rep.setContact(rep.getContact().getBot().getFriend(qq));
+                Contact friend;
+                if (rep.getContact() instanceof Group) {
+                    Group group = (Group) rep.getContact();
+                    friend = group.get(qq);
+                } else {
+                    friend = rep.getContact().getBot().getFriend(qq);
+                }
+                rep.setContact(friend);
             }
         }
 
