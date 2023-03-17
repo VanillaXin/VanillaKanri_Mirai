@@ -654,18 +654,10 @@ public class VanillaUtils {
     public static String deVanillaCodeIns(@NotNull final String word, @NotNull final String rep, Bot bot, Group group, @NotNull Contact sender, MessageChain messageChain) {
         String result;
         try {
-            // 非操作特殊码解码
-            result = deVanillaCodeRep(rep);
-
-            // 禁言
-            result = RegExpConfig.VaCode.exeMute(result, group != null ? (NormalMember) sender : null);
-            // 撤回
-            result = RegExpConfig.VaCode.exeRecall(result, messageChain);
-            // 踢出
-            result = RegExpConfig.VaCode.exeKick(word, result, group != null ? (NormalMember) sender : null);
+            if (!rep.contains("[vacode:")) return rep;
 
             // 转义艾特
-            result = result.replaceAll("\\[vacode:@]", new At(sender.getId()).serializeToMiraiCode());
+            result = rep.replaceAll("\\[vacode:@]", new At(sender.getId()).serializeToMiraiCode());
             // 取发送者qq
             result = result.replaceAll("\\[vacode:qnumber]", String.valueOf(sender.getId()));
             if (group != null) {
@@ -674,6 +666,16 @@ public class VanillaUtils {
                 // 取群名
                 result = result.replaceAll("\\[vacode:gname]", group.getName());
             }
+
+            // 非操作特殊码解码
+            result = deVanillaCodeRep(result);
+
+            // 禁言
+            result = RegExpConfig.VaCode.exeMute(result, group != null ? (NormalMember) sender : null);
+            // 撤回
+            result = RegExpConfig.VaCode.exeRecall(result, messageChain);
+            // 踢出
+            result = RegExpConfig.VaCode.exeKick(word, result, group != null ? (NormalMember) sender : null);
 
 
         } catch (Exception e) {
