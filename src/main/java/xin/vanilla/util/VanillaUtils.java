@@ -521,7 +521,7 @@ public class VanillaUtils {
             result = result.replaceAll("\\[vacode:date:s]", String.valueOf(second));
             result = result.replaceAll("\\[vacode:date:0s]", second < 10 ? "0" + second : String.valueOf(second));
             result = result.replaceAll("\\[vacode:date:s:", "[vacode:math:add:+")
-                    .replaceAll("\\[vacode:math:add:++", "[vacode:math:add:+");
+                    .replaceAll("\\[vacode:math:add:\\+\\+", "[vacode:math:add:+");
             result = result.replaceAll("\\[vacode:math:add:", "[vacode:math:add:" + second);
 
             // 當前分
@@ -529,7 +529,7 @@ public class VanillaUtils {
             result = result.replaceAll("\\[vacode:date:m]", String.valueOf(minute));
             result = result.replaceAll("\\[vacode:date:0m]", minute < 10 ? "0" + minute : String.valueOf(minute));
             result = result.replaceAll("\\[vacode:date:m:", "[vacode:math:add:+")
-                    .replaceAll("\\[vacode:math:add:++", "[vacode:math:add:+");
+                    .replaceAll("\\[vacode:math:add:\\+\\+", "[vacode:math:add:+");
             result = result.replaceAll("\\[vacode:math:add:", "[vacode:math:add:" + minute);
 
             // 當前時
@@ -537,7 +537,7 @@ public class VanillaUtils {
             result = result.replaceAll("\\[vacode:date:H]", String.valueOf(hour));
             result = result.replaceAll("\\[vacode:date:0H]", hour < 10 ? "0" + hour : String.valueOf(hour));
             result = result.replaceAll("\\[vacode:date:H:", "[vacode:math:add:+")
-                    .replaceAll("\\[vacode:math:add:++", "[vacode:math:add:+");
+                    .replaceAll("\\[vacode:math:add:\\+\\+", "[vacode:math:add:+");
             result = result.replaceAll("\\[vacode:math:add:", "[vacode:math:add:" + hour);
 
             // 當前日
@@ -545,7 +545,7 @@ public class VanillaUtils {
             result = result.replaceAll("\\[vacode:date:d]", String.valueOf(day));
             result = result.replaceAll("\\[vacode:date:0d]", day < 10 ? "0" + day : String.valueOf(day));
             result = result.replaceAll("\\[vacode:date:d:", "[vacode:math:add:+")
-                    .replaceAll("\\[vacode:math:add:++", "[vacode:math:add:+");
+                    .replaceAll("\\[vacode:math:add:\\+\\+", "[vacode:math:add:+");
             result = result.replaceAll("\\[vacode:math:add:", "[vacode:math:add:" + day);
 
             // 當前周
@@ -553,7 +553,7 @@ public class VanillaUtils {
             if (week == 0) week = 7;
             result = result.replaceAll("\\[vacode:date:E]", String.valueOf(week));
             result = result.replaceAll("\\[vacode:date:E:", "[vacode:math:add:+")
-                    .replaceAll("\\[vacode:math:add:++", "[vacode:math:add:+");
+                    .replaceAll("\\[vacode:math:add:\\+\\+", "[vacode:math:add:+");
             result = result.replaceAll("\\[vacode:math:add:", "[vacode:math:add:" + week);
 
             // 當前月
@@ -561,42 +561,42 @@ public class VanillaUtils {
             result = result.replaceAll("\\[vacode:date:M]", String.valueOf(month));
             result = result.replaceAll("\\[vacode:date:0M]", month < 10 ? "0" + month : String.valueOf(month));
             result = result.replaceAll("\\[vacode:date:M:", "[vacode:math:add:+")
-                    .replaceAll("\\[vacode:math:add:++", "[vacode:math:add:+");
+                    .replaceAll("\\[vacode:math:add:\\+\\+", "[vacode:math:add:+");
             result = result.replaceAll("\\[vacode:math:add:", "[vacode:math:add:" + month);
 
             // 當前年
             int year = now.get(Calendar.YEAR);
             result = result.replaceAll("\\[vacode:date:y]", String.valueOf(year));
             result = result.replaceAll("\\[vacode:date:y:", "[vacode:math:add:+")
-                    .replaceAll("\\[vacode:math:add:++", "[vacode:math:add:+");
+                    .replaceAll("\\[vacode:math:add:\\+\\+", "[vacode:math:add:+");
             result = result.replaceAll("\\[vacode:math:add:", "[vacode:math:add:" + year);
 
             // 本月第幾周
             int weekOfMonth = now.get(Calendar.WEEK_OF_MONTH);
             result = result.replaceAll("\\[vacode:date:W]", String.valueOf(weekOfMonth));
             result = result.replaceAll("\\[vacode:date:W:", "[vacode:math:add:+")
-                    .replaceAll("\\[vacode:math:add:++", "[vacode:math:add:+");
+                    .replaceAll("\\[vacode:math:add:\\+\\+", "[vacode:math:add:+");
             result = result.replaceAll("\\[vacode:math:add:", "[vacode:math:add:" + weekOfMonth);
 
             // 本年第幾周
             int weekOfYear = now.get(Calendar.WEEK_OF_YEAR);
             result = result.replaceAll("\\[vacode:date:w]", String.valueOf(weekOfYear));
             result = result.replaceAll("\\[vacode:date:w:", "[vacode:math:add:+")
-                    .replaceAll("\\[vacode:math:add:++", "[vacode:math:add:+");
+                    .replaceAll("\\[vacode:math:add:\\+\\+", "[vacode:math:add:+");
             result = result.replaceAll("\\[vacode:math:add:", "[vacode:math:add:" + weekOfYear);
 
             // 本年第幾天
             int dayOfYear = now.get(Calendar.DAY_OF_YEAR);
             result = result.replaceAll("\\[vacode:date:D]", String.valueOf(dayOfYear));
             result = result.replaceAll("\\[vacode:date:D:", "[vacode:math:add:+")
-                    .replaceAll("\\[vacode:math:add:++", "[vacode:math:add:+");
+                    .replaceAll("\\[vacode:math:add:\\+\\+", "[vacode:math:add:+");
             result = result.replaceAll("\\[vacode:math:add:", "[vacode:math:add:" + dayOfYear);
 
             // 本月總天數
             int lastDayOfMonth = DateUtil.getLastDayOfMonth(now.getTime());
             result = result.replaceAll("\\[vacode:date:days]", String.valueOf(lastDayOfMonth));
             result = result.replaceAll("\\[vacode:date:days:", "[vacode:math:add:+")
-                    .replaceAll("\\[vacode:math:add:++", "[vacode:math:add:+");
+                    .replaceAll("\\[vacode:math:add:\\+\\+", "[vacode:math:add:+");
             result = result.replaceAll("\\[vacode:math:add:", "[vacode:math:add:" + lastDayOfMonth);
         }
 
@@ -613,9 +613,9 @@ public class VanillaUtils {
                 String numString2 = regUtils.getMatcher().group("num2");
                 String ran;
                 if (numString1.contains(".") || numString2.contains(".")) {
-                    ran = NumberUtil.roundStr(RandomUtil.randomDouble(Double.parseDouble(numString1), Double.parseDouble(numString2)), 4);
+                    ran = NumberUtil.roundStr(RandomUtil.randomDouble(Double.parseDouble(numString1), Double.parseDouble(numString2) + 0.0001), 4);
                 } else {
-                    ran = String.valueOf(RandomUtil.randomInt(Integer.parseInt(numString1), Integer.parseInt(numString2)));
+                    ran = String.valueOf(RandomUtil.randomInt(Integer.parseInt(numString1), Integer.parseInt(numString2) + 1));
                 }
                 result = result.replaceAll("\\[vacode:rand:" + numString1 + ":" + numString2 + "]", ran);
             }
