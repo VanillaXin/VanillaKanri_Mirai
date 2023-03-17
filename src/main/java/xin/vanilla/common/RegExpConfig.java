@@ -30,11 +30,11 @@ public class RegExpConfig {
 
 
     public static final String QQ_CODE = "(?:(?:" +
-            StringUtils.escapeExprSpecialWord(new At(2333333333L).toString()).replace("2333333333", "\\d{6,10}")
+            StringUtils.escapeExprSpecialWord(new At(2333333333L).toString()).replace("2333333333", "\\d{5,10}")
             + "|" + StringUtils.escapeExprSpecialWord(AtAll.INSTANCE.toString())
             + "|\\d{6,10})" + REG_SEPARATOR + "?)+";
 
-    public static final String GROUP_CODE = "<(?:(?:\\d{6,10}"
+    public static final String GROUP_CODE = "<(?:(?:\\d{5,10}"
             + "|" + RegUtils.processGroup(base.getThat())
             + "|" + RegUtils.processGroup(base.getGlobal()) + ")" + REG_SEPARATOR + "?)*?>";
 

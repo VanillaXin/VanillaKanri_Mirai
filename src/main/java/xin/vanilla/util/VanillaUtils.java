@@ -1,12 +1,12 @@
 package xin.vanilla.util;
 
-import cn.hutool.http.HttpRequest;
-import cn.hutool.http.HttpResponse;
+import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.util.NumberUtil;
+import cn.hutool.core.util.RandomUtil;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.contact.*;
 import net.mamoe.mirai.message.code.MiraiCode;
 import net.mamoe.mirai.message.data.*;
-import net.mamoe.mirai.utils.ExternalResource;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import xin.vanilla.VanillaKanri;
@@ -14,13 +14,7 @@ import xin.vanilla.common.RegExpConfig;
 import xin.vanilla.enumeration.DataCacheKey;
 import xin.vanilla.enumeration.PermissionLevel;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.Proxy;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static xin.vanilla.enumeration.PermissionLevel.*;
 
@@ -518,6 +512,128 @@ public class VanillaUtils {
         String result = msg;
         for (String key : repCode.keySet()) {
             result = result.replaceAll(key, repCode.get(key));
+        }
+        // 替换日期特时间殊码
+        if (result.contains("[vacode:date:")) {
+            Calendar now = Calendar.getInstance();
+            // 當前秒
+            int second = now.get(Calendar.SECOND);
+            result = result.replaceAll("\\[vacode:date:s]", String.valueOf(second));
+            result = result.replaceAll("\\[vacode:date:0s]", second < 10 ? "0" + second : String.valueOf(second));
+            result = result.replaceAll("\\[vacode:date:s:", "[vacode:math:add:+")
+                    .replaceAll("\\[vacode:math:add:++", "[vacode:math:add:+");
+            result = result.replaceAll("\\[vacode:math:add:", "[vacode:math:add:" + second);
+
+            // 當前分
+            int minute = now.get(Calendar.MINUTE);
+            result = result.replaceAll("\\[vacode:date:m]", String.valueOf(minute));
+            result = result.replaceAll("\\[vacode:date:0m]", minute < 10 ? "0" + minute : String.valueOf(minute));
+            result = result.replaceAll("\\[vacode:date:m:", "[vacode:math:add:+")
+                    .replaceAll("\\[vacode:math:add:++", "[vacode:math:add:+");
+            result = result.replaceAll("\\[vacode:math:add:", "[vacode:math:add:" + minute);
+
+            // 當前時
+            int hour = now.get(Calendar.HOUR_OF_DAY);
+            result = result.replaceAll("\\[vacode:date:H]", String.valueOf(hour));
+            result = result.replaceAll("\\[vacode:date:0H]", hour < 10 ? "0" + hour : String.valueOf(hour));
+            result = result.replaceAll("\\[vacode:date:H:", "[vacode:math:add:+")
+                    .replaceAll("\\[vacode:math:add:++", "[vacode:math:add:+");
+            result = result.replaceAll("\\[vacode:math:add:", "[vacode:math:add:" + hour);
+
+            // 當前日
+            int day = now.get(Calendar.DATE);
+            result = result.replaceAll("\\[vacode:date:d]", String.valueOf(day));
+            result = result.replaceAll("\\[vacode:date:0d]", day < 10 ? "0" + day : String.valueOf(day));
+            result = result.replaceAll("\\[vacode:date:d:", "[vacode:math:add:+")
+                    .replaceAll("\\[vacode:math:add:++", "[vacode:math:add:+");
+            result = result.replaceAll("\\[vacode:math:add:", "[vacode:math:add:" + day);
+
+            // 當前周
+            int week = now.get(Calendar.DAY_OF_WEEK) - 1;
+            result = result.replaceAll("\\[vacode:date:E]", String.valueOf(week == 0 ? 7 : week));
+            result = result.replaceAll("\\[vacode:date:E:", "[vacode:math:add:+")
+                    .replaceAll("\\[vacode:math:add:++", "[vacode:math:add:+");
+            result = result.replaceAll("\\[vacode:math:add:", "[vacode:math:add:" + week);
+
+            // 當前月
+            int month = now.get(Calendar.MONTH);
+            result = result.replaceAll("\\[vacode:date:M]", String.valueOf(month));
+            result = result.replaceAll("\\[vacode:date:0M]", month < 10 ? "0" + month : String.valueOf(month));
+            result = result.replaceAll("\\[vacode:date:M:", "[vacode:math:add:+")
+                    .replaceAll("\\[vacode:math:add:++", "[vacode:math:add:+");
+            result = result.replaceAll("\\[vacode:math:add:", "[vacode:math:add:" + month);
+
+            // 當前年
+            int year = now.get(Calendar.YEAR);
+            result = result.replaceAll("\\[vacode:date:y]", String.valueOf(year));
+            result = result.replaceAll("\\[vacode:date:y:", "[vacode:math:add:+")
+                    .replaceAll("\\[vacode:math:add:++", "[vacode:math:add:+");
+            result = result.replaceAll("\\[vacode:math:add:", "[vacode:math:add:" + year);
+
+            // 本月第幾周
+            int weekOfMonth = now.get(Calendar.WEEK_OF_MONTH);
+            result = result.replaceAll("\\[vacode:date:W]", String.valueOf(weekOfMonth));
+            result = result.replaceAll("\\[vacode:date:W:", "[vacode:math:add:+")
+                    .replaceAll("\\[vacode:math:add:++", "[vacode:math:add:+");
+            result = result.replaceAll("\\[vacode:math:add:", "[vacode:math:add:" + weekOfMonth);
+
+            // 本年第幾周
+            int weekOfYear = now.get(Calendar.WEEK_OF_YEAR);
+            result = result.replaceAll("\\[vacode:date:w]", String.valueOf(weekOfYear));
+            result = result.replaceAll("\\[vacode:date:w:", "[vacode:math:add:+")
+                    .replaceAll("\\[vacode:math:add:++", "[vacode:math:add:+");
+            result = result.replaceAll("\\[vacode:math:add:", "[vacode:math:add:" + weekOfYear);
+
+            // 本年第幾天
+            int dayOfYear = now.get(Calendar.DAY_OF_YEAR);
+            result = result.replaceAll("\\[vacode:date:D]", String.valueOf(dayOfYear));
+            result = result.replaceAll("\\[vacode:date:D:", "[vacode:math:add:+")
+                    .replaceAll("\\[vacode:math:add:++", "[vacode:math:add:+");
+            result = result.replaceAll("\\[vacode:math:add:", "[vacode:math:add:" + dayOfYear);
+
+            // 本月總天數
+            int lastDayOfMonth = DateUtil.getLastDayOfMonth(now.getTime());
+            result = result.replaceAll("\\[vacode:date:days]", String.valueOf(lastDayOfMonth));
+            result = result.replaceAll("\\[vacode:date:days:", "[vacode:math:add:+")
+                    .replaceAll("\\[vacode:math:add:++", "[vacode:math:add:+");
+            result = result.replaceAll("\\[vacode:math:add:", "[vacode:math:add:" + lastDayOfMonth);
+        }
+
+        // 替换随机数特殊码
+        if (result.contains("[vacode:rand:")) {
+            RegUtils regUtils = new RegUtils().appendIg(".*?")
+                    .append("[vacode:rand:")
+                    .groupIgByName("num1", "-?[1-9]\\d{0,9}(?:\\.\\d{1,4})?")
+                    .append(":")
+                    .groupIgByName("num2", "-?[1-9]\\d{0,9}(?:\\.\\d{1,4})?")
+                    .appendIg("].*?");
+            while (regUtils.matcher(result).find()) {
+                String numString1 = regUtils.getMatcher().group("num1");
+                String numString2 = regUtils.getMatcher().group("num2");
+                String ran;
+                if (numString1.contains(".") || numString2.contains(".")) {
+                    ran = NumberUtil.roundStr(RandomUtil.randomDouble(Double.parseDouble(numString1), Double.parseDouble(numString2)), 4);
+                } else {
+                    ran = String.valueOf(RandomUtil.randomInt(Integer.parseInt(numString1), Integer.parseInt(numString2)));
+                }
+                result = result.replaceAll("\\[vacode:rand:" + numString1 + ":" + numString2 + "]", ran);
+            }
+        }
+
+        // 替换算数特殊码
+        if (result.contains("[vacode:math:add:")) {
+            RegUtils regUtils = new RegUtils().appendIg(".*?")
+                    .append("[vacode:math:add:")
+                    .groupIgByName("num1", "-?[1-9]\\d{0,9}(?:\\.\\d{1,4})?")
+                    .append("+")
+                    .groupIgByName("num2", "-?[1-9]\\d{0,9}(?:\\.\\d{1,4})?")
+                    .appendIg("].*?");
+            while (regUtils.matcher(result).find()) {
+                String numString1 = regUtils.getMatcher().group("num1");
+                String numString2 = regUtils.getMatcher().group("num2");
+                result = result.replaceAll("\\[vacode:math:add:" + numString1 + "\\+" + numString2 + "]",
+                        String.valueOf(Double.parseDouble(numString1) + Double.parseDouble(numString2)));
+            }
         }
         return result;
     }

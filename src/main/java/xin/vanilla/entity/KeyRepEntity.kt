@@ -1,11 +1,17 @@
 package xin.vanilla.entity
 
 import kotlinx.serialization.Serializable
+import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.message.data.Message
 import net.mamoe.mirai.message.data.MessageChainBuilder
 
 @Serializable
-class KeyRepEntity {
+class KeyRepEntity(
+    /**
+     * 发送至的对象
+     */
+    private var contact: Contact
+) {
     /**
      * 回复内容
      */
@@ -21,4 +27,11 @@ class KeyRepEntity {
             return if (field > 1000 * 60 * 10) 1000 * 60 * 10 else field
         }
 
+    fun setContact(contact: Contact?) {
+        if (contact != null) this.contact = contact
+    }
+
+    fun getContact(): Contact {
+        return this.contact
+    }
 }

@@ -280,12 +280,12 @@ public class Api {
         if (message.contains("\\(:vaevent:\\)"))
             message = message.replace("\\(:vaevent:\\)", "(:vaevent:)");
 
-        KeyRepEntity rep = new KeyRepEntity();
+        KeyRepEntity rep = new KeyRepEntity(contact);
         // 判断是否包含延时特殊码
-        message = decodeDelay(rep, message);
+        message = deVanillaCode(rep, message);
 
         rep.setRep(MessageUtils.newChain(new PlainText(message)));
-        return sendMessage(contact, rep);
+        return sendMessage(rep);
     }
 
     /**
@@ -294,7 +294,7 @@ public class Api {
     public static MessageReceipt<Contact> sendMessage(Contact contact, Message message) {
         if (contact == null) return null;
         if (StringUtils.isNullOrEmpty(message.contentToString())) return null;
-        KeyRepEntity rep = new KeyRepEntity();
+        KeyRepEntity rep = new KeyRepEntity(contact);
         // 反转义事件特殊码
         if (message instanceof MessageChain) {
             if (message.contentToString().contains("\\(:vaevent:\\)")) {
@@ -304,7 +304,7 @@ public class Api {
                     if (singleMessage instanceof PlainText) {
                         PlainText plainText = (PlainText) singleMessage;
                         String textMsg = plainText.contentToString().replace("\\(:vaevent:\\)", "(:vaevent:)");
-                        textMsg = decodeDelay(rep, textMsg);
+                        textMsg = deVanillaCode(rep, textMsg);
                         messages.add(textMsg);
                     } else {
                         messages.add(singleMessage);
@@ -314,15 +314,15 @@ public class Api {
             }
         }
         rep.setRep(message);
-        return sendMessage(contact, rep);
+        return sendMessage(rep);
     }
 
-    private static MessageReceipt<Contact> sendMessage(Contact contact, KeyRepEntity rep) {
+    private static MessageReceipt<Contact> sendMessage(KeyRepEntity rep) {
         if (rep.getDelayMillis() > 0) {
             CompletableFuture<MessageReceipt<Contact>> delayed = Va.delayed(rep.getDelayMillis(), () -> {
-                MessageReceipt<Contact> contactMessageReceipt = contact.sendMessage(rep.getRep());
+                MessageReceipt<Contact> contactMessageReceipt = rep.getContact().sendMessage(rep.getRep());
                 Va.addMsgSendCount();
-                Va.getMessageCache().addMsg(contact, contactMessageReceipt.getSource(), rep.getRep());
+                Va.getMessageCache().addMsg(rep.getContact(), contactMessageReceipt.getSource(), rep.getRep());
                 return contactMessageReceipt;
             });
             try {
@@ -331,21 +331,50 @@ public class Api {
                 throw new RuntimeException(e);
             }
         } else {
-            MessageReceipt<Contact> contactMessageReceipt = contact.sendMessage(rep.getRep());
+            MessageReceipt<Contact> contactMessageReceipt = rep.getContact().sendMessage(rep.getRep());
             Va.addMsgSendCount();
-            Va.getMessageCache().addMsg(contact, contactMessageReceipt.getSource(), rep.getRep());
+            Va.getMessageCache().addMsg(rep.getContact(), contactMessageReceipt.getSource(), rep.getRep());
             return contactMessageReceipt;
         }
     }
 
     @NotNull
-    private static String decodeDelay(KeyRepEntity rep, String textMsg) {
+    private static String deVanillaCode(KeyRepEntity rep, String textMsg) {
+        // 发送至指定好友特殊码
+        if (textMsg.contains("[vacode:tofriend:")) {
+            RegUtils regUtils = new RegUtils()
+                    .appendIg(".*?")
+                    .append("[vacode:tofriend:")
+                    .groupIgByName("qq", "\\d{5,10}")
+                    .appendIg("].*?");
+            while (regUtils.matcher(textMsg).find()) {
+                long qq = Long.parseLong(regUtils.getMatcher().group("qq"));
+                textMsg = textMsg.replace("[vacode:tofriend:" + qq + "]", "");
+                rep.setContact(rep.getContact().getBot().getFriend(qq));
+            }
+        }
+
+        // 发送至指定群聊特殊码
+        if (textMsg.contains("[vacode:togroup:")) {
+            RegUtils regUtils = new RegUtils()
+                    .appendIg(".*?")
+                    .append("[vacode:togroup:")
+                    .groupIgByName("group", "\\d{5,10}")
+                    .appendIg("].*?");
+            while (regUtils.matcher(textMsg).find()) {
+                long group = Long.parseLong(regUtils.getMatcher().group("group"));
+                textMsg = textMsg.replace("[vacode:togroup:" + group + "]", "");
+                rep.setContact(rep.getContact().getBot().getGroup(group));
+            }
+        }
+
         if (textMsg.contains("[vacode:delay:")) {
             RegUtils regUtils = new RegUtils()
-                    .appendIg(".*?\\[vacode:delay:")
+                    .appendIg(".*?")
+                    .append("[vacode:delay:")
                     .groupIgByName("time", "\\d{1,6}")
                     .appendIg("].*?");
-            if (regUtils.matcher(textMsg).find()) {
+            while (regUtils.matcher(textMsg).find()) {
                 String millis = regUtils.getMatcher().group("time");
                 textMsg = textMsg.replace("[vacode:delay:" + millis + "]", "");
                 rep.setDelayMillis(Integer.parseInt(millis));

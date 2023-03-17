@@ -800,17 +800,17 @@ public class InstructionMsgEvent {
             rep = reg.getMatcher().group("rep");
 
             MessageChain keyFormat;
-            MessageChain repFormat = MessageChain.deserializeFromMiraiCode(rep, group);
+            MessageChain repFormat = MessageChain.deserializeFromMiraiCode(rep.replaceAll("\\[vacode:","[☢:"), group);
 
             if (keyword.getContain().contains(type)) {
-                keyFormat = MessageChain.deserializeFromMiraiCode(".*?" + key + ".*?", group);
+                keyFormat = MessageChain.deserializeFromMiraiCode(".*?" + key.replaceAll("\\[vacode:","[☢:") + ".*?", group);
             } else if (keyword.getPinyin().contains(type)) {
                 key = PinyinHelper.toPinyin(key, PinyinStyleEnum.NORMAL).trim();
-                keyFormat = MessageChain.deserializeFromMiraiCode(".*?" + key + ".*?", group);
+                keyFormat = MessageChain.deserializeFromMiraiCode(".*?" + key.replaceAll("\\[vacode:","[☢:") + ".*?", group);
             } else if (keyword.getRegex().contains(type)) {
-                keyFormat = MessageChain.deserializeFromMiraiCode(key, group);
+                keyFormat = MessageChain.deserializeFromMiraiCode(key.replaceAll("\\[vacode:","[☢:"), group);
             } else {
-                keyFormat = MessageChain.deserializeFromMiraiCode("^" + key + "$", group);
+                keyFormat = MessageChain.deserializeFromMiraiCode("^" + key.replaceAll("\\[vacode:","[☢:") + "$", group);
             }
 
             ForwardMessageBuilder forwardMessageBuilder = new ForwardMessageBuilder(group)
@@ -819,9 +819,9 @@ public class InstructionMsgEvent {
                     .add(bot, new MessageChainBuilder().append("触发内容:\n").append(keyFormat).build())
                     .add(bot, new MessageChainBuilder().append("回复内容:\n").append(repFormat).build())
                     .add(bot, new PlainText("触发内容文本:"))
-                    .add(bot, new PlainText(VanillaUtils.enVanillaCodeKey(key)))
+                    .add(bot, new PlainText(VanillaUtils.enVanillaCodeKey(key).replaceAll("\\[vacode:", "[☢:")))
                     .add(bot, new PlainText("回复内容文本:"))
-                    .add(bot, new PlainText(VanillaUtils.enVanillaCodeRep(rep)));
+                    .add(bot, new PlainText(VanillaUtils.enVanillaCodeRep(rep).replaceAll("\\[vacode:", "[☢:")));
             boolean tf = false;
             for (long groupId : groups) {
                 int level = VanillaUtils.getPermissionLevel(bot, groupId, sender.getId()) * SettingsUtils.getKeyRadix(group.getId());
@@ -896,9 +896,9 @@ public class InstructionMsgEvent {
                                     "关键词状态: " + (keyData.getStatus() > 0 ? "已启用" : "未启用") + "\n" +
                                     "关键词内容:"
                     ));
-                    forwardMessageBuilder.add(bot, MessageChain.deserializeFromMiraiCode(keyData.getWordDecode(), group));
+                    forwardMessageBuilder.add(bot, MessageChain.deserializeFromMiraiCode(keyData.getWordDecode().replaceAll("\\[vacode:", "[☢:"), group));
                     forwardMessageBuilder.add(bot, new PlainText("关键词回复:"));
-                    forwardMessageBuilder.add(bot, MessageChain.deserializeFromMiraiCode(keyData.getRepDecode(), group));
+                    forwardMessageBuilder.add(bot, MessageChain.deserializeFromMiraiCode(keyData.getRepDecode().replaceAll("\\[vacode:", "[☢:"), group));
                 }
             }
             Api.sendMessage(group, forwardMessageBuilder.build());
