@@ -538,7 +538,7 @@ public class VanillaUtils {
             result = result.replaceAll("\\[vacode:date:0H]", hour < 10 ? "0" + hour : String.valueOf(hour));
             result = result.replaceAll("\\[vacode:date:H:", "[vacode:math:add:H:+")
                     .replaceAll("\\[vacode:math:add:H:\\+\\+", "[vacode:math:add:H:+");
-            result = result.replaceAll("\\[vacode:math:H:add:", "[vacode:math:add:" + hour);
+            result = result.replaceAll("\\[vacode:math:add:H:", "[vacode:math:add:" + hour);
 
             // 當前日
             int day = now.get(Calendar.DATE);
