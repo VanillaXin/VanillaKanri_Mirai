@@ -520,84 +520,84 @@ public class VanillaUtils {
             int second = now.get(Calendar.SECOND);
             result = result.replaceAll("\\[vacode:date:s]", String.valueOf(second));
             result = result.replaceAll("\\[vacode:date:0s]", second < 10 ? "0" + second : String.valueOf(second));
-            result = result.replaceAll("\\[vacode:date:s:", "[vacode:math:add:+")
-                    .replaceAll("\\[vacode:math:add:\\+\\+", "[vacode:math:add:+");
-            result = result.replaceAll("\\[vacode:math:add:", "[vacode:math:add:" + second);
+            result = result.replaceAll("\\[vacode:date:s:", "[vacode:math:add:s:+")
+                    .replaceAll("\\[vacode:math:add:s:\\+\\+", "[vacode:math:add:s:+");
+            result = result.replaceAll("\\[vacode:math:add:s:", "[vacode:math:add:" + second);
 
             // 當前分
             int minute = now.get(Calendar.MINUTE);
             result = result.replaceAll("\\[vacode:date:m]", String.valueOf(minute));
             result = result.replaceAll("\\[vacode:date:0m]", minute < 10 ? "0" + minute : String.valueOf(minute));
-            result = result.replaceAll("\\[vacode:date:m:", "[vacode:math:add:+")
-                    .replaceAll("\\[vacode:math:add:\\+\\+", "[vacode:math:add:+");
-            result = result.replaceAll("\\[vacode:math:add:", "[vacode:math:add:" + minute);
+            result = result.replaceAll("\\[vacode:date:m:", "[vacode:math:add:m:+")
+                    .replaceAll("\\[vacode:math:add:m:\\+\\+", "[vacode:math:add:m:+");
+            result = result.replaceAll("\\[vacode:math:add:m:", "[vacode:math:add:" + minute);
 
             // 當前時
             int hour = now.get(Calendar.HOUR_OF_DAY);
             result = result.replaceAll("\\[vacode:date:H]", String.valueOf(hour));
             result = result.replaceAll("\\[vacode:date:0H]", hour < 10 ? "0" + hour : String.valueOf(hour));
-            result = result.replaceAll("\\[vacode:date:H:", "[vacode:math:add:+")
-                    .replaceAll("\\[vacode:math:add:\\+\\+", "[vacode:math:add:+");
-            result = result.replaceAll("\\[vacode:math:add:", "[vacode:math:add:" + hour);
+            result = result.replaceAll("\\[vacode:date:H:", "[vacode:math:add:H:+")
+                    .replaceAll("\\[vacode:math:add:H:\\+\\+", "[vacode:math:add:H:+");
+            result = result.replaceAll("\\[vacode:math:H:add:", "[vacode:math:add:" + hour);
 
             // 當前日
             int day = now.get(Calendar.DATE);
             result = result.replaceAll("\\[vacode:date:d]", String.valueOf(day));
             result = result.replaceAll("\\[vacode:date:0d]", day < 10 ? "0" + day : String.valueOf(day));
-            result = result.replaceAll("\\[vacode:date:d:", "[vacode:math:add:+")
-                    .replaceAll("\\[vacode:math:add:\\+\\+", "[vacode:math:add:+");
-            result = result.replaceAll("\\[vacode:math:add:", "[vacode:math:add:" + day);
+            result = result.replaceAll("\\[vacode:date:d:", "[vacode:math:add:d:+")
+                    .replaceAll("\\[vacode:math:add:d:\\+\\+", "[vacode:math:add:d:+");
+            result = result.replaceAll("\\[vacode:math:add:d:", "[vacode:math:add:" + day);
 
             // 當前周
             int week = now.get(Calendar.DAY_OF_WEEK) - 1;
             if (week == 0) week = 7;
             result = result.replaceAll("\\[vacode:date:E]", String.valueOf(week));
-            result = result.replaceAll("\\[vacode:date:E:", "[vacode:math:add:+")
-                    .replaceAll("\\[vacode:math:add:\\+\\+", "[vacode:math:add:+");
-            result = result.replaceAll("\\[vacode:math:add:", "[vacode:math:add:" + week);
+            result = result.replaceAll("\\[vacode:date:E:", "[vacode:math:add:E:+")
+                    .replaceAll("\\[vacode:math:add:E:\\+\\+", "[vacode:math:add:E:+");
+            result = result.replaceAll("\\[vacode:math:add:E:", "[vacode:math:add:" + week);
 
             // 當前月
             int month = now.get(Calendar.MONTH) + 1;
             result = result.replaceAll("\\[vacode:date:M]", String.valueOf(month));
             result = result.replaceAll("\\[vacode:date:0M]", month < 10 ? "0" + month : String.valueOf(month));
-            result = result.replaceAll("\\[vacode:date:M:", "[vacode:math:add:+")
-                    .replaceAll("\\[vacode:math:add:\\+\\+", "[vacode:math:add:+");
-            result = result.replaceAll("\\[vacode:math:add:", "[vacode:math:add:" + month);
+            result = result.replaceAll("\\[vacode:date:M:", "[vacode:math:add:M:+")
+                    .replaceAll("\\[vacode:math:add:M:\\+\\+", "[vacode:math:add:M:+");
+            result = result.replaceAll("\\[vacode:math:add:M:", "[vacode:math:add:" + month);
 
             // 當前年
             int year = now.get(Calendar.YEAR);
             result = result.replaceAll("\\[vacode:date:y]", String.valueOf(year));
-            result = result.replaceAll("\\[vacode:date:y:", "[vacode:math:add:+")
-                    .replaceAll("\\[vacode:math:add:\\+\\+", "[vacode:math:add:+");
-            result = result.replaceAll("\\[vacode:math:add:", "[vacode:math:add:" + year);
+            result = result.replaceAll("\\[vacode:date:y:", "[vacode:math:add:y:+")
+                    .replaceAll("\\[vacode:math:add:y:\\+\\+", "[vacode:math:add:y:+");
+            result = result.replaceAll("\\[vacode:math:add:y:", "[vacode:math:add:" + year);
 
             // 本月第幾周
             int weekOfMonth = now.get(Calendar.WEEK_OF_MONTH);
             result = result.replaceAll("\\[vacode:date:W]", String.valueOf(weekOfMonth));
-            result = result.replaceAll("\\[vacode:date:W:", "[vacode:math:add:+")
-                    .replaceAll("\\[vacode:math:add:\\+\\+", "[vacode:math:add:+");
-            result = result.replaceAll("\\[vacode:math:add:", "[vacode:math:add:" + weekOfMonth);
+            result = result.replaceAll("\\[vacode:date:W:", "[vacode:math:add:W:+")
+                    .replaceAll("\\[vacode:math:add:W:\\+\\+", "[vacode:math:add:W:+");
+            result = result.replaceAll("\\[vacode:math:add:W:", "[vacode:math:add:" + weekOfMonth);
 
             // 本年第幾周
             int weekOfYear = now.get(Calendar.WEEK_OF_YEAR);
             result = result.replaceAll("\\[vacode:date:w]", String.valueOf(weekOfYear));
-            result = result.replaceAll("\\[vacode:date:w:", "[vacode:math:add:+")
-                    .replaceAll("\\[vacode:math:add:\\+\\+", "[vacode:math:add:+");
-            result = result.replaceAll("\\[vacode:math:add:", "[vacode:math:add:" + weekOfYear);
+            result = result.replaceAll("\\[vacode:date:w:", "[vacode:math:add:w:+")
+                    .replaceAll("\\[vacode:math:add:w:\\+\\+", "[vacode:math:add:w:+");
+            result = result.replaceAll("\\[vacode:math:add:w:", "[vacode:math:add:" + weekOfYear);
 
             // 本年第幾天
             int dayOfYear = now.get(Calendar.DAY_OF_YEAR);
             result = result.replaceAll("\\[vacode:date:D]", String.valueOf(dayOfYear));
-            result = result.replaceAll("\\[vacode:date:D:", "[vacode:math:add:+")
-                    .replaceAll("\\[vacode:math:add:\\+\\+", "[vacode:math:add:+");
-            result = result.replaceAll("\\[vacode:math:add:", "[vacode:math:add:" + dayOfYear);
+            result = result.replaceAll("\\[vacode:date:D:", "[vacode:math:add:D:+")
+                    .replaceAll("\\[vacode:math:add:D:\\+\\+", "[vacode:math:add:D:+");
+            result = result.replaceAll("\\[vacode:math:add:D:", "[vacode:math:add:" + dayOfYear);
 
             // 本月總天數
             int lastDayOfMonth = DateUtil.getLastDayOfMonth(now.getTime());
             result = result.replaceAll("\\[vacode:date:days]", String.valueOf(lastDayOfMonth));
-            result = result.replaceAll("\\[vacode:date:days:", "[vacode:math:add:+")
-                    .replaceAll("\\[vacode:math:add:\\+\\+", "[vacode:math:add:+");
-            result = result.replaceAll("\\[vacode:math:add:", "[vacode:math:add:" + lastDayOfMonth);
+            result = result.replaceAll("\\[vacode:date:days:", "[vacode:math:add:days:+")
+                    .replaceAll("\\[vacode:math:add:days:\\+\\+", "[vacode:math:add:days:+");
+            result = result.replaceAll("\\[vacode:math:add:days:", "[vacode:math:add:" + lastDayOfMonth);
         }
 
         // 替换随机数特殊码
