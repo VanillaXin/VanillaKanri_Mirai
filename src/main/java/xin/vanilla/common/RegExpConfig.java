@@ -289,6 +289,8 @@ public class RegExpConfig {
 
         /**
          * 关键词 回复内容解码
+         * <p>
+         * 非重要特殊码
          */
         public static Map<String, String> DE_REP = new HashMap<String, String>() {{
             put("\\[vacode:void]", "");

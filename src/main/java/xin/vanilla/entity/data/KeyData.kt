@@ -60,7 +60,17 @@ class KeyData {
      * 不执行群管操作
      */
     fun getRepDecode(): String {
-        return VanillaUtils.deVanillaCodeRep(this.rep)
+        return VanillaUtils.deVanillaCodeRep(this.rep, false)
+    }
+
+    /**
+     * 获取解Va码后的消息
+     *
+     * 不执行群管操作
+     * @param boolean 是否仅解析非重要特殊码
+     */
+    fun getRepDecode(boolean: Boolean): String {
+        return VanillaUtils.deVanillaCodeRep(this.rep, boolean)
     }
 
     /**

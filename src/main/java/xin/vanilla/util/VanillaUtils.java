@@ -506,13 +506,17 @@ public class VanillaUtils {
 
     /**
      * 词库回复(repMsg)消息解码
+     *
+     * @param only 是否仅解析转义非重要特殊码
      */
-    public static String deVanillaCodeRep(@NotNull String msg) {
+    public static String deVanillaCodeRep(@NotNull String msg, boolean only) {
         Map<String, String> repCode = RegExpConfig.VaCode.DE_REP;
         String result = msg;
         for (String key : repCode.keySet()) {
             result = result.replaceAll(key, repCode.get(key));
         }
+        if (only) return result;
+
         // 替换日期特时间殊码
         if (result.contains("[vacode:date:")) {
             Calendar now = Calendar.getInstance();
@@ -668,7 +672,7 @@ public class VanillaUtils {
             }
 
             // 非操作特殊码解码
-            result = deVanillaCodeRep(result);
+            result = deVanillaCodeRep(result, false);
 
             // 禁言
             result = RegExpConfig.VaCode.exeMute(result, group != null ? (NormalMember) sender : null);
