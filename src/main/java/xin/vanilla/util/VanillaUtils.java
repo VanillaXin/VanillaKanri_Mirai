@@ -550,13 +550,14 @@ public class VanillaUtils {
 
             // 當前周
             int week = now.get(Calendar.DAY_OF_WEEK) - 1;
-            result = result.replaceAll("\\[vacode:date:E]", String.valueOf(week == 0 ? 7 : week));
+            if (week == 0) week = 7;
+            result = result.replaceAll("\\[vacode:date:E]", String.valueOf(week));
             result = result.replaceAll("\\[vacode:date:E:", "[vacode:math:add:+")
                     .replaceAll("\\[vacode:math:add:++", "[vacode:math:add:+");
             result = result.replaceAll("\\[vacode:math:add:", "[vacode:math:add:" + week);
 
             // 當前月
-            int month = now.get(Calendar.MONTH);
+            int month = now.get(Calendar.MONTH) + 1;
             result = result.replaceAll("\\[vacode:date:M]", String.valueOf(month));
             result = result.replaceAll("\\[vacode:date:0M]", month < 10 ? "0" + month : String.valueOf(month));
             result = result.replaceAll("\\[vacode:date:M:", "[vacode:math:add:+")
