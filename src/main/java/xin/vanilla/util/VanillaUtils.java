@@ -632,8 +632,13 @@ public class VanillaUtils {
             while (regUtils.matcher(result).find()) {
                 String numString1 = regUtils.getMatcher().group("num1");
                 String numString2 = regUtils.getMatcher().group("num2");
-                result = result.replaceAll("\\[vacode:math:add:" + numString1 + "\\+" + numString2 + "]",
-                        String.valueOf(Double.parseDouble(numString1) + Double.parseDouble(numString2)));
+                String sum;
+                if (numString1.contains(".") || numString2.contains(".")) {
+                    sum = String.valueOf(Double.parseDouble(numString1) + Double.parseDouble(numString2));
+                } else {
+                    sum = String.valueOf(Long.parseLong(numString1) + Long.parseLong(numString2));
+                }
+                result = result.replaceAll("\\[vacode:math:add:" + numString1 + "\\+" + numString2 + "]", sum);
             }
         }
         return result;
