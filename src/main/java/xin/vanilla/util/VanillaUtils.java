@@ -681,7 +681,15 @@ public class VanillaUtils {
             // 踢出
             result = RegExpConfig.VaCode.exeKick(word, result, group != null ? (NormalMember) sender : null);
 
-
+            // 解析戳一戳特殊码
+            if (result.contains("[vacode:tap]")) {
+                result = result.replaceAll("\\[vacode:tap]", "");
+                if (sender instanceof Friend) {
+                    ((Friend) sender).nudge().sendTo(sender);
+                } else if (sender instanceof Member) {
+                    ((Member) sender).nudge().sendTo(((Member) sender).getGroup());
+                }
+            }
         } catch (Exception e) {
             e.printStackTrace();
             result = "";
