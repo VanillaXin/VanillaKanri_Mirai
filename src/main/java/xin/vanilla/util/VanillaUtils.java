@@ -660,9 +660,6 @@ public class VanillaUtils {
         try {
             if (!rep.contains("[vacode:")) return rep;
 
-            // ChatGPT
-            result = RegExpConfig.VaCode.exeGpt(word, result, group != null ? (NormalMember) sender : null);
-
             // 转义艾特
             result = rep.replaceAll("\\[vacode:@]", new At(sender.getId()).serializeToMiraiCode());
             // 取发送者qq
@@ -683,6 +680,9 @@ public class VanillaUtils {
             result = RegExpConfig.VaCode.exeRecall(result, messageChain);
             // 踢出
             result = RegExpConfig.VaCode.exeKick(word, result, group != null ? (NormalMember) sender : null);
+
+            // ChatGPT
+            result = RegExpConfig.VaCode.exeGpt(word, result, group != null ? (NormalMember) sender : null);
 
             // 解析戳一戳特殊码
             if (result.contains("[vacode:tap]")) {
