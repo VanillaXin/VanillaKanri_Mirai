@@ -271,21 +271,11 @@ public class Api {
                 nature.setRole(com.unfbx.chatgpt.entity.chat.Message.Role.USER.getName());
                 nature.setContent(s);
                 messages.add(nature);
-
-                com.unfbx.chatgpt.entity.chat.Message natureRep = new com.unfbx.chatgpt.entity.chat.Message();
-                natureRep.setRole(com.unfbx.chatgpt.entity.chat.Message.Role.ASSISTANT.getName());
-                natureRep.setContent("好的");
-                messages.add(natureRep);
             }
-
-            com.unfbx.chatgpt.entity.chat.Message userName = new com.unfbx.chatgpt.entity.chat.Message();
-            userName.setRole(com.unfbx.chatgpt.entity.chat.Message.Role.USER.getName());
-            userName.setContent("我的名字是: " + nick);
-            messages.add(userName);
 
             com.unfbx.chatgpt.entity.chat.Message userMessage = new com.unfbx.chatgpt.entity.chat.Message();
             userMessage.setRole(com.unfbx.chatgpt.entity.chat.Message.Role.USER.getName());
-            userMessage.setContent(msg);
+            userMessage.setContent("我的名字是" + nick + "," + msg);
             messages.add(userMessage);
 
             ChatCompletion chatCompletion = ChatCompletion.builder()
