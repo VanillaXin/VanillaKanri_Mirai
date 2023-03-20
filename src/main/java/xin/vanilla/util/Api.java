@@ -239,7 +239,7 @@ public class Api {
         String chatGPTUrl = Va.getGlobalConfig().getOther().getChatGPTUrl();
         if (StringUtils.isNullOrEmptyEx(chatGPTUrl)) return "";
 
-        String context = Va.getGlobalConfig().getOther().getChatGPTContext();
+        List<String> context = Va.getGlobalConfig().getOther().getChatGPTContext();
 
         String proxyHost = Va.getGlobalConfig().getOther().getSystemProxyHost();
         int proxyPort = Va.getGlobalConfig().getOther().getSystemProxyPort();
@@ -259,11 +259,17 @@ public class Api {
 
             List<com.unfbx.chatgpt.entity.chat.Message> messages = new ArrayList<>();
 
-            if (!StringUtils.isNullOrEmptyEx(context)) {
-                com.unfbx.chatgpt.entity.chat.Message systemMessage = new com.unfbx.chatgpt.entity.chat.Message();
-                systemMessage.setRole(com.unfbx.chatgpt.entity.chat.Message.Role.SYSTEM.getName());
-                systemMessage.setContent(context);
-                messages.add(systemMessage);
+            com.unfbx.chatgpt.entity.chat.Message systemMessage = new com.unfbx.chatgpt.entity.chat.Message();
+            systemMessage.setRole(com.unfbx.chatgpt.entity.chat.Message.Role.SYSTEM.getName());
+            systemMessage.setContent("回复尽可能短");
+            messages.add(systemMessage);
+
+            // 设置预设文本(风格)
+            for (String s : context) {
+                com.unfbx.chatgpt.entity.chat.Message nature = new com.unfbx.chatgpt.entity.chat.Message();
+                nature.setRole(com.unfbx.chatgpt.entity.chat.Message.Role.USER.getName());
+                nature.setContent(s);
+                messages.add(nature);
             }
 
             com.unfbx.chatgpt.entity.chat.Message userName = new com.unfbx.chatgpt.entity.chat.Message();

@@ -53,7 +53,7 @@ class Other {
     /**
      * chatGPT 预设语境
      */
-    var chatGPTContext: String = ""
+    var chatGPTContext: List<String> = mutableListOf()
 
     /**
      * chatGPT 请求失败后的默认回复
