@@ -493,13 +493,12 @@ public class Api {
         // ChatGPT特殊码过滤key, 防止暴露
         if (textMsg.contains(":chatgpt:")) {
             RegUtils regUtils = new RegUtils()
-                    .appendIg(".*?")
                     .append(":chatgpt:")
                     .groupIgByName("key", ".*?")
-                    .appendIg("].*?");
+                    .append("]");
             while (regUtils.matcher(textMsg).find()) {
                 String key = regUtils.getMatcher().group("key");
-                textMsg = textMsg.replace(":chatgpt:" + key + "]", ":chatgpt:***]");
+                textMsg = textMsg.replaceAll(regUtils.build(), ":chatgpt:***]");
             }
         }
         return textMsg;
