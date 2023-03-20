@@ -7,6 +7,9 @@ import cn.hutool.http.HttpResponse;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
+import com.unfbx.chatgpt.OpenAiClient;
+import com.unfbx.chatgpt.entity.chat.ChatCompletion;
+import com.unfbx.chatgpt.entity.chat.ChatCompletionResponse;
 import net.mamoe.mirai.contact.Contact;
 import net.mamoe.mirai.message.MessageReceipt;
 import net.mamoe.mirai.message.data.*;
@@ -17,6 +20,7 @@ import xin.vanilla.entity.KeyRepEntity;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -221,6 +225,72 @@ public class Api {
         }
     }
 
+    public static String chatGPT(String nick, String msg) {
+        return chatGPT(nick, Va.getGlobalConfig().getOther().getChatGPTKey(), msg);
+    }
+
+    public static String chatGPT(String nick, String key, String msg) {
+        String chatGPTKey = key;
+        if (StringUtils.isNullOrEmptyEx(chatGPTKey))
+            chatGPTKey = Va.getGlobalConfig().getOther().getChatGPTKey();
+        if (StringUtils.isNullOrEmptyEx(chatGPTKey)) return "";
+        String chatGPTUrl = Va.getGlobalConfig().getOther().getChatGPTUrl();
+        if (StringUtils.isNullOrEmptyEx(chatGPTUrl)) return "";
+
+        String context = Va.getGlobalConfig().getOther().getChatGPTContext();
+
+        String proxyHost = Va.getGlobalConfig().getOther().getSystemProxyHost();
+        int proxyPort = Va.getGlobalConfig().getOther().getSystemProxyPort();
+
+        try {
+            OpenAiClient.Builder builder = OpenAiClient.builder();
+
+            if (!StringUtils.isNullOrEmptyEx(proxyHost) && proxyPort > 0)
+                builder.proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyHost, proxyPort)));
+
+            OpenAiClient openAiClient = builder.apiKey(chatGPTKey)
+                    .apiHost(chatGPTUrl)
+                    .connectTimeout(50)
+                    .writeTimeout(50)
+                    .readTimeout(50)
+                    .build();
+
+            List<com.unfbx.chatgpt.entity.chat.Message> messages = new ArrayList<>();
+
+            if (!StringUtils.isNullOrEmptyEx(context)) {
+                com.unfbx.chatgpt.entity.chat.Message systemMessage = new com.unfbx.chatgpt.entity.chat.Message();
+                systemMessage.setRole(com.unfbx.chatgpt.entity.chat.Message.Role.SYSTEM.getName());
+                systemMessage.setContent(context);
+                messages.add(systemMessage);
+            }
+
+            com.unfbx.chatgpt.entity.chat.Message userName = new com.unfbx.chatgpt.entity.chat.Message();
+            userName.setRole(com.unfbx.chatgpt.entity.chat.Message.Role.USER.getName());
+            userName.setContent("我的名字是: " + nick);
+            messages.add(userName);
+
+            com.unfbx.chatgpt.entity.chat.Message userMessage = new com.unfbx.chatgpt.entity.chat.Message();
+            userMessage.setRole(com.unfbx.chatgpt.entity.chat.Message.Role.USER.getName());
+            userMessage.setContent(msg);
+            messages.add(userMessage);
+
+            ChatCompletion chatCompletion = ChatCompletion.builder()
+                    .temperature(0.8)
+                    .presencePenalty(1)
+                    .n(1)
+                    .topP(1.0)
+                    .model(ChatCompletion.Model.GPT_3_5_TURBO.getName())
+                    .maxTokens(2000)
+                    .messages(messages)
+                    .build();
+
+            ChatCompletionResponse chatCompletionResponse = openAiClient.chatCompletion(chatCompletion);
+            return chatCompletionResponse.getChoices().get(0).getMessage().getContent();
+        } catch (Exception ignored) {
+        }
+        return Va.getGlobalConfig().getOther().getChatGPTDefaultBack();
+    }
+
     /**
      * 通过图片链接构建图片对象
      */
@@ -270,6 +340,9 @@ public class Api {
         return ExternalResource.uploadAsImage(resource, contact);
     }
 
+
+    // region sendMessage
+
     /**
      * 发送消息
      */
@@ -295,6 +368,15 @@ public class Api {
         if (contact == null) return null;
         if (StringUtils.isNullOrEmpty(message.contentToString())) return null;
         KeyRepEntity rep = new KeyRepEntity(contact);
+        // 反转义事件特殊码
+        return sendMessage(rep, message);
+    }
+
+    /**
+     * 发送消息
+     */
+    public static MessageReceipt<Contact> sendMessage(KeyRepEntity rep, Message message) {
+        if (StringUtils.isNullOrEmpty(message.contentToString())) return null;
         // 反转义事件特殊码
         if (message instanceof MessageChain) {
             if (message.contentToString().contains("\\(:vaevent:\\)") || message.contentToString().contains("[vacode:")) {
@@ -368,6 +450,7 @@ public class Api {
             }
         }
 
+        // 延时特殊码
         if (textMsg.contains("[vacode:delay:")) {
             RegUtils regUtils = new RegUtils()
                     .appendIg(".*?")
@@ -380,6 +463,21 @@ public class Api {
                 rep.setDelayMillis(Integer.parseInt(millis));
             }
         }
+
+        // ChatGPT特殊码过滤key, 防止暴露
+        if (textMsg.contains(":chatgpt:")) {
+            RegUtils regUtils = new RegUtils()
+                    .appendIg(".*?")
+                    .append(":chatgpt:")
+                    .groupIgByName("key", ".*?")
+                    .appendIg("].*?");
+            while (regUtils.matcher(textMsg).find()) {
+                String key = regUtils.getMatcher().group("key");
+                textMsg = textMsg.replace(":chatgpt:" + key + "]", ":chatgpt:***]");
+            }
+        }
         return textMsg;
     }
+
+    // endregion sendMessage
 }

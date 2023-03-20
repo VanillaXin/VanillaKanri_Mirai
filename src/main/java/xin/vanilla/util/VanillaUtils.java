@@ -664,6 +664,9 @@ public class VanillaUtils {
             // 踢出
             result = RegExpConfig.VaCode.exeKick(word, result, group != null ? (NormalMember) sender : null);
 
+            // ChatGPT
+            result = RegExpConfig.VaCode.exeGpt(word, result, group != null ? (NormalMember) sender : null);
+
             // 转义艾特
             result = result.replaceAll("\\[vacode:@]", new At(sender.getId()).serializeToMiraiCode());
             // 取发送者qq

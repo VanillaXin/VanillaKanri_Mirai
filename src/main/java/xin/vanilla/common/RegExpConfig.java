@@ -9,6 +9,7 @@ import xin.vanilla.entity.config.instruction.BaseInstructions;
 import xin.vanilla.entity.config.instruction.KanriInstructions;
 import xin.vanilla.entity.config.instruction.KeywordInstructions;
 import xin.vanilla.entity.config.instruction.TimedTaskInstructions;
+import xin.vanilla.util.Api;
 import xin.vanilla.util.RegUtils;
 import xin.vanilla.util.StringUtils;
 
@@ -275,6 +276,13 @@ public class RegExpConfig {
                 .append("]");
 
         /**
+         * GPT请求特殊码
+         */
+        public static RegUtils GPT = new RegUtils().append("[vacode:chatgpt:")
+                .groupIgByName("key", ".*?")
+                .append("]");
+
+        /**
          * 回复特殊码
          */
         public static RegUtils REPLY = new RegUtils().append("[vacode:reply]");
@@ -376,6 +384,25 @@ public class RegExpConfig {
                 e.printStackTrace();
             }
             return msg.replaceAll(KICK.build(), "");
+        }
+
+
+        /**
+         * GPT
+         */
+        @NotNull
+        public static String exeGpt(String word, String msg, NormalMember member) {
+            Matcher matcher = GPT.matcher(msg);
+            String chatGPT = "";
+            try {
+                if (matcher.find()) {
+                    String key = matcher.group("key");
+                    chatGPT = Api.chatGPT(member.getNick(), key, word);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return msg.replaceAll(GPT.build(), chatGPT);
         }
 
         /**

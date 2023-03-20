@@ -17,6 +17,7 @@ import net.mamoe.mirai.contact.NormalMember;
 import net.mamoe.mirai.message.data.*;
 import net.mamoe.mirai.utils.ExternalResource;
 import xin.vanilla.common.RegExpConfig;
+import xin.vanilla.entity.KeyRepEntity;
 import xin.vanilla.entity.data.KeyData;
 import xin.vanilla.entity.event.events.GroupMessageEvents;
 import xin.vanilla.enumeration.PermissionLevel;
@@ -87,7 +88,11 @@ public class GroupMsgEvent extends BaseMsgEvent {
         KeyData keyword = Va.getKeywordData().getKeyword(VanillaUtils.messageToString(msg), bot.getId(), -group.getId());
         if (keyword.getId() > 0) {
             MessageChain rep = RegExpConfig.VaCode.exeReply(keyword.getRepDecode(group, bot, sender, msg), msg, group);
-            Api.sendMessage(group, rep);
+            KeyRepEntity keyRepEntity = new KeyRepEntity(group);
+            keyRepEntity.setMsg(VanillaUtils.messageToString(msg));
+            keyRepEntity.setSenderId(sender.getId());
+            keyRepEntity.setSenderName(sender.getNick());
+            Api.sendMessage(keyRepEntity, rep);
             return true;
         }
         return false;

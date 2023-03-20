@@ -13,6 +13,11 @@ class KeyRepEntity(
     private var contact: Contact
 ) {
     /**
+     * 触发内容
+     */
+    var msg: String = ""
+
+    /**
      * 回复内容
      */
     var rep: Message = MessageChainBuilder().build()
@@ -26,6 +31,16 @@ class KeyRepEntity(
         get() {
             return if (field > 1000 * 60 * 10) 1000 * 60 * 10 else field
         }
+
+    /**
+     * 发送者名称
+     */
+    var senderName: String = ""
+
+    /**
+     * 发送者QQ
+     */
+    var senderId: Long = 0
 
     fun setContact(contact: Contact?) {
         if (contact != null) this.contact = contact

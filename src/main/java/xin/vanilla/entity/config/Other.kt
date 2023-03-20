@@ -46,9 +46,19 @@ class Other {
     var chatGPTUrl: String = ""
 
     /**
-     * chatGTP 秘钥
+     * chatGPT 秘钥
      */
     var chatGPTKey: String = ""
+
+    /**
+     * chatGPT 预设语境
+     */
+    var chatGPTContext: String = ""
+
+    /**
+     * chatGPT 请求失败后的默认回复
+     */
+    var chatGPTDefaultBack: String = ""
 
     /**
      * 百度翻译key
@@ -85,5 +95,14 @@ class Other {
      */
     var aiDrawKey: String = ""
 
+    /**
+     * 系统代理地址
+     */
+    var systemProxyHost: String = ""
+
+    /**
+     * 系统代理端口
+     */
+    var systemProxyPort: Int = 0
 
 }
