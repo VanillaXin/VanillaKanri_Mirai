@@ -800,17 +800,17 @@ public class InstructionMsgEvent {
             rep = reg.getMatcher().group("rep");
 
             MessageChain keyFormat;
-            MessageChain repFormat = MessageChain.deserializeFromMiraiCode(rep.replaceAll("\\[vacode:","[☢:"), group);
+            MessageChain repFormat = MessageChain.deserializeFromMiraiCode(rep.replaceAll("\\[vacode:", "[☢:"), group);
 
             if (keyword.getContain().contains(type)) {
-                keyFormat = MessageChain.deserializeFromMiraiCode(".*?" + key.replaceAll("\\[vacode:","[☢:") + ".*?", group);
+                keyFormat = MessageChain.deserializeFromMiraiCode(".*?" + key.replaceAll("\\[vacode:", "[☢:") + ".*?", group);
             } else if (keyword.getPinyin().contains(type)) {
                 key = PinyinHelper.toPinyin(key, PinyinStyleEnum.NORMAL).trim();
-                keyFormat = MessageChain.deserializeFromMiraiCode(".*?" + key.replaceAll("\\[vacode:","[☢:") + ".*?", group);
+                keyFormat = MessageChain.deserializeFromMiraiCode(".*?" + key.replaceAll("\\[vacode:", "[☢:") + ".*?", group);
             } else if (keyword.getRegex().contains(type)) {
-                keyFormat = MessageChain.deserializeFromMiraiCode(key.replaceAll("\\[vacode:","[☢:"), group);
+                keyFormat = MessageChain.deserializeFromMiraiCode(key.replaceAll("\\[vacode:", "[☢:"), group);
             } else {
-                keyFormat = MessageChain.deserializeFromMiraiCode("^" + key.replaceAll("\\[vacode:","[☢:") + "$", group);
+                keyFormat = MessageChain.deserializeFromMiraiCode("^" + key.replaceAll("\\[vacode:", "[☢:") + "$", group);
             }
 
             ForwardMessageBuilder forwardMessageBuilder = new ForwardMessageBuilder(group)
@@ -883,7 +883,8 @@ public class InstructionMsgEvent {
             PaginationList<KeyData> keywordByPage = Va.getKeywordData().getKeywordByPage(key, bot.getId(), groupId, type, page, 20);
 
             forwardMessageBuilder.add(bot, new PlainText(
-                    "数据条数: " + keywordByPage.size() + "/" + keywordByPage.getTotalItemCount()
+                    "关键词类型: " + StringUtils.getKeywordTypeName(type) + "\n" +
+                            "数据条数: " + keywordByPage.size() + "/" + keywordByPage.getTotalItemCount()
                             + "\n数据页数: " + keywordByPage.getCurPageNo() + "/" + keywordByPage.getTotalPageCount()
                             + "\n每页条数: " + keywordByPage.getPageItemCount()
             ));
@@ -891,14 +892,13 @@ public class InstructionMsgEvent {
                 for (KeyData keyData : keywordByPage) {
                     forwardMessageBuilder.add(bot, new PlainText(
                             "关键词ID: " + keyData.getId() + "\n" +
-                                    "关键词类型: " + keyData.getType() + "\n" +
                                     "关键词权级: " + keyData.getLevel() + "\n" +
                                     "关键词状态: " + (keyData.getStatus() > 0 ? "已启用" : "未启用") + "\n" +
                                     "关键词内容:"
                     ));
                     forwardMessageBuilder.add(bot, MessageChain.deserializeFromMiraiCode(keyData.getWordDecode().replaceAll("\\[vacode:", "[☢:"), group));
                     forwardMessageBuilder.add(bot, new PlainText("关键词回复:"));
-                    forwardMessageBuilder.add(bot, MessageChain.deserializeFromMiraiCode(keyData.getRepDecode().replaceAll("\\[vacode:", "[☢:"), group));
+                    forwardMessageBuilder.add(bot, MessageChain.deserializeFromMiraiCode(keyData.getRepDecode(true).replaceAll("\\[vacode:", "[☢:"), group));
                 }
             }
             Api.sendMessage(group, forwardMessageBuilder.build());
@@ -940,7 +940,7 @@ public class InstructionMsgEvent {
 
             ForwardMessageBuilder forwardMessageBuilder = new ForwardMessageBuilder(group)
                     .add(sender, msg)
-                    .add(bot, new PlainText("关键词类型:\n" + type));
+                    .add(bot, new PlainText("关键词类型:\n" + StringUtils.getKeywordTypeName(type)));
 
             long groupId = groups[0];
             for (long keyId : keyIds) {

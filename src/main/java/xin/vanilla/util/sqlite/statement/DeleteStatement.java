@@ -29,6 +29,6 @@ public class DeleteStatement extends Statement {
     public static Statement produce(CharSequence table) {
         DeleteStatement deleteStmt = new DeleteStatement();
         deleteStmt.statement.append("DELETE");
-        return deleteStmt.append('`').from(table).append('`');
+        return deleteStmt.from(table);
     }
 }

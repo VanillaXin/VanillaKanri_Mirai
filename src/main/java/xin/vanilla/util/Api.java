@@ -11,10 +11,12 @@ import com.unfbx.chatgpt.OpenAiClient;
 import com.unfbx.chatgpt.entity.chat.ChatCompletion;
 import com.unfbx.chatgpt.entity.chat.ChatCompletionResponse;
 import net.mamoe.mirai.contact.Contact;
+import net.mamoe.mirai.contact.Group;
 import net.mamoe.mirai.message.MessageReceipt;
 import net.mamoe.mirai.message.data.*;
 import net.mamoe.mirai.utils.ExternalResource;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import xin.vanilla.VanillaKanri;
 import xin.vanilla.entity.KeyRepEntity;
 
@@ -401,23 +403,28 @@ public class Api {
 
     private static MessageReceipt<Contact> sendMessage(KeyRepEntity rep) {
         if (rep.getDelayMillis() > 0) {
-            CompletableFuture<MessageReceipt<Contact>> delayed = Va.delayed(rep.getDelayMillis(), () -> {
-                MessageReceipt<Contact> contactMessageReceipt = rep.getContact().sendMessage(rep.getRep());
-                Va.addMsgSendCount();
-                Va.getMessageCache().addMsg(rep.getContact(), contactMessageReceipt.getSource(), rep.getRep());
-                return contactMessageReceipt;
-            });
+            CompletableFuture<MessageReceipt<Contact>> delayed = Va.delayed(rep.getDelayMillis(), () -> getContactMessageReceipt(rep));
             try {
                 return delayed.get();
             } catch (InterruptedException | ExecutionException e) {
                 throw new RuntimeException(e);
             }
         } else {
-            MessageReceipt<Contact> contactMessageReceipt = rep.getContact().sendMessage(rep.getRep());
+            return getContactMessageReceipt(rep);
+        }
+    }
+
+    @Nullable
+    private static MessageReceipt<Contact> getContactMessageReceipt(KeyRepEntity rep) {
+        MessageReceipt<Contact> contactMessageReceipt = null;
+        try {
+            contactMessageReceipt = rep.getContact().sendMessage(rep.getRep());
             Va.addMsgSendCount();
             Va.getMessageCache().addMsg(rep.getContact(), contactMessageReceipt.getSource(), rep.getRep());
-            return contactMessageReceipt;
+        } catch (Exception e) {
+            Va.getLogger().error(e);
         }
+        return contactMessageReceipt;
     }
 
     @NotNull
@@ -432,7 +439,14 @@ public class Api {
             while (regUtils.matcher(textMsg).find()) {
                 long qq = Long.parseLong(regUtils.getMatcher().group("qq"));
                 textMsg = textMsg.replace("[vacode:tofriend:" + qq + "]", "");
-                rep.setContact(rep.getContact().getBot().getFriend(qq));
+                Contact friend;
+                if (rep.getContact() instanceof Group) {
+                    Group group = (Group) rep.getContact();
+                    friend = group.get(qq);
+                } else {
+                    friend = rep.getContact().getBot().getFriend(qq);
+                }
+                rep.setContact(friend);
             }
         }
 

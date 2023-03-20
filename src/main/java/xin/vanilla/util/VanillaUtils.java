@@ -506,13 +506,17 @@ public class VanillaUtils {
 
     /**
      * 词库回复(repMsg)消息解码
+     *
+     * @param only 是否仅解析转义非重要特殊码
      */
-    public static String deVanillaCodeRep(@NotNull String msg) {
+    public static String deVanillaCodeRep(@NotNull String msg, boolean only) {
         Map<String, String> repCode = RegExpConfig.VaCode.DE_REP;
         String result = msg;
         for (String key : repCode.keySet()) {
             result = result.replaceAll(key, repCode.get(key));
         }
+        if (only) return result;
+
         // 替换日期特时间殊码
         if (result.contains("[vacode:date:")) {
             Calendar now = Calendar.getInstance();
@@ -654,21 +658,13 @@ public class VanillaUtils {
     public static String deVanillaCodeIns(@NotNull final String word, @NotNull final String rep, Bot bot, Group group, @NotNull Contact sender, MessageChain messageChain) {
         String result;
         try {
-            // 非操作特殊码解码
-            result = deVanillaCodeRep(rep);
-
-            // 禁言
-            result = RegExpConfig.VaCode.exeMute(result, group != null ? (NormalMember) sender : null);
-            // 撤回
-            result = RegExpConfig.VaCode.exeRecall(result, messageChain);
-            // 踢出
-            result = RegExpConfig.VaCode.exeKick(word, result, group != null ? (NormalMember) sender : null);
+            if (!rep.contains("[vacode:")) return rep;
 
             // ChatGPT
             result = RegExpConfig.VaCode.exeGpt(word, result, group != null ? (NormalMember) sender : null);
 
             // 转义艾特
-            result = result.replaceAll("\\[vacode:@]", new At(sender.getId()).serializeToMiraiCode());
+            result = rep.replaceAll("\\[vacode:@]", new At(sender.getId()).serializeToMiraiCode());
             // 取发送者qq
             result = result.replaceAll("\\[vacode:qnumber]", String.valueOf(sender.getId()));
             if (group != null) {
@@ -678,7 +674,25 @@ public class VanillaUtils {
                 result = result.replaceAll("\\[vacode:gname]", group.getName());
             }
 
+            // 非操作特殊码解码
+            result = deVanillaCodeRep(result, false);
 
+            // 禁言
+            result = RegExpConfig.VaCode.exeMute(result, group != null ? (NormalMember) sender : null);
+            // 撤回
+            result = RegExpConfig.VaCode.exeRecall(result, messageChain);
+            // 踢出
+            result = RegExpConfig.VaCode.exeKick(word, result, group != null ? (NormalMember) sender : null);
+
+            // 解析戳一戳特殊码
+            if (result.contains("[vacode:tap]")) {
+                result = result.replaceAll("\\[vacode:tap]", "");
+                if (sender instanceof Friend) {
+                    ((Friend) sender).nudge().sendTo(sender);
+                } else if (sender instanceof Member) {
+                    ((Member) sender).nudge().sendTo(((Member) sender).getGroup());
+                }
+            }
         } catch (Exception e) {
             e.printStackTrace();
             result = "";
