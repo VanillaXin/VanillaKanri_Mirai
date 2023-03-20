@@ -10,11 +10,13 @@ import cn.hutool.json.JSONUtil;
 import com.unfbx.chatgpt.OpenAiClient;
 import com.unfbx.chatgpt.entity.chat.ChatCompletion;
 import com.unfbx.chatgpt.entity.chat.ChatCompletionResponse;
+import com.unfbx.chatgpt.interceptor.OpenAILogger;
 import net.mamoe.mirai.contact.Contact;
 import net.mamoe.mirai.contact.Group;
 import net.mamoe.mirai.message.MessageReceipt;
 import net.mamoe.mirai.message.data.*;
 import net.mamoe.mirai.utils.ExternalResource;
+import okhttp3.logging.HttpLoggingInterceptor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import xin.vanilla.VanillaKanri;
@@ -24,10 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -250,11 +249,13 @@ public class Api {
             if (!StringUtils.isNullOrEmptyEx(proxyHost) && proxyPort > 0)
                 builder.proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyHost, proxyPort)));
 
+            // 日志
+            HttpLoggingInterceptor httpLoggingInterceptor = new HttpLoggingInterceptor(new OpenAILogger());
+            httpLoggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+
             OpenAiClient openAiClient = builder.apiKey(chatGPTKey)
                     .apiHost(chatGPTUrl)
-                    .connectTimeout(50)
-                    .writeTimeout(50)
-                    .readTimeout(50)
+                    .interceptor(Collections.singletonList(httpLoggingInterceptor))
                     .build();
 
             List<com.unfbx.chatgpt.entity.chat.Message> messages = new ArrayList<>();
@@ -270,6 +271,11 @@ public class Api {
                 nature.setRole(com.unfbx.chatgpt.entity.chat.Message.Role.USER.getName());
                 nature.setContent(s);
                 messages.add(nature);
+
+                com.unfbx.chatgpt.entity.chat.Message natureRep = new com.unfbx.chatgpt.entity.chat.Message();
+                natureRep.setRole(com.unfbx.chatgpt.entity.chat.Message.Role.ASSISTANT.getName());
+                natureRep.setContent("好的");
+                messages.add(natureRep);
             }
 
             com.unfbx.chatgpt.entity.chat.Message userName = new com.unfbx.chatgpt.entity.chat.Message();

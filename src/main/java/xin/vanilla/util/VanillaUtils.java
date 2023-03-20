@@ -450,6 +450,20 @@ public class VanillaUtils {
     }
 
     /**
+     * 提取消息中的PlainText
+     */
+    public static @NotNull String messageToPlainText(@NotNull MessageChain message) {
+        StringBuilder str = new StringBuilder();
+        for (SingleMessage singleMessage : message) {
+            if (singleMessage instanceof PlainText) {
+                PlainText plainText = (PlainText) singleMessage;
+                str.append(plainText.contentToString());
+            }
+        }
+        return str.toString();
+    }
+
+    /**
      * 将消息序列化为Json
      */
     @NotNull
@@ -682,7 +696,7 @@ public class VanillaUtils {
             result = RegExpConfig.VaCode.exeKick(word, result, group != null ? (NormalMember) sender : null);
 
             // ChatGPT
-            result = RegExpConfig.VaCode.exeGpt(word, result, group != null ? (NormalMember) sender : null);
+            result = RegExpConfig.VaCode.exeGpt(messageToPlainText(messageChain), result, group != null ? (NormalMember) sender : null);
 
             // 解析戳一戳特殊码
             if (result.contains("[vacode:tap]")) {
