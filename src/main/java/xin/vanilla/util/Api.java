@@ -355,7 +355,7 @@ public class Api {
         if (StringUtils.isNullOrEmpty(message)) return null;
         // 反转义事件特殊码
         if (message.contains("\\(:vaevent:\\)") || message.contains("(:vaevent:)"))
-            message = message.replace("(:vaevent:)", "(:☢:)").replace("\\(:vaevent:\\)", "(:vaevent:)");
+            message = message.replaceAll("\\(:vaevent:\\)", "(:☢:)").replaceAll("\\\\(:vaevent:\\\\)", "(:vaevent:)");
 
         KeyRepEntity rep = new KeyRepEntity(contact);
         // 判断是否包含延时特殊码
@@ -388,7 +388,7 @@ public class Api {
             if (message.contentToString().contains("(:vaevent:)")
                     || message.contentToString().contains("\\(:vaevent:\\)")
                     || message.contentToString().contains("[vacode:")) {
-                String textMsg = msgJson.replace("(:vaevent:)", "(:☢:)").replace("\\(:vaevent:\\)", "(:vaevent:)");
+                String textMsg = msgJson.replaceAll("\\(:vaevent:\\)", "(:☢:)").replaceAll("\\\\(:vaevent:\\\\)", "(:vaevent:)");
                 textMsg = deVanillaCode(rep, textMsg);
                 message = MessageChain.deserializeFromJsonString(textMsg);
             }
