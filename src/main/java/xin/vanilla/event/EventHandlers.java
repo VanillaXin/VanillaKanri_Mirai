@@ -351,6 +351,8 @@ public class EventHandlers extends SimpleListenerHost {
     private MessageChain buildTapMessage(@NotNull UserOrBot sender, @NotNull UserOrBot target, @NotNull Bot bot, String action, String suffix, MessageSourceKind kind) {
         MessageChainBuilder singleMessages = new MessageChainBuilder();
 
+        // TODO 计次
+
         // 构建 (:vaevent:)<±tap±>
         StringBuilder prefix = new StringBuilder("(:vaevent:)");
         prefix.append("<");
