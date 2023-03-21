@@ -182,6 +182,8 @@ public class KeywordDataImpl extends Base implements KeywordData {
 
             if (group < -1000) {
                 query.and(KeyData::getGroup).in(-1, Math.abs(group));
+            } else if (group == -2) {
+                query.and(KeyData::getGroup).in(-1, group);
             } else if (group != 0) {
                 query.and(KeyData::getGroup).eq(group);
             }

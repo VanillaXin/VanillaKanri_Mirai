@@ -78,7 +78,7 @@ class KeyData {
      *
      * 执行群管操作
      */
-    fun getRepDecode(group: Group, bot: Bot, contact: Contact, messageChain: MessageChain): String {
+    fun getRepDecode(group: Group?, bot: Bot, contact: Contact, messageChain: MessageChain): String {
         return VanillaUtils.deVanillaCodeIns(this.word, this.rep, bot, group, contact, messageChain)
     }
 
