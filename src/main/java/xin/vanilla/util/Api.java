@@ -383,20 +383,12 @@ public class Api {
         if (StringUtils.isNullOrEmpty(message.contentToString())) return null;
         // 反转义事件特殊码
         if (message instanceof MessageChain) {
+            MessageChain messageChain = (MessageChain) message;
+            String msgJson = MessageChain.serializeToJsonString(messageChain);
             if (message.contentToString().contains("\\(:vaevent:\\)") || message.contentToString().contains("[vacode:")) {
-                MessageChain messageChain = (MessageChain) message;
-                MessageChainBuilder messages = new MessageChainBuilder();
-                for (SingleMessage singleMessage : messageChain) {
-                    if (singleMessage instanceof PlainText) {
-                        PlainText plainText = (PlainText) singleMessage;
-                        String textMsg = plainText.contentToString().replace("\\(:vaevent:\\)", "(:vaevent:)");
-                        textMsg = deVanillaCode(rep, textMsg);
-                        messages.add(textMsg);
-                    } else {
-                        messages.add(singleMessage);
-                    }
-                }
-                message = messages.build();
+                String textMsg = msgJson.replace("\\(:vaevent:\\)", "(:☢:)");
+                textMsg = deVanillaCode(rep, textMsg);
+                message = MessageChain.deserializeFromJsonString(textMsg);
             }
         }
         rep.setRep(message);
@@ -484,7 +476,7 @@ public class Api {
         if (textMsg.contains(":chatgpt:")) {
             RegUtils regUtils = new RegUtils()
                     .append(":chatgpt:")
-                    .groupIgByName("key", ".*?")
+                    .groupIgByName("key", "[\\w\\-]+?")
                     .append("]");
             while (regUtils.matcher(textMsg).find()) {
                 String key = regUtils.getMatcher().group("key");

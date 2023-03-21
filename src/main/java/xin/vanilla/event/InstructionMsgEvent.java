@@ -137,7 +137,7 @@ public class InstructionMsgEvent {
      */
     @KanriInsEvent(prefix = "tap"
             , regexp = "tapRegExp")
-    public int tap(@NotNull long[] groups, long[] qqs, String num) {
+    public int tap(long @NotNull [] groups, long[] qqs, String num) {
         if (groups.length == 0) groups = new long[]{0};
         for (long groupId : groups) {
             Group thatGroup;
@@ -186,7 +186,7 @@ public class InstructionMsgEvent {
             , sender = PERMISSION_LEVEL_DEPUTY_ADMIN
             , bot = {MemberPermission.ADMINISTRATOR, MemberPermission.OWNER}
             , regexp = "cardRegExp")
-    public int card(@NotNull long[] groups, @NotNull long[] qqs, String text) {
+    public int card(long @NotNull [] groups, long @NotNull [] qqs, String text) {
         if (groups.length == 0) groups = new long[]{0};
         for (long groupId : groups) {
             Group thatGroup;
@@ -228,7 +228,7 @@ public class InstructionMsgEvent {
     @KanriInsEvent(prefix = "tag"
             , bot = {MemberPermission.OWNER}
             , regexp = "tagRegExp")
-    public int tag(@NotNull long[] groups, long[] qqs, String tag) {
+    public int tag(long @NotNull [] groups, long[] qqs, String tag) {
         if (groups.length == 0) groups = new long[]{0};
         for (long groupId : groups) {
             Group thatGroup;
@@ -276,7 +276,7 @@ public class InstructionMsgEvent {
             , sender = PERMISSION_LEVEL_DEPUTY_ADMIN
             , bot = {MemberPermission.ADMINISTRATOR, MemberPermission.OWNER}
             , regexp = "essenceRegExp")
-    public int essence(@NotNull long[] groups, long[] qqs, String text) {
+    public int essence(long @NotNull [] groups, long[] qqs, String text) {
         if (groups.length == 0) groups = new long[]{0};
         for (long groupId : groups) {
             Group thatGroup;
@@ -321,7 +321,7 @@ public class InstructionMsgEvent {
             , sender = PERMISSION_LEVEL_DEPUTY_ADMIN
             , bot = {MemberPermission.ADMINISTRATOR, MemberPermission.OWNER}
             , regexp = "loudRegExp")
-    public int loud(@NotNull long[] groups, @NotNull long[] qqs, String text) {
+    public int loud(long @NotNull [] groups, long @NotNull [] qqs, String text) {
         if (groups.length == 0) groups = new long[]{0};
         for (long groupId : groups) {
             Group thatGroup;
@@ -369,7 +369,7 @@ public class InstructionMsgEvent {
             , sender = PERMISSION_LEVEL_DEPUTY_ADMIN
             , bot = {MemberPermission.ADMINISTRATOR, MemberPermission.OWNER}
             , regexp = "muteRegExp")
-    public int mute(@NotNull long[] groups, @NotNull long[] qqs, String time) {
+    public int mute(long @NotNull [] groups, long @NotNull [] qqs, String time) {
         if (groups.length == 0) groups = new long[]{0};
         for (long groupId : groups) {
             Group thatGroup;
@@ -491,7 +491,7 @@ public class InstructionMsgEvent {
             , sender = PERMISSION_LEVEL_SUPER_ADMIN
             , bot = MemberPermission.OWNER
             , regexp = "adminRegExp")
-    public int admin(@NotNull long[] groups, @NotNull long[] qqs, String text) {
+    public int admin(long @NotNull [] groups, long @NotNull [] qqs, String text) {
         if (groups.length == 0) groups = new long[]{0};
         for (long groupId : groups) {
             Group thatGroup;
@@ -531,7 +531,7 @@ public class InstructionMsgEvent {
             , sender = PERMISSION_LEVEL_SUPER_ADMIN
             , bot = {MemberPermission.ADMINISTRATOR, MemberPermission.OWNER, MemberPermission.MEMBER}
             , regexp = "deputyAdminRegExp")
-    public int deputyAdmin(@NotNull long[] groups, @NotNull long[] qqs, String text) {
+    public int deputyAdmin(long @NotNull [] groups, long @NotNull [] qqs, String text) {
         if (groups.length == 0) groups = new long[]{-1};
         StringBuilder rep = new StringBuilder();
         if (qqs.length == 0 && base.getSelect().contains(text)) {
@@ -593,7 +593,7 @@ public class InstructionMsgEvent {
             , sender = PERMISSION_LEVEL_GROUP_OWNER
             , bot = {MemberPermission.ADMINISTRATOR, MemberPermission.OWNER, MemberPermission.MEMBER}
             , regexp = "deputyAdminRegExp")
-    public int groupDeputyAdmin(@NotNull long[] groups, @NotNull long[] qqs, String text) {
+    public int groupDeputyAdmin(long @NotNull [] groups, long @NotNull [] qqs, String text) {
         if (groups.length == 0) groups = new long[]{0};
         if (groups.length > 1) return RETURN_BREAK_TRUE;
         if (groups[0] != 0 || groups[0] != this.group.getId()) return RETURN_BREAK_TRUE;
@@ -640,7 +640,7 @@ public class InstructionMsgEvent {
             , sender = PERMISSION_LEVEL_SUPER_ADMIN
             , bot = {MemberPermission.ADMINISTRATOR, MemberPermission.OWNER, MemberPermission.MEMBER}
             , regexp = "botAdminRegExp")
-    public int botAdmin(long[] groups, @NotNull long[] qqs, String text) {
+    public int botAdmin(long[] groups, long @NotNull [] qqs, String text) {
         StringBuilder rep = new StringBuilder();
         if (qqs.length == 0 && base.getSelect().contains(text)) {
             rep.append("主管列表:\n");
@@ -677,7 +677,7 @@ public class InstructionMsgEvent {
             , sender = PERMISSION_LEVEL_BOT_OWNER
             , bot = {MemberPermission.ADMINISTRATOR, MemberPermission.OWNER, MemberPermission.MEMBER}
             , regexp = "superAdminRegExp")
-    public int superAdmin(long[] groups, @NotNull long[] qqs, String text) {
+    public int superAdmin(long[] groups, long @NotNull [] qqs, String text) {
         StringBuilder rep = new StringBuilder();
         if (qqs.length == 0 && base.getSelect().contains(text)) {
             rep.append("超管列表:\n");
@@ -714,7 +714,7 @@ public class InstructionMsgEvent {
             , sender = PERMISSION_LEVEL_SUPER_OWNER
             , bot = {MemberPermission.ADMINISTRATOR, MemberPermission.OWNER, MemberPermission.MEMBER}
             , regexp = "botOwnerRegExp")
-    public int botOwner(long[] groups, @NotNull long[] qqs, String text) {
+    public int botOwner(long[] groups, long @NotNull [] qqs, String text) {
         if (qqs.length == 1) {
             long qq = qqs[0];
             if (base.getAdd().contains(text)) {
@@ -741,7 +741,7 @@ public class InstructionMsgEvent {
             , sender = PERMISSION_LEVEL_DEPUTY_ADMIN
             , bot = {MemberPermission.ADMINISTRATOR, MemberPermission.OWNER}
             , regexp = "kickRegExp")
-    public int kick(@NotNull long[] groups, @NotNull long[] qqs, String text) {
+    public int kick(long @NotNull [] groups, long @NotNull [] qqs, String text) {
         if (groups.length == 0) groups = new long[]{0};
         for (long groupId : groups) {
             Group thatGroup;
@@ -800,17 +800,17 @@ public class InstructionMsgEvent {
             rep = reg.getMatcher().group("rep");
 
             MessageChain keyFormat;
-            MessageChain repFormat = MessageChain.deserializeFromMiraiCode(rep.replaceAll("\\[vacode:", "[☢:").replaceAll(":chatgpt:.*?]", ":chatgpt:***]"), group);
+            MessageChain repFormat = MessageChain.deserializeFromMiraiCode(rep.replaceAll("\\[vacode:", "[☣:").replaceAll(":chatgpt:.*?]", ":chatgpt:***]"), group);
 
             if (keyword.getContain().contains(type)) {
-                keyFormat = MessageChain.deserializeFromMiraiCode(".*?" + key.replaceAll("\\[vacode:", "[☢:").replaceAll(":chatgpt:.*?]", ":chatgpt:***]") + ".*?", group);
+                keyFormat = MessageChain.deserializeFromMiraiCode(".*?" + key.replaceAll("\\[vacode:", "[☣:").replaceAll(":chatgpt:.*?]", ":chatgpt:***]") + ".*?", group);
             } else if (keyword.getPinyin().contains(type)) {
                 key = PinyinHelper.toPinyin(key, PinyinStyleEnum.NORMAL).trim();
-                keyFormat = MessageChain.deserializeFromMiraiCode(".*?" + key.replaceAll("\\[vacode:", "[☢:").replaceAll(":chatgpt:.*?]", ":chatgpt:***]") + ".*?", group);
+                keyFormat = MessageChain.deserializeFromMiraiCode(".*?" + key.replaceAll("\\[vacode:", "[☣:").replaceAll(":chatgpt:.*?]", ":chatgpt:***]") + ".*?", group);
             } else if (keyword.getRegex().contains(type)) {
-                keyFormat = MessageChain.deserializeFromMiraiCode(key.replaceAll("\\[vacode:", "[☢:").replaceAll(":chatgpt:.*?]", ":chatgpt:***]"), group);
+                keyFormat = MessageChain.deserializeFromMiraiCode(key.replaceAll("\\[vacode:", "[☣:").replaceAll(":chatgpt:.*?]", ":chatgpt:***]"), group);
             } else {
-                keyFormat = MessageChain.deserializeFromMiraiCode("^" + key.replaceAll("\\[vacode:", "[☢:").replaceAll(":chatgpt:.*?]", ":chatgpt:***]") + "$", group);
+                keyFormat = MessageChain.deserializeFromMiraiCode("^" + key.replaceAll("\\[vacode:", "[☣:").replaceAll(":chatgpt:.*?]", ":chatgpt:***]") + "$", group);
             }
 
             ForwardMessageBuilder forwardMessageBuilder = new ForwardMessageBuilder(group)
@@ -819,9 +819,9 @@ public class InstructionMsgEvent {
                     .add(bot, new MessageChainBuilder().append("触发内容:\n").append(keyFormat).build())
                     .add(bot, new MessageChainBuilder().append("回复内容:\n").append(repFormat).build())
                     .add(bot, new PlainText("触发内容文本:"))
-                    .add(bot, new PlainText(VanillaUtils.enVanillaCodeKey(key).replaceAll("\\[vacode:", "[☢:").replaceAll(":chatgpt:.*?]", ":chatgpt:***]")))
+                    .add(bot, new PlainText(VanillaUtils.enVanillaCodeKey(key).replaceAll("\\[vacode:", "[☣:").replaceAll(":chatgpt:.*?]", ":chatgpt:***]")))
                     .add(bot, new PlainText("回复内容文本:"))
-                    .add(bot, new PlainText(VanillaUtils.enVanillaCodeRep(rep).replaceAll("\\[vacode:", "[☢:").replaceAll(":chatgpt:.*?]", ":chatgpt:***]")));
+                    .add(bot, new PlainText(VanillaUtils.enVanillaCodeRep(rep).replaceAll("\\[vacode:", "[☣:").replaceAll(":chatgpt:.*?]", ":chatgpt:***]")));
             boolean tf = false;
             for (long groupId : groups) {
                 int level = VanillaUtils.getPermissionLevel(bot, groupId, sender.getId()) * SettingsUtils.getKeyRadix(group.getId());
@@ -896,9 +896,9 @@ public class InstructionMsgEvent {
                                     "关键词状态: " + (keyData.getStatus() > 0 ? "已启用" : "未启用") + "\n" +
                                     "关键词内容:"
                     ));
-                    forwardMessageBuilder.add(bot, MessageChain.deserializeFromMiraiCode(keyData.getWordDecode().replaceAll("\\[vacode:", "[☢:").replaceAll(":chatgpt:.*?]", ":chatgpt:***]"), group));
+                    forwardMessageBuilder.add(bot, MessageChain.deserializeFromMiraiCode(keyData.getWordDecode().replaceAll("\\[vacode:", "[☣:").replaceAll(":chatgpt:.*?]", ":chatgpt:***]"), group));
                     forwardMessageBuilder.add(bot, new PlainText("关键词回复:"));
-                    forwardMessageBuilder.add(bot, MessageChain.deserializeFromMiraiCode(keyData.getRepDecode(true).replaceAll("\\[vacode:", "[☢:").replaceAll(":chatgpt:.*?]", ":chatgpt:***]"), group));
+                    forwardMessageBuilder.add(bot, MessageChain.deserializeFromMiraiCode(keyData.getRepDecode(true).replaceAll("\\[vacode:", "[☣:").replaceAll(":chatgpt:.*?]", ":chatgpt:***]"), group));
                 }
             }
             Api.sendMessage(group, forwardMessageBuilder.build());
