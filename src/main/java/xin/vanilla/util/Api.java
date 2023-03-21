@@ -354,8 +354,8 @@ public class Api {
         if (contact == null) return null;
         if (StringUtils.isNullOrEmpty(message)) return null;
         // 反转义事件特殊码
-        if (message.contains("\\(:vaevent:\\)"))
-            message = message.replace("\\(:vaevent:\\)", "(:vaevent:)");
+        if (message.contains("\\(:vaevent:\\)") || message.contains("(:vaevent:)"))
+            message = message.replace("(:vaevent:)", "(:☢:)").replace("\\(:vaevent:\\)", "(:vaevent:)");
 
         KeyRepEntity rep = new KeyRepEntity(contact);
         // 判断是否包含延时特殊码
