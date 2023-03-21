@@ -385,8 +385,10 @@ public class Api {
         if (message instanceof MessageChain) {
             MessageChain messageChain = (MessageChain) message;
             String msgJson = MessageChain.serializeToJsonString(messageChain);
-            if (message.contentToString().contains("\\(:vaevent:\\)") || message.contentToString().contains("[vacode:")) {
-                String textMsg = msgJson.replace("\\(:vaevent:\\)", "(:☢:)");
+            if (message.contentToString().contains("(:vaevent:)")
+                    || message.contentToString().contains("\\(:vaevent:\\)")
+                    || message.contentToString().contains("[vacode:")) {
+                String textMsg = msgJson.replace("(:vaevent:)", "(:☢:)").replace("\\(:vaevent:\\)", "(:vaevent:)");
                 textMsg = deVanillaCode(rep, textMsg);
                 message = MessageChain.deserializeFromJsonString(textMsg);
             }
