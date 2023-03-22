@@ -27,9 +27,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * 整合部分接口
@@ -264,6 +268,8 @@ public class Api {
 
     /**
      * 通过图片链接构建图片对象
+     *
+     * @param url 可以是http(s)://路径 也可以是file:///路径
      */
     @NotNull
     public static Image uploadImageByUrl(String url, Contact contact) {
@@ -277,7 +283,19 @@ public class Api {
                 throw new RuntimeException(e);
             }
         } else if (url.startsWith("file:///")) {
-            resource = ExternalResource.Companion.create(new File(url));
+            File file = new File(url);
+            if (file.isFile()) {
+                resource = ExternalResource.Companion.create(file);
+            } else {
+                List<Path> files;
+                try (Stream<Path> paths = Files.walk(file.toPath())) {
+                    files = paths.filter(Files::isRegularFile).collect(Collectors.toList());
+                    Collections.shuffle(files);
+                    resource = ExternalResource.Companion.create(files.get(0).toFile());
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
         } else {
             throw new RuntimeException("图片路径不合法");
         }
