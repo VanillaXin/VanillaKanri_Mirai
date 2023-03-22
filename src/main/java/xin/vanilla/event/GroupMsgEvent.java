@@ -1,15 +1,10 @@
 package xin.vanilla.event;
 
 import cn.hutool.core.date.DateUtil;
-import cn.hutool.core.io.IORuntimeException;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.RandomUtil;
-import cn.hutool.core.util.ReUtil;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
-import cn.hutool.json.JSONArray;
-import cn.hutool.json.JSONObject;
-import cn.hutool.json.JSONUtil;
 import net.mamoe.mirai.contact.ContactList;
 import net.mamoe.mirai.contact.Group;
 import net.mamoe.mirai.contact.Member;
@@ -29,11 +24,13 @@ import xin.vanilla.util.VanillaUtils;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -70,7 +67,6 @@ public class GroupMsgEvent extends BaseMsgEvent {
         if (capability.get("chatGPTVoice")) chatGPTVoice();
         if (capability.get("onlineRandomPic")) onlineRandomPic();
         if (capability.get("onlineAiPic")) onlineAiPic();
-        if (capability.get("onlineCosPic")) onlineCosPic();
 
         // 测试
         // audioTest();
@@ -285,68 +281,16 @@ public class GroupMsgEvent extends BaseMsgEvent {
         final String prefix = "chatGPT";
         if (msg.contentToString().startsWith(prefix)) {
             String command = msg.contentToString().substring(prefix.length());
-            JSONObject jsonObject = JSONUtil.createObj();
-            Map<String, Object> map = new HashMap<>();
-            List<Map<String, Object>> list = new ArrayList<>();
-            list.add(map);
-            map.put("role", "user");
-            map.put("content", command);
-            jsonObject.set("model", "gpt-3.5-turbo").set("messages", list);
-
-            try (HttpResponse response = HttpRequest.post("https://api.openai.com/v1/chat/completions")
-                    .setHttpProxy("localhost", 10808)
-                    .header("Content-Type", "application/json")
-                    .header("Authorization", "Bearer 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")
-                    .body(JSONUtil.toJsonStr(jsonObject))
-                    .timeout(40000)
-                    .execute()) {
-
-                String body = response.body();
-
-                JSONObject jsonObject1 = JSONUtil.parseObj(body);
-                JSONArray jsonArray = JSONUtil.parseArray(jsonObject1.get("choices"));
-                JSONObject jsonObject2 = JSONUtil.parseObj(jsonArray.get(0));
-                JSONObject jsonObject3 = JSONUtil.parseObj(jsonObject2.get("message"));
-                String bake = (String) jsonObject3.get("content");
-                bake = ReUtil.delFirst("^\n+", bake);
-                Api.sendMessage(group, bake);
-                // System.out.println(bake);
-            } catch (IORuntimeException e) {
+            String back = Api.chatGPT(sender.getNick(), command);
+            if (StringUtils.isNullOrEmptyEx(back)) {
                 Api.sendMessage(group, "可能是请求太快也可能是模型使用超时总之挂了，后续在改");
-                // throw new RuntimeException(e);
+            } else {
+                Api.sendMessage(group, back);
             }
         }
     }
 
     public void onlineRandomPic() {
-        if (msg.contentToString().matches("(来.?|.*?不够)[射蛇色涩瑟铯\uD83D\uDC0D].*?")) {
-            ForwardMessageBuilder forwardMessageBuilder = new ForwardMessageBuilder(group).add(sender, msg);
-            try {
-                for (int i = 0; i <= 10; i++) {
-                    URL url = new URL("https://api.jrsgslb.cn/cos/url.php?return=img");
-                    InputStream inputStream = url.openConnection().getInputStream();
-                    ExternalResource ex = ExternalResource.Companion.create(inputStream);
-                    Image img = ExternalResource.uploadAsImage(ex, group);
-
-                    forwardMessageBuilder.add(sender, new MessageChainBuilder().append(img).build());
-                    ex.close();
-                }
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-
-            // group.sendMessage(forwardMessageBuilder.build());
-            //
-            // MessageChain chain = new MessageChainBuilder()
-            //         .append(img)
-            //         .build();
-
-            // event.getSubject().sendMessage(chain);
-            // ExternalResource ex = ExternalResource.Companion.create(HttpUtil.downloadBytes("https://picture.yinux.workers.dev"));
-        }
-    }
-
-    public void onlineCosPic() {
         if (msg.contentToString().matches(".*?cos.*?")) {
             ForwardMessageBuilder forwardMessageBuilder = new ForwardMessageBuilder(group).add(sender, msg);
             try {

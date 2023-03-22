@@ -688,6 +688,31 @@ public class VanillaUtils {
             // 非操作特殊码解码
             result = deVanillaCodeRep(result, false);
 
+            // 解析图片特殊码
+            if (result.contains("[vacode:pic:")) {
+                RegUtils regUtils = new RegUtils()
+                        .append("[vacode:pic:")
+                        .groupIgByName("url", "(?:(?:https?|file)://|[A-Za-z]:\\\\).*?")
+                        .groupIgByName("num", ":[1-9]\\d?")
+                        .appendIg("?]");
+                while (regUtils.matcher(result).find()) {
+                    String url = regUtils.getMatcher().group("url");
+                    int num = 1;
+                    String numString = "";
+                    try {
+                        numString = regUtils.getMatcher().group("num");
+                        num = Integer.parseInt(numString.substring(1));
+                    } catch (Exception ignored) {
+                    }
+                    StringBuilder picCode = new StringBuilder();
+                    for (int i = 0; i < num; i++) {
+                        String image = Api.uploadImageByUrl(url, group != null ? group : sender).serializeToMiraiCode();
+                        picCode.append(image);
+                    }
+                    result = result.replace("[vacode:pic:" + url + numString + "]", picCode);
+                }
+            }
+
             // 禁言
             result = RegExpConfig.VaCode.exeMute(result, group != null ? (NormalMember) sender : null);
             // 撤回

@@ -22,6 +22,7 @@ import org.jetbrains.annotations.Nullable;
 import xin.vanilla.VanillaKanri;
 import xin.vanilla.entity.KeyRepEntity;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
@@ -267,14 +268,26 @@ public class Api {
     @NotNull
     public static Image uploadImageByUrl(String url, Contact contact) {
         ExternalResource resource;
-        try (HttpResponse response = HttpRequest.get(url).execute()) {
-            try (InputStream inputStream = response.bodyStream()) {
-                resource = ExternalResource.Companion.create(inputStream);
+        if (url.startsWith("http")) {
+            try (HttpResponse response = HttpRequest.get(url).execute()) {
+                try (InputStream inputStream = response.bodyStream()) {
+                    resource = ExternalResource.Companion.create(inputStream);
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
+        } else if (url.startsWith("file:///")) {
+            resource = ExternalResource.Companion.create(new File(url));
+        } else {
+            throw new RuntimeException("图片路径不合法");
+        }
+        Image image = ExternalResource.uploadAsImage(resource, contact);
+        try {
+            resource.close();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        return ExternalResource.uploadAsImage(resource, contact);
+        return image;
     }
 
     /**
@@ -290,7 +303,13 @@ public class Api {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        return ExternalResource.uploadAsImage(resource, contact);
+        Image image = ExternalResource.uploadAsImage(resource, contact);
+        try {
+            resource.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return image;
     }
 
     /**
@@ -307,9 +326,14 @@ public class Api {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        return ExternalResource.uploadAsImage(resource, contact);
+        Image image = ExternalResource.uploadAsImage(resource, contact);
+        try {
+            resource.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return image;
     }
-
 
     // region sendMessage
 

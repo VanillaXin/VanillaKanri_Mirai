@@ -54,8 +54,6 @@ class Base {
         "chatGPTVoice" to false,
         // 在线随机涩图
         "onlineRandomPic" to false,
-        // 在线COS涩图
-        "onlineCosPic" to false,
         // 在线AI画图
         "onlineAiPic" to false
     )
