@@ -283,7 +283,7 @@ public class Api {
                 throw new RuntimeException(e);
             }
         } else if (url.startsWith("file:///")) {
-            File file = new File(url);
+            File file = new File(url.substring("file:///".length()));
             if (file.isFile()) {
                 resource = ExternalResource.Companion.create(file);
             } else {
