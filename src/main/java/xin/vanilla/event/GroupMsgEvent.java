@@ -257,7 +257,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
         if (msg.contentToString().startsWith(prefix)) {
             String command = msg.contentToString().substring(prefix.length());
 
-            String back = Api.chatGPT(command);
+            String back = Api.chatGPT(sender.getNick(), command);
             Api.sendMessage(group, new MessageChainBuilder()
                     .append(new At(sender.getId()))
                     .append(back).build());

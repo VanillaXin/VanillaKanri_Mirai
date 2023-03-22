@@ -192,40 +192,6 @@ public class Api {
         }
     }
 
-    @NotNull
-    public static String chatGPT(String command) {
-
-        String key = Va.getGlobalConfig().getOther().getChatGPTKey();
-        String chatGPTUrl = Va.getGlobalConfig().getOther().getChatGPTUrl();
-        JSONObject jsonObject = JSONUtil.createObj();
-        Map<String, Object> map = new HashMap<>();
-        List<Map<String, Object>> list = new ArrayList<>();
-        list.add(map);
-        map.put("role", "user");
-        map.put("content", command);
-        jsonObject.set("model", "gpt-3.5-turbo").set("messages", list);
-
-        try (HttpResponse response = HttpRequest.post(chatGPTUrl)
-                .setHttpProxy("localhost", 10808)
-                .header("Content-Type", "application/json")
-                .header("Authorization", key)
-                .body(JSONUtil.toJsonStr(jsonObject))
-                .timeout(40000)
-                .execute()) {
-            String body = response.body();
-
-            JSONObject jsonObject1 = JSONUtil.parseObj(body);
-            JSONArray jsonArray = JSONUtil.parseArray(jsonObject1.get("choices"));
-            JSONObject jsonObject2 = JSONUtil.parseObj(jsonArray.get(0));
-            JSONObject jsonObject3 = JSONUtil.parseObj(jsonObject2.get("message"));
-            String content = (String) jsonObject3.get("content");
-            return content == null ? "" : content;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "";
-        }
-    }
-
     public static String chatGPT(String nick, String msg) {
         return chatGPT(nick, Va.getGlobalConfig().getOther().getChatGPTKey(), msg);
     }
@@ -275,7 +241,7 @@ public class Api {
 
             com.unfbx.chatgpt.entity.chat.Message userMessage = new com.unfbx.chatgpt.entity.chat.Message();
             userMessage.setRole(com.unfbx.chatgpt.entity.chat.Message.Role.USER.getName());
-            userMessage.setContent("我的名字是" + nick + "," + msg);
+            userMessage.setContent(nick + ":" + msg);
             messages.add(userMessage);
 
             ChatCompletion chatCompletion = ChatCompletion.builder()

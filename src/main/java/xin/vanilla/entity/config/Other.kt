@@ -53,7 +53,7 @@ class Other {
     /**
      * chatGPT 预设语境
      */
-    var chatGPTContext: List<String> = mutableListOf()
+    var chatGPTContext: List<String> = mutableListOf("从现在开始我会使用“名字:内容”的格式与你对话")
 
     /**
      * chatGPT 请求失败后的默认回复
