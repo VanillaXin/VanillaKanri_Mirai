@@ -275,7 +275,7 @@ public class Api {
     public static Image uploadImageByUrl(String url, Contact contact) {
         ExternalResource resource;
         if (url.startsWith("http")) {
-            try (HttpResponse response = HttpRequest.get(url).execute()) {
+            try (HttpResponse response = HttpRequest.get(url).setFollowRedirects(true).setMaxRedirectCount(3).execute()) {
                 try (InputStream inputStream = response.bodyStream()) {
                     resource = ExternalResource.Companion.create(inputStream);
                 }
@@ -314,7 +314,7 @@ public class Api {
     @NotNull
     public static Image uploadImageByUrl(String url, Proxy proxy, Contact contact) {
         ExternalResource resource;
-        try (HttpResponse response = HttpRequest.get(url).setProxy(proxy).execute()) {
+        try (HttpResponse response = HttpRequest.get(url).setFollowRedirects(true).setMaxRedirectCount(3).setProxy(proxy).execute()) {
             try (InputStream inputStream = response.bodyStream()) {
                 resource = ExternalResource.Companion.create(inputStream);
             }
@@ -337,7 +337,7 @@ public class Api {
     public static Image uploadImageByUrl(String url, String proxy, Contact contact) {
         ExternalResource resource;
         String[] split = proxy.split(":");
-        try (HttpResponse response = HttpRequest.get(url).setHttpProxy(split[0], Integer.parseInt(split[1])).execute()) {
+        try (HttpResponse response = HttpRequest.get(url).setFollowRedirects(true).setMaxRedirectCount(3).setHttpProxy(split[0], Integer.parseInt(split[1])).execute()) {
             try (InputStream inputStream = response.bodyStream()) {
                 resource = ExternalResource.Companion.create(inputStream);
             }
