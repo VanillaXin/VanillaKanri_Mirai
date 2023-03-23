@@ -697,12 +697,14 @@ public class VanillaUtils {
                         .appendIg("?]");
                 while (regUtils.matcher(result).find()) {
                     String url = regUtils.getMatcher().group("url");
-                    int num = 1;
-                    String numString = "";
+                    int num;
+                    String numString;
                     try {
                         numString = regUtils.getMatcher().group("num");
                         num = Integer.parseInt(numString.substring(1));
                     } catch (Exception ignored) {
+                        numString = "";
+                        num = 1;
                     }
                     StringBuilder picCode = new StringBuilder();
                     for (int i = 0; i < num; i++) {
