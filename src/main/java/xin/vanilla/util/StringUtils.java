@@ -253,7 +253,7 @@ public class StringUtils {
     /**
      * 将String[][] 格式化为 String
      */
-    public static String convertToString(String[][] stringArray) {
+    public static String convertToString(String[][] stringArray, String s) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < stringArray.length; i++) {
             for (int j = 0; j < stringArray[i].length; j++) {
@@ -262,8 +262,8 @@ public class StringUtils {
                     sb.append(",");
                 }
             }
-            if (i < stringArray.length - 1) {
-                sb.append(";");
+            if (i == stringArray.length - 1) {
+                sb.append(s);
             }
         }
         return sb.toString();

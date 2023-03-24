@@ -105,11 +105,11 @@ class Other {
      */
     var systemProxyPort: Int = 0
 
-    var something: Something = Something()
+    var queryTest: QueryTest = QueryTest()
 
 
     @Serializable
-    class Something {
+    class QueryTest {
         var prefix: String = ""
         var path: String = ""
         var sql: String = ""

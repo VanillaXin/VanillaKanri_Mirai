@@ -65,7 +65,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
 
         if (capability.getLocalRandomPic()) if (localRandomPic()) return;
         if (capability.getGetWife()) if (getWife()) return;
-        if (capability.getQuerySomething()) querySomething();
+        if (capability.getQuerySomething()) queryTest();
 
         if (capability.getChatGPT()) chatGPT();
         if (capability.getChatGPTVoice()) chatGPTVoice();
@@ -362,20 +362,21 @@ public class GroupMsgEvent extends BaseMsgEvent {
     }
 
     /**
-     * 查询某些东西
+     * 查询测试
      */
-    private void querySomething() {
-        Other.Something something = Va.getGlobalConfig().getOther().getSomething();
-        String somethingPath = something.getPath();
+    private void queryTest() {
+        Other.QueryTest queryTest = Va.getGlobalConfig().getOther().getQueryTest();
+        String somethingPath = queryTest.getPath();
         String content = msg.contentToString();
-        if (something.getGroups().contains(group.getId()) && content.startsWith(something.getPrefix())) {
+        if (queryTest.getGroups().contains(group.getId()) && content.startsWith(queryTest.getPrefix())) {
             if (StringUtils.isNullOrEmptyEx(somethingPath)) return;
             try {
-                String value = content.substring(something.getPrefix().length());
+                String value = content.substring(queryTest.getPrefix().length());
                 SqliteUtil sqliteUtil = SqliteUtil.getInstance(somethingPath);
-                String[][] strings = sqliteUtil.getStrings2(something.getSql().replaceAll("\\$\\{value}", value));
+                String[][] strings = sqliteUtil.getStrings2(queryTest.getSql().replaceAll("\\$\\{value}", value));
                 if (strings != null && strings.length > 0)
-                    Api.sendMessage(group, "查询到数据: " + StringUtils.convertToString(strings));
+                    Api.sendMessage(group, "查询到数据: " + StringUtils.convertToString(strings, "\n"));
+                else Api.sendMessage(group, "啥也没有");
             } catch (SQLException ignored) {
             }
         }
