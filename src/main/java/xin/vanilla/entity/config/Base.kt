@@ -39,25 +39,36 @@ class Base {
     /**
      * 可选功能开关
      */
-    var capability = hashMapOf(
+    var capability = Capability()
+
+    @Serializable
+    class Capability {
         // 关键词回复
-        "keyRep" to true,
+        var keyRep = true
+
         // MC RCON
-        "rcon" to false,
+        var rcon = false
+
         // 本地随机涩图
-        "localRandomPic" to false,
+        var localRandomPic = false
+
         // 抽老婆
-        "getWife" to false,
+        var getWife = false
+
         // chatGpt
-        "chatGPT" to false,
+        var chatGPT = false
+
         // chatGPT Voice
-        "chatGPTVoice" to false,
+        var chatGPTVoice = false
+
         // 在线随机涩图
-        "onlineRandomPic" to false,
+        var onlineRandomPic = false
+
         // 在线AI画图
-        "onlineAiPic" to false,
+        var onlineAiPic = false
+
         // 查询某些东西
-        "querySomething" to false
-    )
+        var querySomething = false
+    }
 
 }

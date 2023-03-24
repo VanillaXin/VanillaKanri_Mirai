@@ -13,6 +13,7 @@ import net.mamoe.mirai.message.data.*;
 import net.mamoe.mirai.utils.ExternalResource;
 import xin.vanilla.common.RegExpConfig;
 import xin.vanilla.entity.KeyRepEntity;
+import xin.vanilla.entity.config.Base;
 import xin.vanilla.entity.config.Other;
 import xin.vanilla.entity.data.KeyData;
 import xin.vanilla.entity.event.events.GroupMessageEvents;
@@ -30,7 +31,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -56,25 +60,25 @@ public class GroupMsgEvent extends BaseMsgEvent {
     public void run() {
         // logger.info("群聊: " + group.getId() + ":" + sender.getId() + " -> " + msg.serializeToMiraiCode());
 
-        HashMap<String, Boolean> capability = Va.getGlobalConfig().getBase().getCapability();
+        Base.Capability capability = Va.getGlobalConfig().getBase().getCapability();
 
-        if (capability.get("rcon")) if (rcon()) return;
+        if (capability.getRcon()) if (rcon()) return;
 
-        if (capability.get("localRandomPic")) if (localRandomPic()) return;
-        if (capability.get("getWife")) if (getWife()) return;
-        if (capability.get("querySomething")) querySomething();
+        if (capability.getLocalRandomPic()) if (localRandomPic()) return;
+        if (capability.getGetWife()) if (getWife()) return;
+        if (capability.getQuerySomething()) querySomething();
 
-        if (capability.get("chatGPT")) chatGPT();
-        if (capability.get("chatGPTVoice")) chatGPTVoice();
-        if (capability.get("onlineRandomPic")) onlineRandomPic();
-        if (capability.get("onlineAiPic")) onlineAiPic();
+        if (capability.getChatGPT()) chatGPT();
+        if (capability.getChatGPTVoice()) chatGPTVoice();
+        if (capability.getOnlineRandomPic()) onlineRandomPic();
+        if (capability.getOnlineAiPic()) onlineAiPic();
 
         // 测试
         // audioTest();
         // test();
 
         // 核心功能: 关键词回复
-        if (capability.get("keyRep")) keyRep();
+        if (capability.getKeyRep()) keyRep();
     }
 
     /**
@@ -364,11 +368,13 @@ public class GroupMsgEvent extends BaseMsgEvent {
     private void querySomething() {
         Other.Something something = Va.getGlobalConfig().getOther().getSomething();
         String somethingPath = something.getPath();
-        if (something.getGroups().contains(group.getId()) && msg.contentToString().startsWith(something.getPrefix())) {
+        String content = msg.contentToString();
+        if (something.getGroups().contains(group.getId()) && content.startsWith(something.getPrefix())) {
             if (StringUtils.isNullOrEmptyEx(somethingPath)) return;
             try {
+                String value = content.substring(something.getPrefix().length());
                 SqliteUtil sqliteUtil = SqliteUtil.getInstance(somethingPath);
-                String[] strings = sqliteUtil.getStrings(something.getSql());
+                String[] strings = sqliteUtil.getStrings(something.getSql().replaceAll("\\$\\{value}", value));
                 if (strings != null && strings.length > 0)
                     Api.sendMessage(group, "查询到数据: " + Arrays.toString(strings));
             } catch (SQLException ignored) {

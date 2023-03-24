@@ -5,6 +5,7 @@ import net.mamoe.mirai.event.events.FriendMessageEvent;
 import net.mamoe.mirai.message.data.MessageChain;
 import xin.vanilla.common.RegExpConfig;
 import xin.vanilla.entity.KeyRepEntity;
+import xin.vanilla.entity.config.Base;
 import xin.vanilla.entity.data.KeyData;
 import xin.vanilla.util.Api;
 import xin.vanilla.util.VanillaUtils;
@@ -25,11 +26,11 @@ public class FriendMsgEvent extends BaseMsgEvent {
 
     public void run() {
         // logger.info("好友: " + friend.getId() + " -> " + msg.serializeToMiraiCode());
-        HashMap<String, Boolean> capability = Va.getGlobalConfig().getBase().getCapability();
+        Base.Capability capability = Va.getGlobalConfig().getBase().getCapability();
 
 
         // 核心功能: 关键词回复
-        if (capability.get("keyRep")) keyRep();
+        if (capability.getKeyRep()) keyRep();
     }
 
     /**
