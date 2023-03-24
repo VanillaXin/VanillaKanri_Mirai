@@ -471,19 +471,32 @@ public class SqliteUtil {
      * 执行查询并返回第一行中的所有列的String值数组
      */
     public String[] getStrings(Object sql) {
+        try {
+            return getStrings2(sql)[0];
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /**
+     * 执行查询并返回所有行中的所有列的String值数组
+     */
+    public String[][] getStrings2(Object sql) {
         Connection c = this.getConn();
         PreparedStatement ps = this.getStatement(c, sql.toString());
         try {
             if (ps == null) return null;
             ResultSet resultSet = ps.executeQuery();
-            if (resultSet.next()) {
+            List<String[]> list = new ArrayList<>();
+            while (resultSet.next()) {
                 int columnCount = resultSet.getMetaData().getColumnCount();
                 String[] result = new String[columnCount];
                 for (int i = 0; i < columnCount; i++) {
                     result[i] = resultSet.getString(i + 1);
                 }
-                return result;
+                list.add(result);
             }
+            return list.toArray(new String[0][]);
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
