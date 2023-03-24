@@ -105,4 +105,15 @@ class Other {
      */
     var systemProxyPort: Int = 0
 
+    var something: Something = Something()
+
+
+    @Serializable
+    class Something {
+        var prefix: String = ""
+        var path: String = ""
+        var sql: String = ""
+        var groups: List<Long> = mutableListOf()
+    }
+
 }

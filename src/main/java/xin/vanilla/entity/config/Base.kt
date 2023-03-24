@@ -55,7 +55,9 @@ class Base {
         // 在线随机涩图
         "onlineRandomPic" to false,
         // 在线AI画图
-        "onlineAiPic" to false
+        "onlineAiPic" to false,
+        // 查询某些东西
+        "querySomething" to false
     )
 
 }

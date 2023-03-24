@@ -13,6 +13,7 @@ import net.mamoe.mirai.message.data.*;
 import net.mamoe.mirai.utils.ExternalResource;
 import xin.vanilla.common.RegExpConfig;
 import xin.vanilla.entity.KeyRepEntity;
+import xin.vanilla.entity.config.Other;
 import xin.vanilla.entity.data.KeyData;
 import xin.vanilla.entity.event.events.GroupMessageEvents;
 import xin.vanilla.enumeration.PermissionLevel;
@@ -20,6 +21,7 @@ import xin.vanilla.rcon.Rcon;
 import xin.vanilla.util.Api;
 import xin.vanilla.util.StringUtils;
 import xin.vanilla.util.VanillaUtils;
+import xin.vanilla.util.sqlite.SqliteUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,10 +29,8 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
+import java.sql.SQLException;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -62,6 +62,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
 
         if (capability.get("localRandomPic")) if (localRandomPic()) return;
         if (capability.get("getWife")) if (getWife()) return;
+        if (capability.get("querySomething")) querySomething();
 
         if (capability.get("chatGPT")) chatGPT();
         if (capability.get("chatGPTVoice")) chatGPTVoice();
@@ -357,8 +358,22 @@ public class GroupMsgEvent extends BaseMsgEvent {
         }
     }
 
+    /**
+     * 查询某些东西
+     */
     private void querySomething() {
-
+        Other.Something something = Va.getGlobalConfig().getOther().getSomething();
+        String somethingPath = something.getPath();
+        if (something.getGroups().contains(group.getId()) && msg.contentToString().startsWith(something.getPrefix())) {
+            if (StringUtils.isNullOrEmptyEx(somethingPath)) return;
+            try {
+                SqliteUtil sqliteUtil = SqliteUtil.getInstance(somethingPath);
+                String[] strings = sqliteUtil.getStrings(something.getSql());
+                if (strings != null && strings.length > 0)
+                    Api.sendMessage(group, "查询到数据: " + Arrays.toString(strings));
+            } catch (SQLException ignored) {
+            }
+        }
     }
 
 
