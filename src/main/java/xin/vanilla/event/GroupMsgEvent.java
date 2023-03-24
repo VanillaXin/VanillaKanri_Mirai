@@ -31,7 +31,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -376,7 +375,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
                 SqliteUtil sqliteUtil = SqliteUtil.getInstance(somethingPath);
                 String[][] strings = sqliteUtil.getStrings2(something.getSql().replaceAll("\\$\\{value}", value));
                 if (strings != null && strings.length > 0)
-                    Api.sendMessage(group, "查询到数据: " + Arrays.toString(strings));
+                    Api.sendMessage(group, "查询到数据: " + StringUtils.convertToString(strings));
             } catch (SQLException ignored) {
             }
         }
