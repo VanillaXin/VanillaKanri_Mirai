@@ -290,7 +290,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
         }
     }
 
-    public void onlineRandomPic() {
+    private void onlineRandomPic() {
         if (msg.contentToString().matches(".*?cos.*?")) {
             ForwardMessageBuilder forwardMessageBuilder = new ForwardMessageBuilder(group).add(sender, msg);
             try {
@@ -355,6 +355,10 @@ public class GroupMsgEvent extends BaseMsgEvent {
                 }
             }
         }
+    }
+
+    private void querySomething() {
+
     }
 
 
