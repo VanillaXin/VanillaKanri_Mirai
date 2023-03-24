@@ -375,7 +375,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
                 SqliteUtil sqliteUtil = SqliteUtil.getInstance(somethingPath);
                 String[][] strings = sqliteUtil.getStrings2(queryTest.getSql().replaceAll("\\$\\{value}", value));
                 if (strings != null && strings.length > 0)
-                    Api.sendMessage(group, "查询到数据: " + StringUtils.convertToString(strings, "\n"));
+                    Api.sendMessage(group, "查询到数据: " + StringUtils.convertToString(strings, ", ", "\n"));
                 else Api.sendMessage(group, "啥也没有");
             } catch (SQLException ignored) {
             }
