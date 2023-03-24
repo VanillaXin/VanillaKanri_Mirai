@@ -65,7 +65,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
 
         if (capability.getLocalRandomPic()) if (localRandomPic()) return;
         if (capability.getGetWife()) if (getWife()) return;
-        if (capability.getQuerySomething()) queryTest();
+        if (capability.getQueryTest()) queryTest();
 
         if (capability.getChatGPT()) chatGPT();
         if (capability.getChatGPTVoice()) chatGPTVoice();

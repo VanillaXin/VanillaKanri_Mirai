@@ -67,8 +67,8 @@ class Base {
         // 在线AI画图
         var onlineAiPic = false
 
-        // 查询某些东西
-        var querySomething = false
+        // 查询测试
+        var queryTest = false
     }
 
 }
