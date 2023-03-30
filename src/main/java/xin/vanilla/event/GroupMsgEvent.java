@@ -31,6 +31,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -39,6 +40,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static xin.vanilla.common.RegExpConfig.RCON_RESULT_LIST;
+import static xin.vanilla.mapper.impl.MessageCacheImpl.MSG_TYPE_GROUP;
 
 public class GroupMsgEvent extends BaseMsgEvent {
     private final GroupMessageEvents event;
@@ -257,7 +259,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
         if (msg.contentToString().startsWith(prefix)) {
             String command = msg.contentToString().substring(prefix.length());
 
-            String back = Api.chatGPT(sender.getNick(), command);
+            String back = Api.chatGPT(command);
             Api.sendMessage(group, new MessageChainBuilder()
                     .append(new At(sender.getId()))
                     .append(back).build());
@@ -285,7 +287,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
         final String prefix = "chatGPT";
         if (msg.contentToString().startsWith(prefix)) {
             String command = msg.contentToString().substring(prefix.length());
-            String back = Api.chatGPT(sender.getNick(), command);
+            String back = Api.chatGPT(command);
             if (StringUtils.isNullOrEmptyEx(back)) {
                 Api.sendMessage(group, "可能是请求太快也可能是模型使用超时总之挂了，后续在改");
             } else {
@@ -424,6 +426,100 @@ public class GroupMsgEvent extends BaseMsgEvent {
     }
 
     private void test() {
+        // 构造消息
+        MessageChain chain = new MessageChainBuilder()
+                .append(new PlainText("string"))
+                .append("string") // 会被构造成 PlainText 再添加, 相当于上一行
+                .append(AtAll.INSTANCE)
+                .append(Image.fromId("{f8f1ab55-bf8e-4236-b55e-955848d7069f}.png"))
+                .build();
 
+        // 取某类型消息
+        Image image = (Image) msg.stream().filter(Image.class::isInstance).findFirst().orElse(null);
+
+        // 撤回指定消息
+        QuoteReply quote = msg.get(QuoteReply.Key);
+        if (quote != null && msg.contentToString().equals("recall"))
+            MessageSource.recall(quote.getSource());
+
+        // 利用缓存的ids与internalIds撤回消息
+        if (group.getId() == 851159783L) {
+            // MessageSource source = msg.get(MessageSource.Key);
+            // logger.info(Arrays.toString(source.getIds()));
+            // logger.info(Arrays.toString(source.getInternalIds()));
+
+            if (msg.contentToString().startsWith("/va recall by ")) {
+                String s = msg.contentToString().substring("/va recall by ".length());
+
+                int[] ids = Arrays.stream(s.substring(0, s.indexOf("|")).split(","))
+                        .mapToInt(Integer::parseInt).toArray();
+                int[] internalIds = Arrays.stream(s.substring(s.indexOf("|") + 1).split(","))
+                        .mapToInt(Integer::parseInt).toArray();
+
+                MessageSource.recall(new MessageSourceBuilder()
+                        .sender(3085477411L)
+                        .target(group.getId())
+                        .id(ids)
+                        .internalId(internalIds)
+                        .build(bot.getId(), MessageSourceKind.GROUP));
+            }
+        }
+
+        // 序列化转码消息
+        if (msg.contentToString().startsWith("/va to string "))
+            Api.sendMessage(group, msg.serializeToMiraiCode());
+
+        if (msg.contentToString().startsWith("/va get msgcache ")) {
+            int no = Integer.parseInt(msg.contentToString().substring("/va get msgcache ".length()));
+            MessageSource source = msg.get(MessageSource.Key);
+            assert source != null;
+            no = source.getIds()[0] - no;
+            String msgCache = Va.getMessageCache().getMsgJsonCode(String.valueOf(no), group.getId(), MSG_TYPE_GROUP);
+            Api.sendMessage(group, msgCache);
+        }
+
+        // if (msg.contentToString().equals("/va get string")) {
+        //     Api.sendMessage(group, "testString is: " + Va.getGlobalConfig().getMc_rcon_ip());
+        // }
+        // if (msg.contentToString().startsWith("/va set string ")) {
+        //     String s = msg.contentToString().substring("/va set string ".length());
+        //     Va.getGlobalConfig().setMc_rcon_ip(s);
+        //     Api.sendMessage(group, "testString now is: " + Va.getGlobalConfig().getMc_rcon_ip());
+        // }
+
+        // if (msg.contentToString().equals("/va get int")) {
+        //     Api.sendMessage(group, "testInt is: " + Va.getGlobalConfig().getMc_rcon_port());
+        // }
+        // if (msg.contentToString().startsWith("/va set int ")) {
+        //     int s = Integer.parseInt(msg.contentToString().substring("/va set int ".length()));
+        //     Va.getGlobalConfig().setMc_rcon_port(s);
+        //     Api.sendMessage(group, "testInt now is: " + Va.getGlobalConfig().getMc_rcon_port());
+        // }
+
+        if (msg.contentToString().equals("/va get owner")) {
+            Api.sendMessage(group, "botOwner is: " + Va.getGlobalConfig().getPermissions().get(bot.getId()).getBotOwner());
+        }
+        // if (msg.contentToString().startsWith("/va set owner ")) {
+        //     String s = msg.contentToString().substring("/va set owner ".length());
+        //     Va.getGlobalConfig().getPermissions().get(bot.getId()).setBotOwner(Long.parseLong(s));
+        //     Api.sendMessage(group, "botOwner now is: " + Va.getGlobalConfig().getPermissions().get(bot.getId()).getBotOwner());
+        // }
+
+        if (msg.contentToString().equals("/va get superAdmin")) {
+            Api.sendMessage(group, "superAdmin is: " + Va.getGlobalConfig().getPermissions().get(bot.getId()).getSuperAdmin());
+        }
+        // if (msg.contentToString().startsWith("/va set superAdmin ")) {
+        //     String s = msg.contentToString().substring("/va set superAdmin ".length());
+        //     Va.getGlobalConfig().getPermissions().get(bot.getId()).setSuperAdmin(new HashSet<Long>() {{
+        //         addAll(Arrays.stream(s.split(" ")).map(Long::parseLong).collect(Collectors.toList()));
+        //     }});
+        //     Api.sendMessage(group, "superAdmin now is: " + Va.getGlobalConfig().getPermissions().get(bot.getId()).getSuperAdmin());
+        // }
+
+        // Va.config.refreshSource();
+
+        if (msg.contentToString().equals("/va get secondaryPrefix")) {
+            Api.sendMessage(group, Va.getGlobalConfig().getInstructions().getSecondaryPrefix().toString());
+        }
     }
 }

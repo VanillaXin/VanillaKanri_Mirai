@@ -1,6 +1,7 @@
 package xin.vanilla.util;
 
 import cn.hutool.core.util.IdUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
@@ -11,6 +12,7 @@ import com.unfbx.chatgpt.OpenAiClient;
 import com.unfbx.chatgpt.entity.chat.ChatCompletion;
 import com.unfbx.chatgpt.entity.chat.ChatCompletionResponse;
 import com.unfbx.chatgpt.interceptor.OpenAILogger;
+import javassist.compiler.ast.Variable;
 import net.mamoe.mirai.contact.Contact;
 import net.mamoe.mirai.contact.Group;
 import net.mamoe.mirai.message.MessageReceipt;
@@ -21,6 +23,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import xin.vanilla.VanillaKanri;
 import xin.vanilla.entity.KeyRepEntity;
+import xin.vanilla.entity.data.ChatApiReq;
+import xin.vanilla.entity.data.ChatApiResp;
 
 import java.io.File;
 import java.io.IOException;
@@ -59,9 +63,7 @@ public class Api {
         map.put("salt", salt);
         map.put("sign", sign);
 
-        try (HttpResponse response = HttpRequest.post("https://fanyi-api.baidu.com/api/trans/vip/translate")
-                .form(map)
-                .execute()) {
+        try (HttpResponse response = HttpRequest.post("https://fanyi-api.baidu.com/api/trans/vip/translate").form(map).execute()) {
             String body = response.body();
             JSONObject jsonObject1 = JSONUtil.parseObj(body);
             JSONArray jsonArray = JSONUtil.parseArray(jsonObject1.get("trans_result"));
@@ -181,12 +183,7 @@ public class Api {
         jsonObject.set("data", jsonArray);
 
         System.out.println(com.alibaba.fastjson2.JSONObject.toJSONString(jsonObject));
-        try (HttpResponse response = HttpRequest.post(aiDrawUrl + "/run/predict/")
-                .header("Content-Type", "application/json")
-                .header("authorization", key)
-                .body(com.alibaba.fastjson2.JSONObject.toJSONString(jsonObject))
-                .timeout(100000)
-                .execute()) {
+        try (HttpResponse response = HttpRequest.post(aiDrawUrl + "/run/predict/").header("Content-Type", "application/json").header("authorization", key).body(com.alibaba.fastjson2.JSONObject.toJSONString(jsonObject)).timeout(100000).execute()) {
             String body = response.body();
             JSONObject jsonObject1 = JSONUtil.parseObj(body);
             JSONArray jsonArray1 = JSONUtil.parseArray(jsonObject1.get("data"));
@@ -201,10 +198,34 @@ public class Api {
         return chatGPT(nick, Va.getGlobalConfig().getOther().getChatGPTKey(), msg);
     }
 
+    // 使用白嫖接口调用chatGPT
+    public static String chatGPT(String msg) {
+        String chatGPTUrl = Va.getGlobalConfig().getOther().getChatGPTUrl();
+        String context = Va.getGlobalConfig().getOther().getChatGPTContextAll();
+        String parentMessageId = Va.getGlobalConfig().getOther().getParentMessageId();
+
+        ChatApiReq chatApiReq = new ChatApiReq();
+        chatApiReq.setPrompt(msg);
+        chatApiReq.setOptions("{parentMessageId:"+parentMessageId+"}");
+        chatApiReq.setSystemMessage(context);
+        // System.out.println(JSONUtil.toJsonStr(chatApiReq));
+        String body = HttpRequest.post(chatGPTUrl+"/api/chat-process")
+                .body(JSONUtil.toJsonStr(chatApiReq))
+                .timeout(10000)
+                .execute()
+                .body();
+
+        List<String> split = StrUtil.split(body, "\n");
+        String join = "["+StrUtil.join(",", split)+"]";
+        List<ChatApiResp> chatApiResps = JSONUtil.toList(join, ChatApiResp.class);
+
+
+        return chatApiResps.get(chatApiResps.size() - 1).getText();
+    }
+
     public static String chatGPT(String nick, String key, String msg) {
         String chatGPTKey = key;
-        if (StringUtils.isNullOrEmptyEx(chatGPTKey))
-            chatGPTKey = Va.getGlobalConfig().getOther().getChatGPTKey();
+        if (StringUtils.isNullOrEmptyEx(chatGPTKey)) chatGPTKey = Va.getGlobalConfig().getOther().getChatGPTKey();
         if (StringUtils.isNullOrEmptyEx(chatGPTKey)) return "";
         String chatGPTUrl = Va.getGlobalConfig().getOther().getChatGPTUrl();
         if (StringUtils.isNullOrEmptyEx(chatGPTUrl)) return "";
@@ -224,10 +245,7 @@ public class Api {
             HttpLoggingInterceptor httpLoggingInterceptor = new HttpLoggingInterceptor(new OpenAILogger());
             httpLoggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
 
-            OpenAiClient openAiClient = builder.apiKey(chatGPTKey)
-                    .apiHost(chatGPTUrl)
-                    .interceptor(Collections.singletonList(httpLoggingInterceptor))
-                    .build();
+            OpenAiClient openAiClient = builder.apiKey(chatGPTKey).apiHost(chatGPTUrl).interceptor(Collections.singletonList(httpLoggingInterceptor)).build();
 
             List<com.unfbx.chatgpt.entity.chat.Message> messages = new ArrayList<>();
 
@@ -249,15 +267,7 @@ public class Api {
             userMessage.setContent(nick + ":" + msg);
             messages.add(userMessage);
 
-            ChatCompletion chatCompletion = ChatCompletion.builder()
-                    .temperature(0.8)
-                    .presencePenalty(1)
-                    .n(1)
-                    .topP(1.0)
-                    .model(ChatCompletion.Model.GPT_3_5_TURBO.getName())
-                    .maxTokens(2000)
-                    .messages(messages)
-                    .build();
+            ChatCompletion chatCompletion = ChatCompletion.builder().temperature(0.8).presencePenalty(1).n(1).topP(1.0).model(ChatCompletion.Model.GPT_3_5_TURBO.getName()).maxTokens(2000).messages(messages).build();
 
             ChatCompletionResponse chatCompletionResponse = openAiClient.chatCompletion(chatCompletion);
             return chatCompletionResponse.getChoices().get(0).getMessage().getContent();
@@ -393,9 +403,7 @@ public class Api {
         if (message instanceof MessageChain) {
             MessageChain messageChain = (MessageChain) message;
             String msgJson = MessageChain.serializeToJsonString(messageChain);
-            if (message.contentToString().contains("(:vaevent:)")
-                    || message.contentToString().contains("\\(:vaevent:\\)")
-                    || message.contentToString().contains("[vacode:")) {
+            if (message.contentToString().contains("(:vaevent:)") || message.contentToString().contains("\\(:vaevent:\\)") || message.contentToString().contains("[vacode:")) {
                 String textMsg = msgJson.replaceAll("\\(:vaevent:\\)", "(:☢:)").replaceAll("\\\\(:vaevent:\\\\)", "(:vaevent:)");
                 textMsg = deVanillaCode(rep, textMsg);
                 message = MessageChain.deserializeFromJsonString(textMsg);
@@ -435,11 +443,7 @@ public class Api {
     private static String deVanillaCode(KeyRepEntity rep, String textMsg) {
         // 发送至指定好友特殊码
         if (textMsg.contains("[vacode:tofriend:")) {
-            RegUtils regUtils = new RegUtils()
-                    .appendIg(".*?")
-                    .append("[vacode:tofriend:")
-                    .groupIgByName("qq", "\\d{5,10}")
-                    .appendIg("].*?");
+            RegUtils regUtils = new RegUtils().appendIg(".*?").append("[vacode:tofriend:").groupIgByName("qq", "\\d{5,10}").appendIg("].*?");
             while (regUtils.matcher(textMsg).find()) {
                 long qq = Long.parseLong(regUtils.getMatcher().group("qq"));
                 textMsg = textMsg.replace("[vacode:tofriend:" + qq + "]", "");
@@ -456,11 +460,7 @@ public class Api {
 
         // 发送至指定群聊特殊码
         if (textMsg.contains("[vacode:togroup:")) {
-            RegUtils regUtils = new RegUtils()
-                    .appendIg(".*?")
-                    .append("[vacode:togroup:")
-                    .groupIgByName("group", "\\d{5,10}")
-                    .appendIg("].*?");
+            RegUtils regUtils = new RegUtils().appendIg(".*?").append("[vacode:togroup:").groupIgByName("group", "\\d{5,10}").appendIg("].*?");
             while (regUtils.matcher(textMsg).find()) {
                 long group = Long.parseLong(regUtils.getMatcher().group("group"));
                 textMsg = textMsg.replace("[vacode:togroup:" + group + "]", "");
@@ -470,11 +470,7 @@ public class Api {
 
         // 延时特殊码
         if (textMsg.contains("[vacode:delay:")) {
-            RegUtils regUtils = new RegUtils()
-                    .appendIg(".*?")
-                    .append("[vacode:delay:")
-                    .groupIgByName("time", "\\d{1,6}")
-                    .appendIg("].*?");
+            RegUtils regUtils = new RegUtils().appendIg(".*?").append("[vacode:delay:").groupIgByName("time", "\\d{1,6}").appendIg("].*?");
             while (regUtils.matcher(textMsg).find()) {
                 String millis = regUtils.getMatcher().group("time");
                 textMsg = textMsg.replace("[vacode:delay:" + millis + "]", "");
@@ -484,10 +480,7 @@ public class Api {
 
         // ChatGPT特殊码过滤key, 防止暴露
         if (textMsg.contains(":chatgpt:")) {
-            RegUtils regUtils = new RegUtils()
-                    .append(":chatgpt:")
-                    .groupIgByName("key", "[\\w\\-]+?")
-                    .append("]");
+            RegUtils regUtils = new RegUtils().append(":chatgpt:").groupIgByName("key", "[\\w\\-]+?").append("]");
             while (regUtils.matcher(textMsg).find()) {
                 String key = regUtils.getMatcher().group("key");
                 textMsg = textMsg.replaceAll(regUtils.build(), ":chatgpt:***]");
