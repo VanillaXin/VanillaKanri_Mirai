@@ -44,7 +44,7 @@ class Base {
     @Serializable
     class Capability {
         // 关键词回复
-        var keyRep = false
+        var keyRep = true
 
         // MC RCON
         var rcon = false
@@ -56,16 +56,16 @@ class Base {
         var getWife = false
 
         // chatGpt
-        var chatGPT = true
+        var chatGPT = false
 
         // chatGPT Voice
-        var chatGPTVoice = true
+        var chatGPTVoice = false
 
         // 在线随机涩图
         var onlineRandomPic = false
 
         // 在线AI画图
-        var onlineAiPic = true
+        var onlineAiPic = false
 
         // 查询测试
         var queryTest = false
