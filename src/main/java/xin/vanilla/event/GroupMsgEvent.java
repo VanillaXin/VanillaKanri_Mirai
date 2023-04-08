@@ -31,10 +31,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -203,52 +200,56 @@ public class GroupMsgEvent extends BaseMsgEvent {
      * 抽老婆
      */
     private boolean getWife() {
-        if (msg.contentToString().startsWith("抽")) {
+        String wifePrefix = Va.getGlobalConfig().getOther().getWifePrefix();
+        if (msg.contentToString().startsWith(wifePrefix)) {
             // 角色名称
-            String nick = msg.contentToString().substring(1);
+            String nick = msg.contentToString().substring(wifePrefix.length());
             String nickKey = nick;
-            if (Va.getGlobalConfig().getOther().getWifePrefix().contains(nick)) {
-                String key = DateUtil.format(new Date(), "yyyy.MM.dd") + "." + group.getId() + "." + sender.getId();
-                long wife = 0;
-                try {
-                    // 今天已抽过的角色名称及角色
-                    String[] wifeVal = Va.getPluginData().getWife().get(key).split(":");
-                    wife = Long.parseLong(wifeVal[1]);
-                    // 判断有无抽过其他角色
-                    if (!nick.equals(wifeVal[0])) {
-                        Api.sendMessage(group, new MessageChainBuilder()
-                                .append(new At(sender.getId()))
-                                .append(" 今天你已经有 ").append(wifeVal[0]).append(" 啦!").build());
-                        return true;
+            Set<String> wifeSuffix = Va.getGlobalConfig().getOther().getWifeSuffix();
+            for (String suffix : wifeSuffix) {
+                if (nickKey.matches(suffix)) {
+                    String key = DateUtil.format(new Date(), "yyyy.MM.dd") + "." + group.getId() + "." + sender.getId();
+                    long wife = 0;
+                    try {
+                        // 今天已抽过的角色名称及角色
+                        String[] wifeVal = Va.getPluginData().getWife().get(key).split(":");
+                        wife = Long.parseLong(wifeVal[1]);
+                        // 判断有无抽过其他角色
+                        if (!nickKey.equals(wifeVal[0])) {
+                            Api.sendMessage(group, new MessageChainBuilder()
+                                    .append(new At(sender.getId()))
+                                    .append(" 今天你已经有 ").append(wifeVal[0]).append(" 啦!").build());
+                            return true;
+                        }
+                    } catch (Exception ignored) {
                     }
-                } catch (Exception ignored) {
-                }
 
-                final String[] nicks = {"老婆", "老公", "男友", "女友"};
-                for (String s : nicks) {
-                    if (s.equals(nick)) {
-                        nick = "亲爱的";
-                        break;
+                    final String[] nicks = {"老婆", "老公", "男友", "女友"};
+                    for (String s : nicks) {
+                        if (s.equals(nickKey)) {
+                            nick = "亲爱的";
+                            break;
+                        }
                     }
-                }
 
-                if (wife == 0) {
-                    ContactList<NormalMember> members = group.getMembers();
-                    List<Long> qqs = members.stream().map(NormalMember::getId).collect(Collectors.toList());
-                    qqs.add(bot.getId());
-                    wife = qqs.get((int) (Math.random() * qqs.size()));
-                    Va.getPluginData().getWife().put(key, nickKey + ":" + wife);
+                    if (wife == 0) {
+                        ContactList<NormalMember> members = group.getMembers();
+                        List<Long> qqs = members.stream().map(NormalMember::getId).collect(Collectors.toList());
+                        qqs.add(bot.getId());
+                        wife = qqs.get((int) (Math.random() * qqs.size()));
+                        Va.getPluginData().getWife().put(key, nickKey + ":" + wife);
+                    }
+                    NormalMember normalMember = group.get(wife);
+                    assert normalMember != null;
+                    Api.sendMessage(group, new MessageChainBuilder()
+                            .append(new At(sender.getId()))
+                            .append(" 今天你的群友").append(nick).append("是\n")
+                            .append(Api.uploadImageByUrl(normalMember.getAvatarUrl(), group))
+                            .append("\n『").append(normalMember.getNick()).append("』")
+                            .append("(").append(String.valueOf(wife)).append(") 喵!")
+                            .build());
+                    return true;
                 }
-                NormalMember normalMember = group.get(wife);
-                assert normalMember != null;
-                Api.sendMessage(group, new MessageChainBuilder()
-                        .append(new At(sender.getId()))
-                        .append(" 今天你的群友").append(nick).append("是\n")
-                        .append(Api.uploadImageByUrl(normalMember.getAvatarUrl(), group))
-                        .append("\n『").append(normalMember.getNick()).append("』")
-                        .append("(").append(String.valueOf(wife)).append(") 喵!")
-                        .build());
-                return true;
             }
         }
         return false;

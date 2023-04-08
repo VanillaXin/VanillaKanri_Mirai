@@ -15,10 +15,7 @@ import xin.vanilla.common.annotation.KeywordInsEvent;
 import xin.vanilla.entity.config.instruction.KanriInstructions;
 import xin.vanilla.entity.event.events.GroupMessageEvents;
 import xin.vanilla.enumeration.PermissionLevel;
-import xin.vanilla.util.Api;
-import xin.vanilla.util.RegUtils;
-import xin.vanilla.util.StringUtils;
-import xin.vanilla.util.VanillaUtils;
+import xin.vanilla.util.*;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -26,6 +23,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -33,22 +31,62 @@ import static xin.vanilla.enumeration.DataCacheKey.PLUGIN_BOT_ONLINE_TIME;
 
 @SuppressWarnings("unused")
 public class EventHandlers extends SimpleListenerHost {
+    private static final VanillaKanri Va = VanillaKanri.INSTANCE;
+
     @Override
     public void handleException(@NotNull CoroutineContext context, @NotNull Throwable exception) {
+        // 是否已启用调试模式
+        if (!Va.getGlobalConfig().getBase().getCapability().getDebug()) return;
+
         // 处理事件处理时抛出的异常
         Event event = ((ExceptionInEventHandlerException) exception).getEvent();
 
         exception = getBaseException(exception);
 
-        if (event instanceof GroupMessageEvent) {
+        StringWriter stringWriter = new StringWriter();
+        exception.printStackTrace(new PrintWriter(stringWriter));
+        String eString = stringWriter.getBuffer().toString();
+
+        final int ENABLE_GROUP = 1;     // 启用群
+        final int ENABLE_FRIEND = 2;    // 启用好友
+        final int ENABLE_BACKEND = 4;   // 启用后台
+
+        final int PRINT_SIMPLE_EXCEPTION = 10;   // 精简异常
+        final int PRINT_FULL_EXCEPTION = 20;      // 完整异常
+
+        int type = Va.getGlobalConfig().getBase().getDebugMode();
+
+        // 检查是否打印精简异常
+        if (type >= 10 && type < 20) {
+            eString = StringUtils.getByLine(eString, 1, 5, "... [num] more");
+        }
+
+        // 自定义异常格式
+        Map<String, String> map = Va.getGlobalConfig().getBase().getDebugCustomException();
+        if (!map.isEmpty()) {
+            for (String key : map.keySet()) {
+                if (eString.matches(key)) {
+                    eString = eString.replaceAll(key, map.get(key));
+                }
+            }
+        }
+
+        if (event instanceof GroupMessageEvent && (type & ENABLE_GROUP) != 0) {
             GroupMessageEvent groupMessageEvent = (GroupMessageEvent) event;
-
-            StringWriter stringWriter = new StringWriter();
-            PrintWriter writer = new PrintWriter(stringWriter);
-            exception.printStackTrace(writer);
-            StringBuffer buffer = stringWriter.getBuffer();
-
-            Api.sendMessage(groupMessageEvent.getGroup(), StringUtils.getByLine(buffer.toString(), 1, 5, "... [num] more"));
+            Api.sendMessage(groupMessageEvent.getGroup(), eString);
+        }
+        if (event instanceof FriendMessageEvent && (type & ENABLE_FRIEND) != 0) {
+            FriendMessageEvent friendMessageEvent = (FriendMessageEvent) event;
+            Api.sendMessage(friendMessageEvent.getFriend(), eString);
+        }
+        if (event instanceof BotEvent && (type & ENABLE_BACKEND) != 0) {
+            BotEvent botEvent = (BotEvent) event;
+            Set<Long> groups = SettingsUtils.getBackGroup(0);
+            for (Long groupId : groups) {
+                // 获取该机器人账号下的后台管理群对象
+                Group backGroup = Bot.getInstance(botEvent.getBot().getId()).getGroup(groupId);
+                Api.sendMessage(backGroup, eString);
+            }
         }
 
     }

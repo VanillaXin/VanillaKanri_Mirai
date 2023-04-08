@@ -36,9 +36,14 @@ class Other {
     var mcRconPsw: String = "password"
 
     /**
-     * 抽老婆关键词
+     * 抽老婆关键词前缀
      */
-    var wifePrefix: Set<String> = mutableSetOf("抽老婆")
+    var wifePrefix: String = "抽"
+
+    /**
+     * 抽老婆关键词后缀
+     */
+    var wifeSuffix: Set<String> = mutableSetOf("老婆")
 
     /**
      * chatGPT url
@@ -64,7 +69,8 @@ class Other {
     /**
      * parentMessageId
      */
-    var parentMessageId:String  = ""
+    var parentMessageId: String = ""
+
     /**
      * chatGPT 请求失败后的默认回复
      */

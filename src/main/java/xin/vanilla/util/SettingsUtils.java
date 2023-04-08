@@ -36,7 +36,8 @@ public class SettingsUtils {
     @NotNull
     public static Set<Long> getBackGroup(long group) {
         Set<Long> groups = Va.getGlobalConfig().getBase().getBackGroup();
-        groups.addAll(Va.getGroupConfig().getBase(group).getBackGroup());
+        if (group != 0)
+            groups.addAll(Va.getGroupConfig().getBase(group).getBackGroup());
         return groups;
     }
 

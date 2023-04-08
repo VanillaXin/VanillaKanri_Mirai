@@ -35,12 +35,24 @@ class Base {
      */
     var keyAutoExamine: Int = 0
 
+    /**
+     * 调试模式
+     */
+    var debugMode: Int = 13
+
+    /**
+     * 自定义调试模式异常输出规则(正则表达式)
+     */
+    var debugCustomException: Map<String, String> = mutableMapOf()
 
     /**
      * 可选功能开关
      */
     var capability = Capability()
 
+    /**
+     * 可选功能开关类
+     */
     @Serializable
     class Capability {
         // 关键词回复
@@ -70,6 +82,8 @@ class Base {
         // 查询测试
         var queryTest = false
 
+        // 调试模式
+        var debug = true
     }
 
 }
