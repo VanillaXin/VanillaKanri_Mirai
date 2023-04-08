@@ -71,6 +71,7 @@ public class EventHandlers extends SimpleListenerHost {
             }
         }
 
+        type %= 10;
         if (event instanceof GroupMessageEvent && (type & ENABLE_GROUP) != 0) {
             GroupMessageEvent groupMessageEvent = (GroupMessageEvent) event;
             Api.sendMessage(groupMessageEvent.getGroup(), eString);
