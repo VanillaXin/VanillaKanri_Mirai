@@ -233,7 +233,7 @@ public class RegExpConfig {
         return RegUtils.start().groupNon(prefix).separator()
                 .groupIgByName("group", GROUP_CODE).appendIg("?").separator("?")
                 .groupByName("type", keyword.getExactly(), keyword.getContain(), keyword.getPinyin(), keyword.getRegex()).separator()
-                .groupIgByName("keyIds", "\\d+\\s?").end();
+                .groupIgByName("keyIds", "(?:\\d+\\s?)+").end();
     }
 
     /**
@@ -244,7 +244,7 @@ public class RegExpConfig {
         return RegUtils.start().groupNon(prefix).separator()
                 .groupIgByName("group", GROUP_CODE).appendIg("?").separator("?")
                 .groupByName("type", keyword.getExactly(), keyword.getContain(), keyword.getPinyin(), keyword.getRegex()).separator()
-                .groupIgByName("keyIds", "\\d+\\s?").end();
+                .groupIgByName("keyIds", "(?:\\d+\\s?)+").end();
     }
 
     // endregion

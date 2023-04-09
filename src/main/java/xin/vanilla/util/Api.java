@@ -12,7 +12,6 @@ import com.unfbx.chatgpt.OpenAiClient;
 import com.unfbx.chatgpt.entity.chat.ChatCompletion;
 import com.unfbx.chatgpt.entity.chat.ChatCompletionResponse;
 import com.unfbx.chatgpt.interceptor.OpenAILogger;
-import javassist.compiler.ast.Variable;
 import net.mamoe.mirai.contact.Contact;
 import net.mamoe.mirai.contact.Group;
 import net.mamoe.mirai.message.MessageReceipt;
@@ -206,17 +205,17 @@ public class Api {
 
         ChatApiReq chatApiReq = new ChatApiReq();
         chatApiReq.setPrompt(msg);
-        chatApiReq.setOptions("{parentMessageId:"+parentMessageId+"}");
+        chatApiReq.setOptions("{parentMessageId:" + parentMessageId + "}");
         chatApiReq.setSystemMessage(context);
         // System.out.println(JSONUtil.toJsonStr(chatApiReq));
-        String body = HttpRequest.post(chatGPTUrl+"/api/chat-process")
+        String body = HttpRequest.post(chatGPTUrl + "/api/chat-process")
                 .body(JSONUtil.toJsonStr(chatApiReq))
                 .timeout(10000)
                 .execute()
                 .body();
 
         List<String> split = StrUtil.split(body, "\n");
-        String join = "["+StrUtil.join(",", split)+"]";
+        String join = "[" + StrUtil.join(",", split) + "]";
         List<ChatApiResp> chatApiResps = JSONUtil.toList(join, ChatApiResp.class);
 
 
