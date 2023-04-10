@@ -6,6 +6,8 @@ import net.mamoe.mirai.message.data.MessageChain;
 import net.mamoe.mirai.message.data.OnlineMessageSource;
 import xin.vanilla.entity.data.MsgCache;
 
+import java.util.List;
+
 public interface MessageCache {
 
     /**
@@ -74,6 +76,8 @@ public interface MessageCache {
     int[] getInternalIds(int[] ids, long target, String type);
 
     int[] getInternalIds(int id, long target, String type);
+
+    List<MsgCache> getMsgChainByKeyWord(String keyword, long sender, long target, long time, String type);
 
     MsgCache getMsgCache(String no, long sender, long target, long time, String type);
 

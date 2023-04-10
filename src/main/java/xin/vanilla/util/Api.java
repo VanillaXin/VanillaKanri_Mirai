@@ -193,6 +193,130 @@ public class Api {
         }
     }
 
+    public static String aiPictureV2(String prompt, String unPrompt) {
+
+
+        String aiDrawUrl = Va.getGlobalConfig().getOther().getAiDrawUrl();
+
+        String task = "task(" + IdUtil.randomUUID() + ")";
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.set("fn_index", 196);
+
+        JSONArray jsonArray = new JSONArray();
+        jsonArray.add(task);
+
+        jsonArray.add(prompt);
+        jsonArray.add(unPrompt);
+        jsonArray.add("[]");
+        jsonArray.add(20);
+        jsonArray.add("DPM++ 2M Karras");
+        jsonArray.add(false);
+        jsonArray.add(false);
+        jsonArray.add(1);
+        jsonArray.add(1);
+        jsonArray.add(7);
+        jsonArray.add(-1);
+        jsonArray.add(-1);
+        jsonArray.add(0);
+        jsonArray.add(0);
+        jsonArray.add(0);
+        jsonArray.add(false);
+        jsonArray.add(1224);
+        jsonArray.add(704);
+        jsonArray.add(false);
+        jsonArray.add(0.7);
+        jsonArray.add(2);
+        jsonArray.add("R-ESRGAN 4x+ Anime6B");
+        jsonArray.add(0);
+        jsonArray.add(0);
+        jsonArray.add(0);
+        jsonArray.add("");
+        jsonArray.add("None");
+        jsonArray.add(false);
+        jsonArray.add(false);
+        jsonArray.add("LoRA");
+        jsonArray.add("None");
+        jsonArray.add(1);
+        jsonArray.add(1);
+        jsonArray.add("LoRA");
+        jsonArray.add("None");
+        jsonArray.add(1);
+        jsonArray.add(1);
+        jsonArray.add("LoRA");
+        jsonArray.add("None");
+        jsonArray.add(1);
+        jsonArray.add(1);
+        jsonArray.add("LoRA");
+        jsonArray.add("None");
+        jsonArray.add(1);
+        jsonArray.add(1);
+        jsonArray.add("LoRA");
+        jsonArray.add("None");
+        jsonArray.add(1);
+        jsonArray.add(1);
+        jsonArray.add("Refresh models");
+        jsonArray.add(false);
+        jsonArray.add("none");
+        jsonArray.add("None");
+        jsonArray.add(1);
+        jsonArray.add(null);
+        jsonArray.add(false);
+        jsonArray.add("Scale to Fit (Inner Fit)");
+        jsonArray.add(false);
+        jsonArray.add(false);
+        jsonArray.add(64);
+        jsonArray.add(64);
+        jsonArray.add(64);
+        jsonArray.add(1);
+        jsonArray.add(false);
+        jsonArray.add(0.9);
+        jsonArray.add(5);
+        jsonArray.add("0.0001");
+        jsonArray.add(false);
+        jsonArray.add("None");
+        jsonArray.add("");
+        jsonArray.add(0.1);
+        jsonArray.add(false);
+        jsonArray.add(false);
+        jsonArray.add(false);
+        jsonArray.add("positive");
+        jsonArray.add("comma");
+        jsonArray.add(0);
+        jsonArray.add(false);
+        jsonArray.add(false);
+        jsonArray.add("");
+        jsonArray.add("Seed");
+        jsonArray.add("");
+        jsonArray.add("Nothing");
+        jsonArray.add("");
+        jsonArray.add("Nothing");
+        jsonArray.add("");
+        jsonArray.add(true);
+        jsonArray.add(false);
+        jsonArray.add(false);
+        jsonArray.add(false);
+        jsonArray.add(0);
+
+
+        jsonObject.set("data", jsonArray);
+
+        System.out.println(com.alibaba.fastjson2.JSONObject.toJSONString(jsonObject));
+
+        try (HttpResponse response = HttpRequest.post(aiDrawUrl + "/run/predict/").header("Content-Type", "application/json").body(com.alibaba.fastjson2.JSONObject.toJSONString(jsonObject)).timeout(100000).execute()) {
+            String body = response.body();
+            JSONObject jsonObject1 = JSONUtil.parseObj(body);
+            JSONArray jsonArray1 = JSONUtil.parseArray(jsonObject1.get("data"));
+            JSONArray jsonArray2 = JSONUtil.parseArray(jsonArray1.get(0));
+            JSONObject jsonObject2 = JSONUtil.parseObj(jsonArray2.get(0));
+
+            return (String) jsonObject2.get("name");
+        }catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+        // return null;
+    }
+
     public static String chatGPT(String nick, String msg) {
         return chatGPT(nick, Va.getGlobalConfig().getOther().getChatGPTKey(), msg);
     }
@@ -204,11 +328,13 @@ public class Api {
         String parentMessageId = Va.getGlobalConfig().getOther().getParentMessageId();
 
         ChatApiReq chatApiReq = new ChatApiReq();
+        Map m = new HashMap();
+        m.put("parentMessageId",parentMessageId);
         chatApiReq.setPrompt(msg);
-        chatApiReq.setOptions("{parentMessageId:" + parentMessageId + "}");
+        chatApiReq.setOptions(m);
         chatApiReq.setSystemMessage(context);
-        // System.out.println(JSONUtil.toJsonStr(chatApiReq));
-        String body = HttpRequest.post(chatGPTUrl + "/api/chat-process")
+        // Api.sendMessage(group,JSONUtil.toJsonStr(chatApiReq));
+        String body = HttpRequest.post(chatGPTUrl+"/api/chat-process")
                 .body(JSONUtil.toJsonStr(chatApiReq))
                 .timeout(10000)
                 .execute()
@@ -218,9 +344,12 @@ public class Api {
         String join = "[" + StrUtil.join(",", split) + "]";
         List<ChatApiResp> chatApiResps = JSONUtil.toList(join, ChatApiResp.class);
 
+        Va.setParentMessageId(chatApiResps.get(chatApiResps.size() - 1).getId());
 
         return chatApiResps.get(chatApiResps.size() - 1).getText();
     }
+
+
 
     public static String chatGPT(String nick, String key, String msg) {
         String chatGPTKey = key;

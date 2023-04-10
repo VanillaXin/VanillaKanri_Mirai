@@ -74,7 +74,7 @@ class Base {
         var chatGPTVoice = false
 
         // 在线随机涩图
-        var onlineRandomPic = false
+        var onlineRandomPic = true
 
         // 在线AI画图
         var onlineAiPic = false

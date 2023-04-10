@@ -15,6 +15,7 @@ import xin.vanilla.util.sqlite.statement.Statement;
 
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.List;
 
 public class MessageCacheImpl extends Base implements MessageCache {
     public static String dbname = "\\msg_cache.db";
@@ -194,6 +195,7 @@ public class MessageCacheImpl extends Base implements MessageCache {
         return getMsgString(no, 0, target);
     }
 
+
     @Override
     public MessageChain getMsgChain(String no, long sender, long target, long time, String type) {
         return VanillaUtils.deserializeJsonCode(getMsgJsonCode(no, sender, target, time, type));
@@ -297,6 +299,31 @@ public class MessageCacheImpl extends Base implements MessageCache {
     @Override
     public int[] getInternalIds(int id, long target, String type) {
         return getInternalIds(new int[]{id}, target, type);
+    }
+
+    @Override
+    public List<MsgCache> getMsgChainByKeyWord(String keyword, long sender, long target, long time, String type) {
+        List<MsgCache> msgCache = null;
+        if (!StringUtils.isNullOrEmpty(type))
+            MSG_TYPES = new String[]{type};
+
+        for (String msgType : MSG_TYPES) {
+            Statement query = QueryStatement.produce()
+                    .from(getTableName(msgType))
+                    .where(MsgCache::getTarget).eq(target);
+
+            // if (sender > 0) query.and(MsgCache::getSender).eq(sender);
+            if (time > 0) query.and(MsgCache::getTime).eq(time);
+            query.and(MsgCache::getMsg).like("%"+keyword+"%");
+            query.and(MsgCache::getMsg).notlike("%/va get msgcache%");
+            query.orderBy(MsgCache::getTime).desc();
+            query.limit(50);
+            // if (!StringUtils.isNullOrEmpty(keyword))query.and(keyword).eq(keyword);
+
+            msgCache = sqliteUtil.getList(query, MsgCache.class);
+            // if (msgCache != null && msgCache.getId() > 0) break;
+        }
+        return msgCache;
     }
 
     @Override

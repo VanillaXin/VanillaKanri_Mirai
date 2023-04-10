@@ -3,12 +3,10 @@ package xin.vanilla.event;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.RandomUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
-import net.mamoe.mirai.contact.ContactList;
-import net.mamoe.mirai.contact.Group;
-import net.mamoe.mirai.contact.Member;
-import net.mamoe.mirai.contact.NormalMember;
+import net.mamoe.mirai.contact.*;
 import net.mamoe.mirai.message.data.*;
 import net.mamoe.mirai.utils.ExternalResource;
 import xin.vanilla.common.RegExpConfig;
@@ -16,6 +14,7 @@ import xin.vanilla.entity.KeyRepEntity;
 import xin.vanilla.entity.config.Base;
 import xin.vanilla.entity.config.Other;
 import xin.vanilla.entity.data.KeyData;
+import xin.vanilla.entity.data.MsgCache;
 import xin.vanilla.entity.event.events.GroupMessageEvents;
 import xin.vanilla.enumeration.PermissionLevel;
 import xin.vanilla.rcon.Rcon;
@@ -51,8 +50,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
         this.group = this.event.getGroup();
         this.sender = this.event.getSender();
         // 当原始事件不为null时才记录消息
-        if (event.getOriginalEvent() != null)
-            Va.getMessageCache().addMsg(this.group, this.msg);
+        if (event.getOriginalEvent() != null) Va.getMessageCache().addMsg(this.group, this.msg);
     }
 
     public void run() {
@@ -70,6 +68,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
         if (capability.getChatGPTVoice()) chatGPTVoice();
         if (capability.getOnlineRandomPic()) onlineRandomPic();
         if (capability.getOnlineAiPic()) onlineAiPic();
+        searchMsg();
 
         // 测试
         // audioTest();
@@ -78,6 +77,33 @@ public class GroupMsgEvent extends BaseMsgEvent {
         // 核心功能: 关键词回复
         if (capability.getKeyRep()) keyRep();
     }
+
+
+    private boolean searchMsg() {
+
+        String s = msg.get(At.Key).contentToString();
+        if (msg.contentToString().startsWith("/va get msgcache ")) {
+            String no = msg.contentToString().substring("/va get msgcache ".length());
+            MessageSource source = msg.get(MessageSource.Key);
+            assert source != null;
+            // Va.getMessageCache().getMsgJsonCode(String.valueOf(no), group.getId(), MSG_TYPE_GROUP);
+            List<MsgCache> msgCache = Va.getMessageCache().getMsgChainByKeyWord(no, sender.getId(), group.getId(), 0, MSG_TYPE_GROUP);
+            ForwardMessageBuilder forwardMessageBuilder = new ForwardMessageBuilder(group).add(sender, msg);
+            // int i = 0;
+            for (MsgCache item : msgCache) {
+                // if (i>=8) break;
+                // sender. = item.getSender();
+                Member normalMember = sender.getGroup().get(item.getSender());
+                MessageChain singleMessages = VanillaUtils.deserializeJsonCode(item.getMsg());
+                forwardMessageBuilder.add(normalMember,singleMessages);
+                // Api.sendMessage(group,singleMessages);
+                // i++;
+            }
+            group.sendMessage(forwardMessageBuilder.build());
+        }
+        return false;
+    }
+
 
     /**
      * 解析关键词回复
@@ -255,15 +281,13 @@ public class GroupMsgEvent extends BaseMsgEvent {
         return false;
     }
 
-    private void chatGPTVoice() {
+    private boolean chatGPTVoice() {
         final String prefix = "chatGPTVoice";
         if (msg.contentToString().startsWith(prefix)) {
             String command = msg.contentToString().substring(prefix.length());
 
             String back = Api.chatGPT(command);
-            Api.sendMessage(group, new MessageChainBuilder()
-                    .append(new At(sender.getId()))
-                    .append(back).build());
+            Api.sendMessage(group, new MessageChainBuilder().append(new At(sender.getId())).append(back).build());
 
             String res = Api.translateToJP(back.replace("\r", "")).replace("\n", "").replace(" ", "");
             String path = Va.getGlobalConfig().getOther().getVoiceSavePath() + "\\";
@@ -282,12 +306,14 @@ public class GroupMsgEvent extends BaseMsgEvent {
                 // throw new RuntimeException(e);
             }
         }
+        return false;
     }
 
-    private void chatGPT() {
-        final String prefix = "chatGPT";
-        if (msg.contentToString().startsWith(prefix)) {
-            String command = msg.contentToString().substring(prefix.length());
+    private boolean chatGPT() {
+        if (VanillaUtils.messageToString(msg).contains(new At(bot.getId()).toString())) {
+            String command = VanillaUtils.messageToPlainText(msg);
+            // Api.sendMessage(group,command);
+            // final String prefix = "chatGPT";
             String back = Api.chatGPT(command);
             if (StringUtils.isNullOrEmptyEx(back)) {
                 Api.sendMessage(group, "可能是请求太快也可能是模型使用超时总之挂了，后续在改");
@@ -295,6 +321,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
                 Api.sendMessage(group, back);
             }
         }
+        return true;
     }
 
     private void onlineRandomPic() {
@@ -303,8 +330,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
             try {
                 for (int i = 0; i <= 10; i++) {
                     ExternalResource ex;
-                    try (HttpResponse execute = HttpRequest.get("https://picture.yinux.workers.dev")
-                            .setHttpProxy("127.0.0.1", 10808).execute()) {
+                    try (HttpResponse execute = HttpRequest.get("https://picture.yinux.workers.dev").setHttpProxy("127.0.0.1", 10809).execute()) {
                         try (InputStream inputStream = execute.bodyStream()) {
                             // URL url = new URL("https://api.jrsgslb.cn/cos/url.php?return=img");
                             // InputStream inputStream = url.openConnection().getInputStream();
@@ -344,15 +370,14 @@ public class GroupMsgEvent extends BaseMsgEvent {
 
             String uri = null;
             try {
-                uri = Api.aiPicture(prompt, unprompt);
+                uri = Api.aiPictureV2(prompt, unprompt);
                 // Api.sendMessage(group,uri);
             } catch (Exception e) {
                 Api.sendMessage(group, "请求出错");
             }
 
             InputStream inputStream;
-            try (HttpResponse authorization = HttpRequest.get(aiDrawUrl + "/file=" + uri)
-                    .header("authorization", key).timeout(1000000).execute()) {
+            try (HttpResponse authorization = HttpRequest.get(aiDrawUrl + "/file=" + uri).header("authorization", key).timeout(1000000).execute()) {
                 inputStream = authorization.bodyStream();
                 try (ExternalResource externalResource = ExternalResource.Companion.create(inputStream)) {
                     Image image = ExternalResource.uploadAsImage(externalResource, group);

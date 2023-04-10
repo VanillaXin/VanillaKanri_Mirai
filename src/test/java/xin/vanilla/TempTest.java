@@ -2,9 +2,6 @@ package xin.vanilla;
 
 
 import org.junit.Test;
-
-
-
 public class TempTest {
 
     @Test

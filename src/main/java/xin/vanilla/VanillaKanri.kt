@@ -32,6 +32,7 @@ import java.util.concurrent.ConcurrentHashMap
 object VanillaKanri : KotlinPlugin(
     JvmPluginDescription.loadFromResource()
 ) {
+    var parentMessageId: String = "chatcmpl-72YBVdsjJU4ar30QpQnp4kqN7SXu5"
     /**
      * 消息缓存
      */

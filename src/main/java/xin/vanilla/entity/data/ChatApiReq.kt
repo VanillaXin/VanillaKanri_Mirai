@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 class ChatApiReq {
     var prompt :String = "" ;
 
-    var options:String = "" ;
+    var options:Map<String, String> = HashMap() ;
 
     var systemMessage:String = "" ;
 

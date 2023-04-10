@@ -435,6 +435,12 @@ public class Statement {
         return this;
     }
 
+    public Statement notlike(String expr) {
+        statement.append("NOT LIKE ").append("?");
+        this.operands.add(expr);
+        return this;
+    }
+
     /**
      * Appending the LIKE operator clause by contains form.
      *
