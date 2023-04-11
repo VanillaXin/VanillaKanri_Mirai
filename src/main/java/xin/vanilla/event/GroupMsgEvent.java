@@ -84,16 +84,17 @@ public class GroupMsgEvent extends BaseMsgEvent {
     private boolean searchMsg() {
         // TODO 丢到InstructionMsgEvent中解析
         if (msg.contentToString().startsWith("/va get msgcache ")) {
-            MessageChainBuilder messages = new MessageChainBuilder();
-            for (SingleMessage singleMessage : msg) {
-                if (singleMessage instanceof PlainText) {
-                    PlainText plainText = (PlainText) singleMessage;
-                    messages.add(plainText.contentToString().substring("/va get msgcache ".length()));
-                } else {
-                    messages.add(singleMessage);
-                }
-            }
-            String no = VanillaUtils.serializeToJsonCode(messages.build());
+            // MessageChainBuilder messages = new MessageChainBuilder();
+            // for (SingleMessage singleMessage : msg) {
+            //     if (singleMessage instanceof PlainText) {
+            //         PlainText plainText = (PlainText) singleMessage;
+            //         messages.add(plainText.contentToString().substring("/va get msgcache ".length()));
+            //     } else {
+            //         messages.add(singleMessage);
+            //     }
+            // }
+            // String no = VanillaUtils.serializeToJsonCode(messages.build());
+            String no = VanillaUtils.messageToString(msg).substring("/va get msgcache ".length());
             MessageSource source = msg.get(MessageSource.Key);
             assert source != null;
             List<MsgCache> msgCache = Va.getMessageCache().getMsgChainByKeyWord(no, sender.getId(), group.getId(), 0, MSG_TYPE_GROUP);
