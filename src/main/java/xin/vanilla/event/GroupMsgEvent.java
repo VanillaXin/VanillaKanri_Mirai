@@ -3,10 +3,12 @@ package xin.vanilla.event;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.RandomUtil;
-import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
-import net.mamoe.mirai.contact.*;
+import net.mamoe.mirai.contact.ContactList;
+import net.mamoe.mirai.contact.Group;
+import net.mamoe.mirai.contact.Member;
+import net.mamoe.mirai.contact.NormalMember;
 import net.mamoe.mirai.message.data.*;
 import net.mamoe.mirai.utils.ExternalResource;
 import xin.vanilla.common.RegExpConfig;
@@ -80,26 +82,24 @@ public class GroupMsgEvent extends BaseMsgEvent {
 
 
     private boolean searchMsg() {
-
-        String s = msg.get(At.Key).contentToString();
+        // TODO 丢到InstructionMsgEvent中解析
         if (msg.contentToString().startsWith("/va get msgcache ")) {
             String no = msg.contentToString().substring("/va get msgcache ".length());
             MessageSource source = msg.get(MessageSource.Key);
             assert source != null;
-            // Va.getMessageCache().getMsgJsonCode(String.valueOf(no), group.getId(), MSG_TYPE_GROUP);
             List<MsgCache> msgCache = Va.getMessageCache().getMsgChainByKeyWord(no, sender.getId(), group.getId(), 0, MSG_TYPE_GROUP);
             ForwardMessageBuilder forwardMessageBuilder = new ForwardMessageBuilder(group).add(sender, msg);
-            // int i = 0;
             for (MsgCache item : msgCache) {
-                // if (i>=8) break;
-                // sender. = item.getSender();
                 Member normalMember = sender.getGroup().get(item.getSender());
                 MessageChain singleMessages = VanillaUtils.deserializeJsonCode(item.getMsg());
-                forwardMessageBuilder.add(normalMember, singleMessages);
-                // Api.sendMessage(group,singleMessages);
-                // i++;
+                try {
+                    if (normalMember != null)
+                        forwardMessageBuilder.add(normalMember, singleMessages, (int) item.getTime());
+                } catch (Exception e) {
+                    break;
+                }
             }
-            group.sendMessage(forwardMessageBuilder.build());
+            Api.sendMessage(group, forwardMessageBuilder.build());
         }
         return false;
     }
@@ -116,7 +116,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
          *  3.然后解析概率选择、条件判断 等特殊码
          *  4.接着解析群管类特殊码(防止群管类特殊码注入(不是))
          *  5.最后解析post、get、pic图片、引用回复、复读 等特殊码
-         *  6.转义替换敏感数据(GPT key等)、图片消息、语音消息、文本消息 应在Api。sendMessage里面处理
+         *  6.转义替换敏感数据(GPT key等)、图片消息、语音消息、文本消息 应在Api.sendMessage里面处理
          *  待实现特殊码清单(关键词):
          *  概率选择、条件判断、get、post、RCON、合并转发、GPT上下文、REP(复读消息)、黑名单、白名单、夸奖、警告、图片消息(将发送内容转为图片)、文本消息(将发送内容转为纯文本)、语音消息(将发送内容转为语音) 等
          *  待实现特殊码清单(事件):

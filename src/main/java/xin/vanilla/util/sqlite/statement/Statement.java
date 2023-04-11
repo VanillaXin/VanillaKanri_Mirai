@@ -435,8 +435,8 @@ public class Statement {
         return this;
     }
 
-    public Statement notlike(String expr) {
-        statement.append("NOT LIKE ").append("?");
+    public Statement notLike(String expr) {
+        statement.append(" NOT LIKE ").append("?");
         this.operands.add(expr);
         return this;
     }

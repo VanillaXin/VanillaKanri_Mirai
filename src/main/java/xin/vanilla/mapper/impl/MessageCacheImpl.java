@@ -314,10 +314,10 @@ public class MessageCacheImpl extends Base implements MessageCache {
 
             // if (sender > 0) query.and(MsgCache::getSender).eq(sender);
             if (time > 0) query.and(MsgCache::getTime).eq(time);
-            query.and(MsgCache::getMsg).like("%"+keyword+"%");
-            query.and(MsgCache::getMsg).notlike("%/va get msgcache%");
+            query.and(MsgCache::getMsg).likeContains(keyword);
+            query.and(MsgCache::getMsg).notLike("%/va get msgcache%");
             query.orderBy(MsgCache::getTime).desc();
-            query.limit(50);
+            query.limit(99);
             // if (!StringUtils.isNullOrEmpty(keyword))query.and(keyword).eq(keyword);
 
             msgCache = sqliteUtil.getList(query, MsgCache.class);
