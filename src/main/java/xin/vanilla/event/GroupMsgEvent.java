@@ -95,7 +95,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
                 // sender. = item.getSender();
                 Member normalMember = sender.getGroup().get(item.getSender());
                 MessageChain singleMessages = VanillaUtils.deserializeJsonCode(item.getMsg());
-                forwardMessageBuilder.add(normalMember,singleMessages);
+                forwardMessageBuilder.add(normalMember, singleMessages);
                 // Api.sendMessage(group,singleMessages);
                 // i++;
             }
@@ -109,6 +109,22 @@ public class GroupMsgEvent extends BaseMsgEvent {
      * 解析关键词回复
      */
     private boolean keyRep() {
+        /*
+         * TODO 关键词回复解析:
+         *  1.需要提供的内容, 机器人ID, 发送人ID, [来源群ID], 发送时间, 消息主体, 消息ID, 被触发的关键词, 被触发的回复,
+         *  2.优先解析静态特殊码: AT、时间、image图片(区别于pic图片)、随机数 等
+         *  3.然后解析概率选择、条件判断 等特殊码
+         *  4.接着解析群管类特殊码(防止群管类特殊码注入(不是))
+         *  5.最后解析post、get、pic图片、引用回复、复读 等特殊码
+         *  6.转义替换敏感数据(GPT key等)、图片消息、语音消息、文本消息 应在Api。sendMessage里面处理
+         *  待实现特殊码清单(关键词):
+         *  概率选择、条件判断、get、post、RCON、合并转发、GPT上下文、REP(复读消息)、黑名单、白名单、夸奖、警告、图片消息(将发送内容转为图片)、文本消息(将发送内容转为纯文本)、语音消息(将发送内容转为语音) 等
+         *  待实现特殊码清单(事件):
+         *  机器人入群事件、某人入群事件、机器人被踢事件、某人被踢事件、机器人被禁言事件、某人被禁言事件 等
+         *  基于以上事件待实现功能:
+         *  邀请人数、被禁言次数 等
+         */
+
         // 关键词查询
         KeyData keyword = Va.getKeywordData().getKeyword(VanillaUtils.messageToString(msg), bot.getId(), -group.getId());
         if (keyword.getId() > 0) {

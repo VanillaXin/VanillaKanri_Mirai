@@ -29,18 +29,14 @@ dependencies {
     implementation 'com.github.oshi:oshi-core:6.2.2' // 系统信息工具类
     implementation 'com.unfbx:chatgpt-java:1.0.6'
     testImplementation 'junit:junit:4.13.1'
-//    testImplementation 'junit:junit:4.13.1'// ChatGPT三方库
 
     compileOnly 'org.projectlombok:lombok:1.18.24'
     annotationProcessor 'org.projectlombok:lombok:1.18.24'
 
     testCompileOnly 'org.apiguardian:apiguardian-api:1.1.0'
-//    testImplementation 'junit:junit:4.12'
+    testImplementation 'junit:junit:4.13.1'
 
-    testImplementation 'junit:junit:4.12'
-
-
-//    testCompileOnly 'org.projectlombok:lombok:1.18.24'
+    testCompileOnly 'org.projectlombok:lombok:1.18.24'
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.24'
 
 }
