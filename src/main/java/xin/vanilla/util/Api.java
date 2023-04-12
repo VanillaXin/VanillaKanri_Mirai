@@ -35,6 +35,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -373,7 +374,7 @@ public class Api {
             HttpLoggingInterceptor httpLoggingInterceptor = new HttpLoggingInterceptor(new OpenAILogger());
             httpLoggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
 
-            OpenAiClient openAiClient = builder.apiKey(chatGPTKey).apiHost(chatGPTUrl).interceptor(Collections.singletonList(httpLoggingInterceptor)).build();
+            OpenAiClient openAiClient = builder.apiKey(chatGPTKey).apiHost(chatGPTUrl).interceptor(Collections.singletonList(httpLoggingInterceptor)).readTimeout(60).build();
 
             List<com.unfbx.chatgpt.entity.chat.Message> messages = new ArrayList<>();
 
