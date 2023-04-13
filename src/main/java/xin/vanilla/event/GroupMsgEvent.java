@@ -133,6 +133,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
          *  机器人入群事件、某人入群事件、机器人被踢事件、某人被踢事件、机器人被禁言事件、某人被禁言事件 等
          *  基于以上事件待实现功能:
          *  邀请人数、被禁言次数 等
+         *  [vacode:chatgpt:key:上下文模式:预设风格:默认回复]
          */
 
         // 关键词查询
@@ -174,8 +175,8 @@ public class GroupMsgEvent extends BaseMsgEvent {
                     String player;
                     if (matcher.find()) {
                         try {
-                            player = matcher.group("player");
-                        } catch (IllegalStateException e) {
+                            player = matcher.group("player").trim();
+                        } catch (Exception e) {
                             player = "";
                         }
                         if (StringUtils.isNullOrEmptyEx(player)) {
