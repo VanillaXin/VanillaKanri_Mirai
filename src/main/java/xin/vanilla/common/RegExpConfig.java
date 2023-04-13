@@ -48,7 +48,7 @@ public class RegExpConfig {
                     .append("of").separator().append("a").separator().append("max").separator().append("of").separator()
                     .groupIgByName("max", "\\d{1,2}").separator()
                     .append("players").separator().append("online:").separator()
-                    .groupIgByName("player", "[\\s.]*?")
+                    .groupIgByName("player", "[^:]*?")
                     .end();
 
 
