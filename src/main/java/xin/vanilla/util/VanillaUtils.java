@@ -725,15 +725,10 @@ public class VanillaUtils {
             // ChatGPT
             result = RegExpConfig.VaCode.exeGpt(messageToPlainText(messageChain), result, group != null ? (NormalMember) sender : null);
 
-            // 解析戳一戳特殊码
-            if (result.contains("[vacode:tap]")) {
-                result = result.replaceAll("\\[vacode:tap]", "");
-                if (sender instanceof Friend) {
-                    ((Friend) sender).nudge().sendTo(sender);
-                } else if (sender instanceof Member) {
-                    ((Member) sender).nudge().sendTo(((Member) sender).getGroup());
-                }
-            }
+            // 戳一戳
+            result = RegExpConfig.VaCode.exeTap(result, sender);
+
+
         } catch (Exception e) {
             e.printStackTrace();
             result = "";
