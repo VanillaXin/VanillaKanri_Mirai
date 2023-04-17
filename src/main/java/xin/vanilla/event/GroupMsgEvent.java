@@ -3,6 +3,7 @@ package xin.vanilla.event;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.RandomUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
 import net.mamoe.mirai.contact.ContactList;
@@ -71,15 +72,49 @@ public class GroupMsgEvent extends BaseMsgEvent {
         if (capability.getOnlineRandomPic()) onlineRandomPic();
         if (capability.getOnlineAiPic()) onlineAiPic();
         searchMsg();
-
+        searchMsgLen();
+        setu();
         // 测试
         // audioTest();
         // test();
-
+        searchMsgAll();
         // 核心功能: 关键词回复
         if (capability.getKeyRep()) keyRep();
     }
 
+    private boolean searchMsgAll() {
+        if (msg.contentToString().startsWith("/va get msg ")){
+            String no = msg.toString();
+            // Image.fromId()
+            Api.sendMessage(group,no);
+        }
+        return false;
+    }
+    // https://api.lolicon.app/setu/v2
+
+
+    private boolean setu(){
+
+        return true;
+    }
+    private boolean searchMsgLen(){
+        if (msg.contentToString().startsWith("/va get msgcachelen ")){
+            String no = msg.contentToString().substring("/va get msgcachelen ".length());
+            List<MsgCache> msgCache = Va.getMessageCache().getMsgChainByKeyWord(no, sender.getId(), group.getId(), 0, MSG_TYPE_GROUP);
+            ForwardMessageBuilder forwardMessageBuilder = new ForwardMessageBuilder(group).add(sender, msg);
+            Map<Long, Long> collect = msgCache.stream().collect(Collectors.groupingBy(MsgCache::getSender, Collectors.counting()));
+            // Api.sendMessage(group,collect.toString());
+            collect.forEach((k,v)->{
+                Member normalMember = sender.getGroup().get(k);
+                // MessageChain singleMessages = VanillaUtils.deserializeJsonCode("总共发了"+ v +"次");
+                forwardMessageBuilder.add(normalMember,new MessageChainBuilder().append("总共发了"+ v +"次").build());
+            });
+            group.sendMessage(forwardMessageBuilder.build());
+            // Member normalMember = sender.getGroup().get(collect.get());
+
+        }
+        return false;
+    }
 
     private boolean searchMsg() {
         // TODO 丢到InstructionMsgEvent中解析
