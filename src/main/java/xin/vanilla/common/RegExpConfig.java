@@ -1,6 +1,8 @@
 package xin.vanilla.common;
 
 import net.mamoe.mirai.contact.Contact;
+import net.mamoe.mirai.contact.Friend;
+import net.mamoe.mirai.contact.Member;
 import net.mamoe.mirai.contact.NormalMember;
 import net.mamoe.mirai.message.data.*;
 import org.jetbrains.annotations.NotNull;
@@ -289,6 +291,14 @@ public class RegExpConfig {
         public static RegUtils REPLY = new RegUtils().append("[vacode:reply]");
 
         /**
+         * 戳一戳特殊码
+         */
+        public static RegUtils TAP = new RegUtils().append("[vacode:tap")
+                .groupIgByName("qq", ":\\d{5,10}").appendIg("?")
+                .groupIgByName("num", ":\\d{1}").appendIg("?")
+                .append("]");
+
+        /**
          * 关键词 回复内容编码
          */
         public static Map<String, String> EN_REP = new HashMap<String, String>() {{
@@ -426,6 +436,42 @@ public class RegExpConfig {
                 e.printStackTrace();
             }
             return messages;
+        }
+
+        /**
+         * 戳一戳
+         */
+        public static String exeTap(String msg, Contact sender) {
+            Matcher matcher = TAP.matcher(msg);
+            try {
+                if (matcher.find()) {
+                    long qq;
+                    try {
+                        qq = Long.parseLong((matcher.group("qq")));
+                    } catch (Exception ignored) {
+                        qq = sender.getId();
+                    }
+
+                    int num;
+                    try {
+                        num = Integer.parseInt((matcher.group("num")));
+                    } catch (Exception ignored) {
+                        num = 1;
+                    }
+                    for (int i = 0; i < num; i++) {
+                        Va.delayed(i * 5 * 1000L, () -> {
+                            if (sender instanceof Friend) {
+                                ((Friend) sender).nudge().sendTo(sender);
+                            } else if (sender instanceof Member) {
+                                ((Member) sender).nudge().sendTo(((Member) sender).getGroup());
+                            }
+                        });
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return msg.replaceAll(TAP.build(), "");
         }
     }
 }

@@ -452,12 +452,16 @@ public class VanillaUtils {
     /**
      * 提取消息中的PlainText
      */
-    public static @NotNull String messageToPlainText(@NotNull MessageChain message) {
+    public static @NotNull String messageToPlainText(@NotNull MessageChain message, @NotNull Group group) {
         StringBuilder str = new StringBuilder();
         for (SingleMessage singleMessage : message) {
             if (singleMessage instanceof PlainText) {
                 PlainText plainText = (PlainText) singleMessage;
                 str.append(plainText.contentToString());
+            } else if (singleMessage instanceof At) {
+                At at = (At) singleMessage;
+                NormalMember normalMember = group.get(at.getTarget());
+                if (normalMember != null) str.append(normalMember.getNick());
             }
         }
         return str.toString();
@@ -530,6 +534,11 @@ public class VanillaUtils {
             result = result.replaceAll(key, repCode.get(key));
         }
         if (only) return result;
+
+        // 解析随机骰子特殊码
+        if (result.contains("[vacode:dice]")) {
+            result = result.replace("[vacode:dice]", Dice.random().serializeToMiraiCode());
+        }
 
         // 替换日期特时间殊码
         if (result.contains("[vacode:date:")) {
@@ -723,17 +732,12 @@ public class VanillaUtils {
             result = RegExpConfig.VaCode.exeKick(word, result, group != null ? (NormalMember) sender : null);
 
             // ChatGPT
-            result = RegExpConfig.VaCode.exeGpt(messageToPlainText(messageChain), result, group != null ? (NormalMember) sender : null);
+            result = RegExpConfig.VaCode.exeGpt(messageToPlainText(messageChain, group), result, group != null ? (NormalMember) sender : null);
 
-            // 解析戳一戳特殊码
-            if (result.contains("[vacode:tap]")) {
-                result = result.replaceAll("\\[vacode:tap]", "");
-                if (sender instanceof Friend) {
-                    ((Friend) sender).nudge().sendTo(sender);
-                } else if (sender instanceof Member) {
-                    ((Member) sender).nudge().sendTo(((Member) sender).getGroup());
-                }
-            }
+            // 戳一戳
+            result = RegExpConfig.VaCode.exeTap(result, sender);
+
+
         } catch (Exception e) {
             e.printStackTrace();
             result = "";

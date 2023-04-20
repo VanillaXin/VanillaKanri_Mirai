@@ -168,7 +168,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
          *  机器人入群事件、某人入群事件、机器人被踢事件、某人被踢事件、机器人被禁言事件、某人被禁言事件 等
          *  基于以上事件待实现功能:
          *  邀请人数、被禁言次数 等
-         *  [vacode:chatgpt:key:上下文模式:预设风格:默认回复]
+         *  [vacode:chatgpt:key:上下文模式(仅发送者, 仅机器人, 发送者+机器人, 发送者+机器人+群友):上下文条数:预设风格:默认回复]
          */
 
         // 关键词查询
@@ -243,27 +243,22 @@ public class GroupMsgEvent extends BaseMsgEvent {
         if (msg.contentToString().matches(".*?(来.?|.*?不够)[射蛇色涩瑟铯\uD83D\uDC0D].*?")) {
             String path = Va.getGlobalConfig().getOther().getHentaiPath();
             if (!StringUtils.isNullOrEmpty(path)) {
-                List<Path> paths;
-                if (!Va.getDataCache().containsKey(path)) {
-                    getLocalPicList(path);
-                }
-                paths = (List<Path>) Va.getDataCache().get(path);
+                List<Path> paths = (List<Path>) Va.getDataCache().computeIfAbsent(path, this::getLocalPicList);
                 long index = VanillaUtils.getDataCacheAsLong(path + "!index");
                 int i1 = RandomUtil.randomInt(1, Math.max(22 - msg.contentToString().length(), 1));
                 index += i1;
                 VanillaUtils.setDateCache(path + "!index", index);
                 if (paths.size() <= index) {
-                    getLocalPicList(path);
-                } else {
-                    ForwardMessageBuilder forwardMessageBuilder = new ForwardMessageBuilder(group)
-                            .add(sender, msg);
-                    for (int i = 0; i < i1; i++) {
-                        forwardMessageBuilder.add(sender, new MessageChainBuilder()
-                                .append(ExternalResource.uploadAsImage(paths.get((int) index - i).toFile(), group))
-                                .build());
-                    }
-                    group.sendMessage(forwardMessageBuilder.build()).recallIn(100 * 1000);
+                    paths = getLocalPicList(path);
                 }
+                ForwardMessageBuilder forwardMessageBuilder = new ForwardMessageBuilder(group)
+                        .add(sender, msg);
+                for (int i = 0; i < i1; i++) {
+                    forwardMessageBuilder.add(sender, new MessageChainBuilder()
+                            .append(ExternalResource.uploadAsImage(paths.get((int) index - i).toFile(), group))
+                            .build());
+                }
+                group.sendMessage(forwardMessageBuilder.build()).recallIn(100 * 1000);
                 return true;
             }
         }
@@ -273,16 +268,17 @@ public class GroupMsgEvent extends BaseMsgEvent {
     /**
      * 遍历路径及子路径下所有文件
      */
-    private void getLocalPicList(String path) {
-        List<Path> files;
+    private List<Path> getLocalPicList(String path) {
+        List<Path> files = new ArrayList<>();
         try (Stream<Path> paths = Files.walk(Paths.get(path))) {
-            files = paths.filter(Files::isRegularFile).collect(Collectors.toList());
-            Collections.shuffle(files);
-            Va.getDataCache().put(path, files);
+            paths.filter(Files::isRegularFile).forEach(files::add);
         } catch (IOException e) {
             e.printStackTrace();
         }
+        Collections.shuffle(files);
+        return files;
     }
+
 
     /**
      * 抽老婆
@@ -373,7 +369,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
 
     private boolean chatGPT() {
         if (VanillaUtils.messageToString(msg).contains(new At(bot.getId()).toString())) {
-            String command = VanillaUtils.messageToPlainText(msg);
+            String command = VanillaUtils.messageToPlainText(msg, group);
             // Api.sendMessage(group,command);
             // final String prefix = "chatGPT";
             String back = Api.chatGPT(command);
