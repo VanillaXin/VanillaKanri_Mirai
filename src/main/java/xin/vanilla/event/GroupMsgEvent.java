@@ -6,6 +6,9 @@ import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
+import cn.hutool.json.JSONArray;
+import cn.hutool.json.JSONObject;
+import cn.hutool.json.JSONUtil;
 import net.mamoe.mirai.contact.ContactList;
 import net.mamoe.mirai.contact.Group;
 import net.mamoe.mirai.contact.Member;
@@ -83,31 +86,58 @@ public class GroupMsgEvent extends BaseMsgEvent {
     }
 
     private boolean searchMsgAll() {
-        if (msg.contentToString().startsWith("/va get msg ")){
+        if (msg.contentToString().startsWith("/va get msg ")) {
             String no = msg.toString();
             // Image.fromId()
-            Api.sendMessage(group,no);
+            Api.sendMessage(group, no);
         }
         return false;
     }
     // https://api.lolicon.app/setu/v2
 
 
-    private boolean setu(){
+    private boolean setu() {
+        if (msg.contentToString().matches(".*?[色涩].*?")) {
 
+            ExternalResource ex;
+            try {
+                String body = HttpRequest.get("https://api.lolicon.app/setu/v2").execute().body();
+                JSONObject jsonObject = JSONUtil.parseObj(body);
+                JSONArray jsonArray = JSONUtil.parseArray(jsonObject.get("data"));
+                JSONObject data = JSONUtil.parseObj(jsonArray.get(0));
+                // List<String> tags = JSONUtil.toList( data.get("tags").toString(), String.class);
+                JSONObject url = JSONUtil.parseObj(data.get("urls"));
+                String urls = (String) url.get("original");
+
+
+                InputStream inputStream = HttpRequest.get(urls).execute().bodyStream();
+                ex = ExternalResource.Companion.create(inputStream);
+                Image img = ExternalResource.uploadAsImage(ex, group);
+
+
+                Api.sendMessage(group, new MessageChainBuilder().append(new At(sender.getId())).append(img).append("tags:" + data.get("tags")).build());
+                ex.close();
+            } catch (Exception e) {
+
+                e.printStackTrace();
+
+            }
+
+        }
         return true;
     }
-    private boolean searchMsgLen(){
-        if (msg.contentToString().startsWith("/va get msgcachelen ")){
+
+    private boolean searchMsgLen() {
+        if (msg.contentToString().startsWith("/va get msgcachelen ")) {
             String no = msg.contentToString().substring("/va get msgcachelen ".length());
             List<MsgCache> msgCache = Va.getMessageCache().getMsgChainByKeyWord(no, sender.getId(), group.getId(), 0, MSG_TYPE_GROUP);
             ForwardMessageBuilder forwardMessageBuilder = new ForwardMessageBuilder(group).add(sender, msg);
             Map<Long, Long> collect = msgCache.stream().collect(Collectors.groupingBy(MsgCache::getSender, Collectors.counting()));
             // Api.sendMessage(group,collect.toString());
-            collect.forEach((k,v)->{
+            collect.forEach((k, v) -> {
                 Member normalMember = sender.getGroup().get(k);
                 // MessageChain singleMessages = VanillaUtils.deserializeJsonCode("总共发了"+ v +"次");
-                forwardMessageBuilder.add(normalMember,new MessageChainBuilder().append("总共发了"+ v +"次").build());
+                forwardMessageBuilder.add(normalMember, new MessageChainBuilder().append("总共发了" + v + "次").build());
             });
             group.sendMessage(forwardMessageBuilder.build());
             // Member normalMember = sender.getGroup().get(collect.get());
