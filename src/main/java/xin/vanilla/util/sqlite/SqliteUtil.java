@@ -151,7 +151,7 @@ public class SqliteUtil {
     private PreparedStatement getStatement(Connection con, String sql) {
         try {
             return con.prepareStatement(sql);
-        } catch (SQLException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
@@ -166,13 +166,13 @@ public class SqliteUtil {
         try {
             if (ps == null) return 0;
             return ps.executeUpdate();
-        } catch (SQLException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             return 0;
         } finally {
             try {
                 c.commit();
-            } catch (SQLException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
             this.releaseConn(c);
@@ -188,7 +188,7 @@ public class SqliteUtil {
         try {
             if (setStatement(statement, ps)) return null;
             return ps.executeQuery();
-        } catch (SQLException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         } finally {
             this.releaseConn(c);
@@ -205,13 +205,13 @@ public class SqliteUtil {
         try {
             if (setStatement(statement, ps)) return -1;
             return ps.executeUpdate();
-        } catch (SQLException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             return -1;
         } finally {
             try {
                 c.commit();
-            } catch (SQLException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
             this.releaseConn(c);
@@ -301,7 +301,8 @@ public class SqliteUtil {
         try (ResultSet resultSet = select(statement)) {
             if (resultSet == null || !resultSet.next()) return null;
             return getEntity(resultSet, clazz);
-        } catch (SQLException e) {
+        } catch (Exception e) {
+            e.printStackTrace();
             return null;
         }
     }
@@ -388,12 +389,12 @@ public class SqliteUtil {
             ResultSet resultSet = ps.executeQuery();
             int[] result = getInts(resultSet);
             if (result != null) return result;
-        } catch (SQLException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         } finally {
             try {
                 c.commit();
-            } catch (SQLException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
             this.releaseConn(c);
@@ -497,12 +498,12 @@ public class SqliteUtil {
                 list.add(result);
             }
             return list.toArray(new String[0][]);
-        } catch (SQLException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         } finally {
             try {
                 c.commit();
-            } catch (SQLException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
             this.releaseConn(c);
@@ -540,7 +541,8 @@ public class SqliteUtil {
                     connection.rollback();
                 }
                 connection.close();
-            } catch (SQLException e) {
+            } catch (Exception e) {
+                e.printStackTrace();
                 return false;
             }
         }
@@ -558,7 +560,8 @@ public class SqliteUtil {
         try (ResultSet resultSet = select(statement)) {
             resultSet.next();
             return resultSet.getInt(1) > 0;
-        } catch (SQLException e) {
+        } catch (Exception e) {
+            e.printStackTrace();
             return false;
         }
     }
@@ -571,7 +574,8 @@ public class SqliteUtil {
         try (ResultSet resultSet = select(statement)) {
             if (!resultSet.next()) return 0;
             return resultSet.getInt(1);
-        } catch (SQLException e) {
+        } catch (Exception e) {
+            e.printStackTrace();
             return 0;
         }
     }
@@ -588,7 +592,8 @@ public class SqliteUtil {
                 columnNames.add(metaData.getColumnName(i));
             }
             return columnNames.toArray(new String[]{});
-        } catch (SQLException e) {
+        } catch (Exception e) {
+            e.printStackTrace();
             return new String[]{};
         }
     }
