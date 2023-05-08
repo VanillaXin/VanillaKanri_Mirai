@@ -76,7 +76,9 @@ public class GroupMsgEvent extends BaseMsgEvent {
         if (capability.getOnlineAiPic()) onlineAiPic();
         searchMsg();
         searchMsgLen();
+
         setu();
+
         // 测试
         // audioTest();
         // test();
@@ -97,11 +99,26 @@ public class GroupMsgEvent extends BaseMsgEvent {
 
 
     private boolean setu() {
-        if (msg.contentToString().matches(".*?[色涩].*?")) {
+        if (msg.contentToString().startsWith("色图来")) {
 
-            ExternalResource ex;
+
+            String listStr = null;
             try {
-                String body = HttpRequest.get("https://api.lolicon.app/setu/v2").execute().body();
+                listStr = msg.contentToString().substring("色图来 ".length());
+            } catch (Exception e) {
+                listStr="";
+            }
+
+
+            String[] split = listStr.split(",");
+            Map<String, String[]> map = new HashMap<String,  String[]>();
+            map.put("tag", split);
+            // Api.sendMessage(group,JSONUtil.parse(split).toString());
+            // Api.sendMessage(group,JSONUtil.parse(map).toString());
+            ExternalResource ex;
+            InputStream inputStream;
+            try {
+                String body = HttpRequest.post("https://api.lolicon.app/setu/v2").timeout(3000).header("Content-Type", "application/json").body(JSONUtil.parse(map).toString()).execute().body();
                 JSONObject jsonObject = JSONUtil.parseObj(body);
                 JSONArray jsonArray = JSONUtil.parseArray(jsonObject.get("data"));
                 JSONObject data = JSONUtil.parseObj(jsonArray.get(0));
@@ -110,17 +127,16 @@ public class GroupMsgEvent extends BaseMsgEvent {
                 String urls = (String) url.get("original");
 
 
-                InputStream inputStream = HttpRequest.get(urls).execute().bodyStream();
+                inputStream = HttpRequest.get(urls).timeout(10000).execute().bodyStream();
                 ex = ExternalResource.Companion.create(inputStream);
                 Image img = ExternalResource.uploadAsImage(ex, group);
-
-
-                Api.sendMessage(group, new MessageChainBuilder().append(new At(sender.getId())).append(img).append("tags:" + data.get("tags")).build());
+                // Api.sendMessage(group, img);
+                Api.sendMessage(group, new MessageChainBuilder().append(img).append(new At(sender.getId())).append("tags:" + data.get("tags")).build());
+                inputStream.close();
                 ex.close();
             } catch (Exception e) {
-
+                Api.sendMessage(group, new MessageChainBuilder().append(new At(sender.getId())).append("未找到该标签图片").build());
                 e.printStackTrace();
-
             }
 
         }
