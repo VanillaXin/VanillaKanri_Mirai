@@ -3,12 +3,11 @@ package xin.vanilla.event;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.RandomUtil;
-import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
-import cn.hutool.json.JSONArray;
-import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
+import com.jayway.jsonpath.Configuration;
+import com.jayway.jsonpath.JsonPath;
 import net.mamoe.mirai.contact.ContactList;
 import net.mamoe.mirai.contact.Group;
 import net.mamoe.mirai.contact.Member;
@@ -100,45 +99,46 @@ public class GroupMsgEvent extends BaseMsgEvent {
 
     private boolean setu() {
         if (msg.contentToString().startsWith("色图来")) {
-
-
-            String listStr = null;
+            String listStr;
             try {
                 listStr = msg.contentToString().substring("色图来 ".length());
             } catch (Exception e) {
-                listStr="";
+                listStr = "";
             }
-
+            String url = "https://api.lolicon.app/setu/v2";
 
             String[] split = listStr.split(",");
-            Map<String, String[]> map = new HashMap<String,  String[]>();
+            Map<String, String[]> map = new HashMap<>();
             map.put("tag", split);
             // Api.sendMessage(group,JSONUtil.parse(split).toString());
             // Api.sendMessage(group,JSONUtil.parse(map).toString());
             ExternalResource ex;
-            InputStream inputStream;
-            try {
-                String body = HttpRequest.post("https://api.lolicon.app/setu/v2").timeout(3000).header("Content-Type", "application/json").body(JSONUtil.parse(map).toString()).execute().body();
-                JSONObject jsonObject = JSONUtil.parseObj(body);
-                JSONArray jsonArray = JSONUtil.parseArray(jsonObject.get("data"));
-                JSONObject data = JSONUtil.parseObj(jsonArray.get(0));
+            try (HttpResponse tagsResponse = HttpRequest.post(url).timeout(3000)
+                    .header("Content-Type", "application/json")
+                    .body(JSONUtil.parse(map).toString())
+                    .execute()) {
+
+                // JSONObject data = JSONUtil.parseObj(JSONUtil.parseArray(JSONUtil.parseObj().get("data")).get(0));
                 // List<String> tags = JSONUtil.toList( data.get("tags").toString(), String.class);
-                JSONObject url = JSONUtil.parseObj(data.get("urls"));
-                String urls = (String) url.get("original");
+                // JSONObject picUrls = JSONUtil.parseObj(data.get("urls"));
+                // String picUrl = (String) picUrls.get("original");
 
+                Object data = Configuration.defaultConfiguration().jsonProvider().parse(tagsResponse.body());
+                String picUrl = JsonPath.read(data, "$.data[0].urls.picUrl");
+                String tags = JsonPath.read(data, "$.data[0].tags");
 
-                inputStream = HttpRequest.get(urls).timeout(10000).execute().bodyStream();
-                ex = ExternalResource.Companion.create(inputStream);
-                Image img = ExternalResource.uploadAsImage(ex, group);
-                // Api.sendMessage(group, img);
-                Api.sendMessage(group, new MessageChainBuilder().append(img).append(new At(sender.getId())).append("tags:" + data.get("tags")).build());
-                inputStream.close();
-                ex.close();
+                try (HttpResponse execute = HttpRequest.get(picUrl).timeout(10000).execute()) {
+                    try (InputStream inputStream = execute.bodyStream()) {
+                        ex = ExternalResource.Companion.create(inputStream);
+                        Image img = ExternalResource.uploadAsImage(ex, group);
+                        // Api.sendMessage(group, img);
+                        Api.sendMessage(group, new MessageChainBuilder().append(img).append(new At(sender.getId())).append("tags:").append(tags).build());
+                    }
+                }
             } catch (Exception e) {
                 Api.sendMessage(group, new MessageChainBuilder().append(new At(sender.getId())).append("未找到该标签图片").build());
                 e.printStackTrace();
             }
-
         }
         return true;
     }
