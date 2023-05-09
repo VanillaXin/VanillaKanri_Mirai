@@ -12,11 +12,13 @@ import com.unfbx.chatgpt.OpenAiClient;
 import com.unfbx.chatgpt.entity.chat.ChatCompletion;
 import com.unfbx.chatgpt.entity.chat.ChatCompletionResponse;
 import com.unfbx.chatgpt.interceptor.OpenAILogger;
+import com.unfbx.chatgpt.interceptor.OpenAiResponseInterceptor;
 import net.mamoe.mirai.contact.Contact;
 import net.mamoe.mirai.contact.Group;
 import net.mamoe.mirai.message.MessageReceipt;
 import net.mamoe.mirai.message.data.*;
 import net.mamoe.mirai.utils.ExternalResource;
+import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -311,7 +313,7 @@ public class Api {
             JSONObject jsonObject2 = JSONUtil.parseObj(jsonArray2.get(0));
 
             return (String) jsonObject2.get("name");
-        }catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
@@ -330,12 +332,12 @@ public class Api {
 
         ChatApiReq chatApiReq = new ChatApiReq();
         Map m = new HashMap();
-        m.put("parentMessageId",parentMessageId);
+        m.put("parentMessageId", parentMessageId);
         chatApiReq.setPrompt(msg);
         chatApiReq.setOptions(m);
         chatApiReq.setSystemMessage(context);
         // Api.sendMessage(group,JSONUtil.toJsonStr(chatApiReq));
-        String body = HttpRequest.post(chatGPTUrl+"/api/chat-process")
+        String body = HttpRequest.post(chatGPTUrl + "/api/chat-process")
                 .body(JSONUtil.toJsonStr(chatApiReq))
                 .timeout(10000)
                 .execute()
@@ -351,7 +353,6 @@ public class Api {
     }
 
 
-
     public static String chatGPT(String nick, String key, String msg) {
         String chatGPTKey = key;
         if (StringUtils.isNullOrEmptyEx(chatGPTKey)) chatGPTKey = Va.getGlobalConfig().getOther().getChatGPTKey();
@@ -365,16 +366,23 @@ public class Api {
         int proxyPort = Va.getGlobalConfig().getOther().getSystemProxyPort();
 
         try {
-            OpenAiClient.Builder builder = OpenAiClient.builder();
-
-            if (!StringUtils.isNullOrEmptyEx(proxyHost) && proxyPort > 0)
-                builder.proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyHost, proxyPort)));
-
             // 日志
             HttpLoggingInterceptor httpLoggingInterceptor = new HttpLoggingInterceptor(new OpenAILogger());
             httpLoggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
 
-            OpenAiClient openAiClient = builder.apiKey(chatGPTKey).apiHost(chatGPTUrl).interceptor(Collections.singletonList(httpLoggingInterceptor)).readTimeout(60).build();
+            OkHttpClient.Builder okHttpClientBuilder = new OkHttpClient.Builder()
+                    .addInterceptor(httpLoggingInterceptor)// 自定义日志输出
+                    .addInterceptor(new OpenAiResponseInterceptor())// 自定义返回值拦截
+                    .connectTimeout(30, TimeUnit.SECONDS)// 自定义超时时间
+                    .writeTimeout(30, TimeUnit.SECONDS)// 自定义超时时间
+                    .readTimeout(60, TimeUnit.SECONDS);// 自定义超时时间
+            if (!StringUtils.isNullOrEmptyEx(proxyHost) && proxyPort > 0)// 自定义代理
+                okHttpClientBuilder.proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyHost, proxyPort)));
+
+            OpenAiClient openAiClient = OpenAiClient.builder()
+                    .okHttpClient(okHttpClientBuilder.build())
+                    .apiKey(Collections.singletonList(chatGPTKey))
+                    .apiHost(chatGPTUrl).build();
 
             List<com.unfbx.chatgpt.entity.chat.Message> messages = new ArrayList<>();
 
@@ -396,7 +404,10 @@ public class Api {
             userMessage.setContent(nick + ":" + msg);
             messages.add(userMessage);
 
-            ChatCompletion chatCompletion = ChatCompletion.builder().temperature(0.8).presencePenalty(1).n(1).topP(1.0).model(ChatCompletion.Model.GPT_3_5_TURBO.getName()).maxTokens(2000).messages(messages).build();
+            ChatCompletion chatCompletion = ChatCompletion.builder()
+                    .temperature(0.8).presencePenalty(1).n(1).topP(1.0)
+                    .model(ChatCompletion.Model.GPT_3_5_TURBO.getName())
+                    .maxTokens(2000).messages(messages).build();
 
             ChatCompletionResponse chatCompletionResponse = openAiClient.chatCompletion(chatCompletion);
             return chatCompletionResponse.getChoices().get(0).getMessage().getContent();
