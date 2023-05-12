@@ -18,10 +18,7 @@ import xin.vanilla.util.sqlite.SqliteUtil;
 import xin.vanilla.util.sqlite.statement.*;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class KeywordDataImpl extends Base implements KeywordData {
@@ -38,9 +35,15 @@ public class KeywordDataImpl extends Base implements KeywordData {
 
     private final VanillaKanri Va = VanillaKanri.INSTANCE;
 
+    private final Set<String> createdTables = new HashSet<>();
+
     public KeywordDataImpl(String path) {
         try {
-            this.sqliteUtil = SqliteUtil.getInstance(path + dbname);
+            // 开启“读写共享锁”锁定级别
+            Properties properties = new Properties();
+            properties.setProperty("pragma.locking_mode", "EXCLUSIVE");
+            properties.setProperty("pragma.journal_mode", "WAL");
+            this.sqliteUtil = SqliteUtil.getInstance(path + dbname, properties);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -48,6 +51,8 @@ public class KeywordDataImpl extends Base implements KeywordData {
 
     @Override
     public void createTable(String table) {
+        if (createdTables.contains(table)) return;
+        createdTables.add(table);
         if (!sqliteUtil.containsTable(table)) {
             sqliteUtil.executeSql(
                     "CREATE TABLE IF NOT EXISTS `" + table + "` (" +

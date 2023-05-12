@@ -14,8 +14,7 @@ import xin.vanilla.util.sqlite.statement.QueryStatement;
 import xin.vanilla.util.sqlite.statement.Statement;
 
 import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 public class MessageCacheImpl extends Base implements MessageCache {
     public static String dbname = "\\msg_cache.db";
@@ -28,6 +27,8 @@ public class MessageCacheImpl extends Base implements MessageCache {
     private static String[] MSG_TYPES = {MSG_TYPE_GROUP, MSG_TYPE_FRIEND, MSG_TYPE_MEMBER, MSG_TYPE_STRANGER};
 
     private final SqliteUtil sqliteUtil;
+
+    private final Set<String> createdTables = new HashSet<>();
 
     @Getter
     @Setter
@@ -51,7 +52,11 @@ public class MessageCacheImpl extends Base implements MessageCache {
 
     public MessageCacheImpl(String path) {
         try {
-            this.sqliteUtil = SqliteUtil.getInstance(path + dbname);
+            // 开启“读写共享锁”锁定级别
+            Properties properties = new Properties();
+            properties.setProperty("pragma.locking_mode", "EXCLUSIVE");
+            properties.setProperty("pragma.journal_mode", "WAL");
+            this.sqliteUtil = SqliteUtil.getInstance(path + dbname, properties);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -59,6 +64,8 @@ public class MessageCacheImpl extends Base implements MessageCache {
 
     @Override
     public void createTable(String table) {
+        if (createdTables.contains(table)) return;
+        createdTables.add(table);
         if (!sqliteUtil.containsTable(table)) {
             sqliteUtil.executeSql(
                     "CREATE TABLE '" + table + "' (" +

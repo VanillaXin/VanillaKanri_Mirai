@@ -504,7 +504,11 @@ public class GroupMsgEvent extends BaseMsgEvent {
             if (StringUtils.isNullOrEmptyEx(somethingPath)) return;
             try {
                 String value = content.substring(queryTest.getPrefix().length());
-                SqliteUtil sqliteUtil = SqliteUtil.getInstance(somethingPath);
+                // 开启“读写共享锁”锁定级别
+                Properties properties = new Properties();
+                properties.setProperty("pragma.locking_mode", "EXCLUSIVE");
+                properties.setProperty("pragma.journal_mode", "WAL");
+                SqliteUtil sqliteUtil = SqliteUtil.getInstance(somethingPath, properties);
                 String[][] strings = sqliteUtil.getStrings2(queryTest.getSql().replaceAll("\\$\\{value}", value));
                 if (strings != null && strings.length > 0)
                     Api.sendMessage(group, "查询到数据: " + StringUtils.convertToString(strings, ", ", "\n"));
