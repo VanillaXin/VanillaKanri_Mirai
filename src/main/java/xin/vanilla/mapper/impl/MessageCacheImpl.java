@@ -69,14 +69,16 @@ public class MessageCacheImpl extends Base implements MessageCache {
         if (!sqliteUtil.containsTable(table)) {
             sqliteUtil.executeSql(
                     "CREATE TABLE '" + table + "' (" +
-                            " `id`     INTEGER     PRIMARY KEY AUTOINCREMENT NOT NULL," +
-                            " `nos`    TEXT        UNIQUE                    NOT NULL," +
-                            " `bot`    INTEGER(10)                           NOT NULL," +
-                            " `sender` INTEGER(10)                           NOT NULL," +
-                            " `target` INTEGER(10)                           NOT NULL," +
-                            " `time`   INTEGER(10)                           NOT NULL," +
-                            " `msg`    TEXT                                  NOT NULL" +
+                            " `id`         INTEGER     PRIMARY KEY AUTOINCREMENT NOT NULL," +
+                            " `nos`        TEXT        UNIQUE                    NOT NULL," +
+                            " `bot`        INTEGER(10)                           NOT NULL," +
+                            " `sender`     INTEGER(10)                           NOT NULL," +
+                            " `target`     INTEGER(10)                           NOT NULL," +
+                            " `time`       INTEGER(10)                           NOT NULL," +
+                            " `msgJson`    TEXT                                  NOT NULL" +
+                            " `msgText`    TEXT                                  NOT NULL" +
                             ")");
+            sqliteUtil.executeSql("CREATE INDEX MSG_TEXT_INDEX ON '" + table + "' (`msgText`)");
         }
     }
 
@@ -159,7 +161,7 @@ public class MessageCacheImpl extends Base implements MessageCache {
                 .put(MsgCache::getSender, Math.abs(sender))
                 .put(MsgCache::getTarget, target)
                 .put(MsgCache::getTime, time)
-                .put(MsgCache::getMsg, msgString);
+                .put(MsgCache::getMsgJson, msgString);
 
         sqliteUtil.insert(insert);
     }
@@ -237,7 +239,7 @@ public class MessageCacheImpl extends Base implements MessageCache {
     public String getMsgJsonCode(String no, long sender, long target, long time, String type) {
         MsgCache msgCache = getMsgCache(no, sender, target, time, type);
         if (msgCache == null) return null;
-        return msgCache.getMsg();
+        return msgCache.getMsgJson();
     }
 
     @Override
@@ -321,8 +323,8 @@ public class MessageCacheImpl extends Base implements MessageCache {
 
             // if (sender > 0) query.and(MsgCache::getSender).eq(sender);
             if (time > 0) query.and(MsgCache::getTime).eq(time);
-            query.and(MsgCache::getMsg).likeContains(keyword);
-            query.and(MsgCache::getMsg).notLike("%/va get msgcache%");
+            query.and(MsgCache::getMsgText).likeContains(keyword);
+            query.and(MsgCache::getMsgText).notLike("%/va get msgcache%");
             query.orderBy(MsgCache::getTime).desc();
             query.limit(99);
             // if (!StringUtils.isNullOrEmpty(keyword))query.and(keyword).eq(keyword);

@@ -145,8 +145,8 @@ public class GroupMsgEvent extends BaseMsgEvent {
 
     private boolean searchMsgLen() {
         if (msg.contentToString().startsWith("/va get msgcachelen ")) {
-            String no = msg.contentToString().substring("/va get msgcachelen ".length());
-            List<MsgCache> msgCache = Va.getMessageCache().getMsgChainByKeyWord(no, sender.getId(), group.getId(), 0, MSG_TYPE_GROUP);
+            String keyWord = VanillaUtils.jsonToText(msg).substring("/va get msgcachelen ".length());
+            List<MsgCache> msgCache = Va.getMessageCache().getMsgChainByKeyWord(keyWord, sender.getId(), group.getId(), 0, MSG_TYPE_GROUP);
             ForwardMessageBuilder forwardMessageBuilder = new ForwardMessageBuilder(group).add(sender, msg);
             Map<Long, Long> collect = msgCache.stream().collect(Collectors.groupingBy(MsgCache::getSender, Collectors.counting()));
             // Api.sendMessage(group,collect.toString());
@@ -174,15 +174,16 @@ public class GroupMsgEvent extends BaseMsgEvent {
             //         messages.add(singleMessage);
             //     }
             // }
-            // String no = VanillaUtils.serializeToJsonCode(messages.build());
-            String no = VanillaUtils.messageToString(msg).substring("/va get msgcache ".length());
+            // String keyWord = VanillaUtils.serializeToJsonCode(messages.build());
+
+            String keyWord = VanillaUtils.jsonToText(msg).substring("/va get msgcache ".length());
             MessageSource source = msg.get(MessageSource.Key);
             assert source != null;
-            List<MsgCache> msgCache = Va.getMessageCache().getMsgChainByKeyWord(no, sender.getId(), group.getId(), 0, MSG_TYPE_GROUP);
+            List<MsgCache> msgCache = Va.getMessageCache().getMsgChainByKeyWord(keyWord, sender.getId(), group.getId(), 0, MSG_TYPE_GROUP);
             ForwardMessageBuilder forwardMessageBuilder = new ForwardMessageBuilder(group).add(sender, msg);
             for (MsgCache item : msgCache) {
                 Member normalMember = sender.getGroup().get(item.getSender());
-                MessageChain singleMessages = VanillaUtils.deserializeJsonCode(item.getMsg());
+                MessageChain singleMessages = VanillaUtils.deserializeJsonCode(item.getMsgJson());
                 try {
                     if (normalMember != null)
                         forwardMessageBuilder.add(normalMember, singleMessages, (int) item.getTime());

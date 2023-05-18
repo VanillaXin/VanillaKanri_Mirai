@@ -1,6 +1,7 @@
 package xin.vanilla.entity.data
 
 import kotlinx.serialization.Serializable
+import xin.vanilla.util.VanillaUtils
 import java.util.*
 
 /**
@@ -26,7 +27,15 @@ class MsgCache {
     var sender: Long = 0
     var target: Long = 0
     var time: Long = 0
-    var msg: String = ""
+    var msgJson: String = ""
+    var msgText: String = ""
+        get() {
+            return field.ifEmpty {
+                val jsonToText = VanillaUtils.jsonToText(msgJson)
+                msgText = jsonToText
+                jsonToText
+            }
+        }
     var ids: IntArray = intArrayOf()
     var internalIds: IntArray = intArrayOf()
 }

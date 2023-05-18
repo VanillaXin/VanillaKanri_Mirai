@@ -745,6 +745,50 @@ public class VanillaUtils {
         return result;
     }
 
+    /**
+     * 转换消息, 用于消息查询
+     */
+    public static String jsonToText(@NotNull final String json) {
+        return jsonToText(deserializeJsonCode(json));
+    }
+
+    /**
+     * 转换消息, 用于消息查询
+     */
+    public static String jsonToText(MessageChain messageChain) {
+        StringBuilder string = new StringBuilder();
+        for (SingleMessage singleMessage : messageChain) {
+            if (singleMessage instanceof PlainText) {
+                string.append(singleMessage);
+            } else if (singleMessage instanceof At) {
+                string.append("[vacode:at:").append(((At) singleMessage).getTarget()).append("]");
+            } else if (singleMessage instanceof AtAll) {
+                string.append("[vacode:at:all]");
+            } else if (singleMessage instanceof Image) {
+                Image image = (Image) singleMessage;
+                string.append("[vacode:image:").append(image.getImageId()).append(":").append(image.getImageType().getFormatName()).append("]");
+            } else if (singleMessage instanceof FlashImage) {
+                Image image = ((FlashImage) singleMessage).getImage();
+                string.append("[vacode:flash:").append(image.getImageId()).append(":").append(image.getImageType().getFormatName()).append("]");
+            } else if (singleMessage instanceof Dice) {
+                string.append("[vacode:dice:").append(((Dice) singleMessage).getValue()).append("]");
+            } else if (singleMessage instanceof VipFace) {
+                string.append("[vacode:vipface:").append(((VipFace) singleMessage).getKind().getName()).append("]");
+            } else if (singleMessage instanceof Face) {
+                string.append("[vacode:face:").append(((Face) singleMessage).getName()).append("]");
+            } else if (singleMessage instanceof ForwardMessage) {
+                ForwardMessage forward = (ForwardMessage) singleMessage;
+                string.append("[vacode:forward:").append(forward.getTitle()).append(":");
+                for (ForwardMessage.Node node : forward.getNodeList()) {
+                    string.append("{").append(jsonToText(node.getMessageChain())).append("}");
+                }
+                string.append("]");
+            } else {
+                string.append(singleMessage.contentToString());
+            }
+        }
+        return string.toString();
+    }
     // endregion 消息转码
 
 }
