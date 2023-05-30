@@ -75,7 +75,7 @@ public class MessageCacheImpl extends Base implements MessageCache {
                             " `sender`     INTEGER(10)                           NOT NULL," +
                             " `target`     INTEGER(10)                           NOT NULL," +
                             " `time`       INTEGER(10)                           NOT NULL," +
-                            " `msgJson`    TEXT                                  NOT NULL" +
+                            " `msgJson`    TEXT                                  NOT NULL," +
                             " `msgText`    TEXT                                  NOT NULL" +
                             ")");
             sqliteUtil.executeSql("CREATE INDEX MSG_TEXT_INDEX ON '" + table + "' (`msgText`)");
