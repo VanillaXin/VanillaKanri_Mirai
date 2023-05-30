@@ -155,13 +155,22 @@ public class MessageCacheImpl extends Base implements MessageCache {
             }
         }
 
+        MsgCache msgCache = new MsgCache();
+        msgCache.setNos(nos);
+        msgCache.setBot(botId);
+        msgCache.setSender(Math.abs(sender));
+        msgCache.setTarget(target);
+        msgCache.setTime(time);
+        msgCache.setMsgJson(msgString);
+
         InsertStatement insert = InsertStatement.produce(table)
-                .put(MsgCache::getNos, nos)
-                .put(MsgCache::getBot, botId)
-                .put(MsgCache::getSender, Math.abs(sender))
-                .put(MsgCache::getTarget, target)
-                .put(MsgCache::getTime, time)
-                .put(MsgCache::getMsgJson, msgString);
+                .put(MsgCache::getNos, msgCache.getNos())
+                .put(MsgCache::getBot, msgCache.getBot())
+                .put(MsgCache::getSender, msgCache.getSender())
+                .put(MsgCache::getTarget, msgCache.getTarget())
+                .put(MsgCache::getTime, msgCache.getTime())
+                .put(MsgCache::getMsgJson, msgCache.getMsgJson())
+                .put(MsgCache::getMsgText, msgCache.getMsgText());
 
         sqliteUtil.insert(insert);
     }
