@@ -106,10 +106,10 @@ public class GroupMsgEvent extends BaseMsgEvent {
                 listStr = "";
             }
             String url = "https://api.lolicon.app/setu/v2";
-
             String[] split = listStr.split(",");
             Map<String, String[]> map = new HashMap<>();
             map.put("tag", split);
+            map.put("size",new String[] {"regular"});
             // Api.sendMessage(group,JSONUtil.parse(split).toString());
             // Api.sendMessage(group,JSONUtil.parse(map).toString());
             ExternalResource ex;
@@ -124,8 +124,8 @@ public class GroupMsgEvent extends BaseMsgEvent {
                 // String picUrl = (String) picUrls.get("original");
 
                 Object data = Configuration.defaultConfiguration().jsonProvider().parse(tagsResponse.body());
-                String picUrl = JsonPath.read(data, "$.data[0].urls.picUrl");
-                String tags = JsonPath.read(data, "$.data[0].tags");
+                String picUrl = JsonPath.read(data, "$.data[0].urls.regular");
+                String tags = JsonPath.read(data, "$.data[0].tags").toString();
 
                 try (HttpResponse execute = HttpRequest.get(picUrl).timeout(10000).execute()) {
                     try (InputStream inputStream = execute.bodyStream()) {
@@ -133,6 +133,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
                         Image img = ExternalResource.uploadAsImage(ex, group);
                         // Api.sendMessage(group, img);
                         Api.sendMessage(group, new MessageChainBuilder().append(img).append(new At(sender.getId())).append("tags:").append(tags).build());
+                        ex.close();
                     }
                 }
             } catch (Exception e) {
