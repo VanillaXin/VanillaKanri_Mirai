@@ -77,6 +77,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
         searchMsgLen();
 
         setu();
+        setur();
 
         // 测试
         // audioTest();
@@ -107,13 +108,15 @@ public class GroupMsgEvent extends BaseMsgEvent {
             }
             String url = "https://api.lolicon.app/setu/v2";
             String[] split = listStr.split(",");
-            Map<String, String[]> map = new HashMap<>();
+            Map<String, Object> map = new HashMap<>();
             map.put("tag", split);
             map.put("size",new String[] {"regular"});
+            map.put("r18",2);
             // Api.sendMessage(group,JSONUtil.parse(split).toString());
             // Api.sendMessage(group,JSONUtil.parse(map).toString());
             ExternalResource ex;
             try (HttpResponse tagsResponse = HttpRequest.post(url).timeout(3000)
+                    .setHttpProxy("127.0.0.1", 10809)
                     .header("Content-Type", "application/json")
                     .body(JSONUtil.parse(map).toString())
                     .execute()) {
@@ -127,12 +130,103 @@ public class GroupMsgEvent extends BaseMsgEvent {
                 String picUrl = JsonPath.read(data, "$.data[0].urls.regular");
                 String tags = JsonPath.read(data, "$.data[0].tags").toString();
 
-                try (HttpResponse execute = HttpRequest.get(picUrl).timeout(10000).execute()) {
+                try (HttpResponse execute = HttpRequest.get(picUrl).timeout(10000) .setHttpProxy("127.0.0.1", 10809).execute()) {
                     try (InputStream inputStream = execute.bodyStream()) {
                         ex = ExternalResource.Companion.create(inputStream);
                         Image img = ExternalResource.uploadAsImage(ex, group);
                         // Api.sendMessage(group, img);
                         Api.sendMessage(group, new MessageChainBuilder().append(img).append(new At(sender.getId())).append("tags:").append(tags).build());
+                        ex.close();
+                    }
+                }
+            } catch (Exception e) {
+                setuTemp();
+                Api.sendMessage(group, new MessageChainBuilder().append(new At(sender.getId())).append("未找到该标签图片随机发送标签").build());
+                e.printStackTrace();
+            }
+        }
+        return true;
+    }
+
+    private void setuTemp(){
+        String url = "https://api.lolicon.app/setu/v2";
+        Map<String, Object> map = new HashMap<>();
+        // map.put("tag", split);
+        map.put("size",new String[] {"regular"});
+        map.put("r18",0);
+        // Api.sendMessage(group,JSONUtil.parse(split).toString());
+        // Api.sendMessage(group,JSONUtil.parse(map).toString());
+        ExternalResource ex;
+        try (HttpResponse tagsResponse = HttpRequest.post(url).timeout(3000)
+                .setHttpProxy("127.0.0.1", 10809)
+                .header("Content-Type", "application/json")
+                .body(JSONUtil.parse(map).toString())
+                .execute()) {
+
+            // JSONObject data = JSONUtil.parseObj(JSONUtil.parseArray(JSONUtil.parseObj().get("data")).get(0));
+            // List<String> tags = JSONUtil.toList( data.get("tags").toString(), String.class);
+            // JSONObject picUrls = JSONUtil.parseObj(data.get("urls"));
+            // String picUrl = (String) picUrls.get("original");
+
+            Object data = Configuration.defaultConfiguration().jsonProvider().parse(tagsResponse.body());
+            String picUrl = JsonPath.read(data, "$.data[0].urls.regular");
+            String tags = JsonPath.read(data, "$.data[0].tags").toString();
+
+            try (HttpResponse execute = HttpRequest.get(picUrl).timeout(10000) .setHttpProxy("127.0.0.1", 10809).execute()) {
+                try (InputStream inputStream = execute.bodyStream()) {
+                    ex = ExternalResource.Companion.create(inputStream);
+                    Image img = ExternalResource.uploadAsImage(ex, group);
+                    // Api.sendMessage(group, img);
+                    Api.sendMessage(group, new MessageChainBuilder().append(img).append(new At(sender.getId())).append("tags:").append(tags).build());
+                    ex.close();
+                }
+            }
+        } catch (Exception e) {
+            setuTemp();
+            // Api.sendMessage(group, new MessageChainBuilder().append(new At(sender.getId())).append("未找到该标签图片").build());
+            e.printStackTrace();
+        }
+    }
+
+    private boolean setur() {
+        if (msg.contentToString().startsWith("stpicr18")) {
+            String listStr;
+            // try {
+            //     listStr = msg.contentToString().substring("色图来 ".length());
+            // } catch (Exception e) {
+            //     listStr = "";
+            // }
+            String url = "https://api.lolicon.app/setu/v2";
+            // String[] split = listStr.split(",");
+            Map<String, Object> map = new HashMap<>();
+            // map.put("tag", split);
+            map.put("size",new String[] {"regular"});
+            map.put("r18",1);
+            // Api.sendMessage(group,JSONUtil.parse(split).toString());
+            // Api.sendMessage(group,JSONUtil.parse(map).toString());
+            ExternalResource ex;
+            try (HttpResponse tagsResponse = HttpRequest.post(url).timeout(3000)
+                    .setHttpProxy("127.0.0.1", 10809)
+                    .header("Content-Type", "application/json")
+                    .body(JSONUtil.parse(map).toString())
+                    .execute()) {
+
+                // JSONObject data = JSONUtil.parseObj(JSONUtil.parseArray(JSONUtil.parseObj().get("data")).get(0));
+                // List<String> tags = JSONUtil.toList( data.get("tags").toString(), String.class);
+                // JSONObject picUrls = JSONUtil.parseObj(data.get("urls"));
+                // String picUrl = (String) picUrls.get("original");
+
+                Object data = Configuration.defaultConfiguration().jsonProvider().parse(tagsResponse.body());
+                String picUrl = JsonPath.read(data, "$.data[0].urls.regular");
+                String tags = JsonPath.read(data, "$.data[0].tags").toString();
+
+                try (HttpResponse execute = HttpRequest.get(picUrl).timeout(10000) .setHttpProxy("127.0.0.1", 10809).execute()) {
+                    try (InputStream inputStream = execute.bodyStream()) {
+                        ex = ExternalResource.Companion.create(inputStream);
+                        Image img = ExternalResource.uploadAsImage(ex, group);
+                        // Api.sendMessage(group, img);
+                        // Api.sendMessage(group, new MessageChainBuilder().append(img).append(new At(sender.getId())).append("tags:").append(tags).build()).recallIn(10 * 1000);
+                        Api.sendMessage(group, new MessageChainBuilder().append(img).append(new At(sender.getId())).build()).recallIn(10 * 1000);
                         ex.close();
                     }
                 }
