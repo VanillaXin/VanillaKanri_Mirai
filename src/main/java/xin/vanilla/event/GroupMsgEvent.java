@@ -75,7 +75,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
         if (capability.getOnlineAiPic()) onlineAiPic();
         searchMsg();
         searchMsgLen();
-
+        caoPic();
         setu();
         setur();
 
@@ -135,7 +135,8 @@ public class GroupMsgEvent extends BaseMsgEvent {
                         ex = ExternalResource.Companion.create(inputStream);
                         Image img = ExternalResource.uploadAsImage(ex, group);
                         // Api.sendMessage(group, img);
-                        Api.sendMessage(group, new MessageChainBuilder().append(img).append(new At(sender.getId())).append("tags:").append(tags).build());
+                        // Api.sendMessage(group, new MessageChainBuilder().append(img).append(new At(sender.getId())).append("tags:").append(tags).build());
+                        Api.sendMessage(group, new MessageChainBuilder().append(img).append(new At(sender.getId())).build());
                         ex.close();
                     }
                 }
@@ -147,7 +148,24 @@ public class GroupMsgEvent extends BaseMsgEvent {
         }
         return true;
     }
-
+    private void caoPic() {
+        if (msg.contentToString().startsWith("来草图")) {
+            String imgUrl = "https://oss.grass.starxw.com/service/image";
+            ExternalResource ex;
+            try (HttpResponse execute = HttpRequest.get(imgUrl).timeout(10000).execute()) {
+                try (InputStream inputStream = execute.bodyStream()) {
+                    ex = ExternalResource.Companion.create(inputStream);
+                    Image img = ExternalResource.uploadAsImage(ex, group);
+                    // Api.sendMessage(group, img);
+                    // Api.sendMessage(group, new MessageChainBuilder().append(img).append(new At(sender.getId())).append("tags:").append(tags).build());
+                    Api.sendMessage(group, new MessageChainBuilder().append(img).append(new At(sender.getId())).build());
+                    ex.close();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+    }
     private void setuTemp(){
         String url = "https://api.lolicon.app/setu/v2";
         Map<String, Object> map = new HashMap<>();
@@ -177,7 +195,8 @@ public class GroupMsgEvent extends BaseMsgEvent {
                     ex = ExternalResource.Companion.create(inputStream);
                     Image img = ExternalResource.uploadAsImage(ex, group);
                     // Api.sendMessage(group, img);
-                    Api.sendMessage(group, new MessageChainBuilder().append(img).append(new At(sender.getId())).append("tags:").append(tags).build());
+                    // Api.sendMessage(group, new MessageChainBuilder().append(img).append(new At(sender.getId())).append("tags:").append(tags).build());
+                    Api.sendMessage(group, new MessageChainBuilder().append(img).append(new At(sender.getId())).build());
                     ex.close();
                 }
             }
