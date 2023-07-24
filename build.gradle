@@ -3,11 +3,11 @@ plugins {
     id 'org.jetbrains.kotlin.plugin.serialization' version '1.7.10'
 
     id 'net.mamoe.mirai-console' version '2.15.0-M1'
-    id 'org.ajoberstar.grgit' version '5.0.0-rc.3' // Git 插件
+    id 'org.ajoberstar.grgit' version '5.2.0' // Git 插件
 }
 
 group = 'xin.vanilla'
-version = '2.0.0-dev'
+version generateVersionCode()
 
 repositories {
     maven { url 'https://maven.aliyun.com/repository/public' }
@@ -46,15 +46,53 @@ tasks.withType(JavaCompile) {
     options.encoding = "UTF-8"
 }
 
+// 获取Git提交次数
+static def getGitCommitCount() {
+    def process = "git rev-list HEAD --count".execute()
+    process.waitFor()
+    return process.text.trim().toInteger()
+}
+
+// 生成版本号，拼接提交次数
+static def generateVersionCode() {
+    def versionName = "2.0.0-dev"
+    def commitCount = getGitCommitCount()
+    return "${versionName}.${commitCount}"
+}
+
 // 获取 Git 当前分支的哈希值并加入到配置
 tasks.register("appendGitHashToFile") {
     doLast {
         def gitCommitHash = grgit.head().abbreviatedId
         file('src/main/resources/hash').write("${gitCommitHash}")
+        println "Version code: ${version}"
+    }
+}
+
+tasks.register('updatePluginYmlVersion') {
+
+    // 设置版本号
+    def pluginVersion = generateVersionCode()
+
+    doLast {
+        // 指定 plugin.yml 文件的路径，根据实际情况进行调整
+        def pluginYmlFile = file('src/main/resources/plugin.yml')
+
+        // 读取 plugin.yml 文件的内容
+        def pluginYmlContent = pluginYmlFile.text
+
+        // 使用正则表达式替换版本号
+        pluginYmlContent = pluginYmlContent.replaceAll(/(version:\s*)\S+/, "\$1'${pluginVersion}'")
+
+        // 将修改后的内容写回到 plugin.yml 文件中
+        pluginYmlFile.write(pluginYmlContent)
+
+        // 输出修改后的版本号
+        println "Updated version in plugin.yml: ${pluginVersion}"
     }
 }
 
 tasks.named('processResources') {
-    // 先执行 appendGitHashToPluginYml 任务
+    dependsOn "updatePluginYmlVersion"
     dependsOn "appendGitHashToFile"
 }
