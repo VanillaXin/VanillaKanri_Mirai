@@ -356,13 +356,40 @@ public class EventHandlers extends SimpleListenerHost {
                     friend,
                     buildTapMessage(sender, target, bot, action, suffix, MessageSourceKind.FRIEND),
                     (int) DateUtil.currentSeconds()
-
             );
             new FriendMsgEvent(friendMessageEvent).run();
         }
         // else if (subject instanceof Member) {
         //
         // }
+    }
+
+    /**
+     * 监听被禁言事件
+     */
+    @EventHandler
+    public void onMuteEvent(@NotNull BotMuteEvent event) {
+        Group subject = event.getGroup();
+        UserOrBot sender = event.getOperator();
+        UserOrBot target = event.getBot();
+        Bot bot = event.getBot();
+        int seconds = event.getDurationSeconds();
+        onMuteEvent(subject, sender, target, bot, seconds);
+    }
+
+    /**
+     * 监听被禁言事件
+     */
+    @EventHandler
+    public void onMuteEvent(@NotNull MemberMuteEvent event) {
+        Group subject = event.getGroup();
+        UserOrBot sender = event.getOperator();
+        UserOrBot target = event.getMember();
+        Bot bot = event.getBot();
+        int seconds = event.getDurationSeconds();
+        if (sender != null) {
+            onMuteEvent(subject, sender, target, bot, seconds);
+        }
     }
 
     /**
@@ -378,13 +405,13 @@ public class EventHandlers extends SimpleListenerHost {
     }
 
     /**
-     * 构建戳一戳消息
+     * 构建戳一戳事件消息
      * <p>
-     * <p>+代表本身 -代表他人, 防止自娱自乐(</p>
-     * <p><code><-tap+></code> 别人戳了机器人</p>
-     * <p><code><-tap-></code> 别人戳了别人</p>
-     * <p><code><+tap-></code> 机器人人戳了别人</p>
-     * <p><code><+tap+></code> 机器人人戳了机器人</p>
+     * <p>+代表机器人自己 -代表某人, 防止自娱自乐(</p>
+     * <p><code><-tap+></code> 某人戳了机器人</p>
+     * <p><code><-tap-></code> 某人戳了某人</p>
+     * <p><code><+tap-></code> 机器人戳了某人</p>
+     * <p><code><+tap+></code> 机器人戳了自己</p>
      */
     @NotNull
     private MessageChain buildTapMessage(@NotNull UserOrBot sender, @NotNull UserOrBot target, @NotNull Bot bot, String action, String suffix, MessageSourceKind kind) {
@@ -422,4 +449,65 @@ public class EventHandlers extends SimpleListenerHost {
                 .build(bot.getId(), kind));
         return singleMessages.build();
     }
+
+    private void onMuteEvent(@NotNull Group group, @NotNull UserOrBot sender, UserOrBot target, Bot bot, int seconds) {
+
+        // 获取发送者对象
+        NormalMember normalMember = group.get(sender.getId());
+        assert normalMember != null;
+
+        // 构建群聊消息事件
+        xin.vanilla.entity.event.GroupMessageEvent groupMessageEvent = new xin.vanilla.entity.event.GroupMessageEvent(
+                sender.getNick(),
+                normalMember.getPermission(),
+                normalMember,
+                buildMuteMessage(sender, target, bot, seconds),
+                (int) DateUtil.currentSeconds()
+        );
+
+        // 触发群聊消息事件
+        new GroupMsgEvent(new GroupMessageEvents(groupMessageEvent)).run();
+    }
+
+    /**
+     * 构建禁言事件消息
+     * <p>
+     * <p>+代表机器人自己 -代表某人</p>
+     * <p><code><-mute+></code> 某人禁言了机器人</p>
+     * <p><code><-mute-></code> 某人禁言了某人</p>
+     * <p><code><+mute-></code> 机器人禁言了某人</p>
+     */
+    private @NotNull MessageChain buildMuteMessage(@NotNull UserOrBot sender, UserOrBot target, Bot bot, int seconds) {
+        MessageChainBuilder singleMessages = new MessageChainBuilder();
+
+        StringBuilder prefix = new StringBuilder("(:vaevent:)");
+        prefix.append("<");
+        if (sender.getId() == bot.getId()) prefix.append("+");
+        else prefix.append("-");
+        prefix.append("mute");
+        if (target.getId() == bot.getId()) prefix.append("+");
+        else prefix.append("-");
+        prefix.append(">");
+
+        // 追加 (:vaevent:)<±mute±>(触发者->被戳者)
+        singleMessages.append(prefix);
+        singleMessages.append("(").append(String.valueOf(sender.getId())).append("->").append(String.valueOf(target.getId())).append(")\n");
+
+        // 追加 (:vaevent:)<±mute±>(被戳者<-触发者)
+        singleMessages.append(prefix);
+        singleMessages.append("(").append(String.valueOf(target.getId())).append("<-").append(String.valueOf(sender.getId())).append(")\n");
+
+        // 追加 {禁言时间}
+        singleMessages.append("{").append(String.valueOf(seconds)).append("}");
+
+        // 追加 消息源
+        singleMessages.append(new MessageSourceBuilder()
+                .sender(sender.getId())
+                .target(target.getId())
+                .id(0)
+                .internalId(0)
+                .build(bot.getId(), MessageSourceKind.GROUP));
+        return singleMessages.build();
+    }
+
 }

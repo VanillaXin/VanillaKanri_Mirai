@@ -2,7 +2,7 @@ plugins {
     id 'org.jetbrains.kotlin.jvm' version '1.7.10'
     id 'org.jetbrains.kotlin.plugin.serialization' version '1.7.10'
 
-    id 'net.mamoe.mirai-console' version '2.15.0-M1'
+    id 'net.mamoe.mirai-console' version '2.15.0'
     id 'org.ajoberstar.grgit' version '5.2.0' // Git 插件
 }
 
@@ -16,7 +16,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.xerial:sqlite-jdbc:3.40.0.0' // Sqlite依赖
+    implementation 'org.xerial:sqlite-jdbc:3.42.0.0' // Sqlite依赖
     implementation 'com.almworks.sqlite4java:sqlite4java:1.0.392'// Sqlite REGEXP函数依赖
 
     implementation 'io.github.karlatemp:caller:1.1.1'
@@ -24,25 +24,25 @@ dependencies {
     implementation 'xin.vanilla.rcon:rcon:1.2.1' // MC RCON依赖
     implementation 'com.github.yangtu222:BeanUtils:1.0.11' // Bean工具类, 复制Bean
     implementation 'com.alibaba.fastjson2:fastjson2-kotlin:2.0.25'
-    implementation 'cn.hutool:hutool-all:5.8.12' // 一堆工具类
+    implementation 'cn.hutool:hutool-all:5.8.18' // 一堆工具类
     implementation 'com.github.houbb:pinyin:0.3.1' // 拼音工具类
-    implementation 'com.github.oshi:oshi-core:6.2.2' // 系统信息工具类
-    implementation 'com.unfbx:chatgpt-java:1.0.13' // ChatGPT工具类
+    implementation 'com.github.oshi:oshi-core:6.4.0' // 系统信息工具类
+    implementation 'com.unfbx:chatgpt-java:1.0.15' // ChatGPT工具类
     implementation 'com.jayway.jsonpath:json-path:2.8.0' // JsonPath工具类
 
 
-    testCompileOnly 'org.apiguardian:apiguardian-api:1.1.0'
-    testImplementation 'junit:junit:4.13.1'
+    testCompileOnly 'org.apiguardian:apiguardian-api:1.1.2'
+    testImplementation 'junit:junit:4.13.2'
 
 
-    compileOnly 'org.projectlombok:lombok:1.18.24'
-    annotationProcessor 'org.projectlombok:lombok:1.18.24'
-    testCompileOnly 'org.projectlombok:lombok:1.18.24'
-    testAnnotationProcessor 'org.projectlombok:lombok:1.18.24'
+    compileOnly 'org.projectlombok:lombok:1.18.26'
+    annotationProcessor 'org.projectlombok:lombok:1.18.26'
+    testCompileOnly 'org.projectlombok:lombok:1.18.26'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.26'
 
 }
 
-tasks.withType(JavaCompile) {
+tasks.withType(JavaCompile).configureEach {
     options.encoding = "UTF-8"
 }
 
