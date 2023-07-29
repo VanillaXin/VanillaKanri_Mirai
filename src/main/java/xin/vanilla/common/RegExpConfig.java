@@ -12,6 +12,7 @@ import xin.vanilla.entity.config.instruction.TimedTaskInstructions;
 import xin.vanilla.util.Api;
 import xin.vanilla.util.RegUtils;
 import xin.vanilla.util.StringUtils;
+import xin.vanilla.util.VanillaUtils;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -298,9 +299,9 @@ public class RegExpConfig {
          * 回复特殊码
          */
         public static RegUtils REP = new RegUtils().append("[vacode:rep")
-                .groupIgByName("prefix", ":[^:\\]]+").appendIg("?")
-                .groupIgByName("content", ":[^:\\]]+")
-                .groupIgByName("suffix", ":[^:\\]]+").appendIg("?")
+                .groupIgByName("prefix", ":(?:\\:|\\]|[^:\\]])+").appendIg("?")
+                .groupIgByName("content", ":(?:\\:|\\]|[^:\\]])+")
+                .groupIgByName("suffix", ":(?:\\:|\\]|[^:\\]])+").appendIg("?")
                 .append("]");
 
         /**
@@ -516,10 +517,22 @@ public class RegExpConfig {
             Matcher matcher = REP.matcher(msg);
             try {
                 if (matcher.find()) {
-                    String prefix = StringUtils.substring(StringUtils.nullToEmpty(matcher.group("prefix")).replaceAll("\\\\:", ":"), 1);
-                    String content = StringUtils.substring(StringUtils.nullToEmpty(matcher.group("content")).replaceAll("\\\\:", ":"), 1);
-                    String suffix = StringUtils.substring(StringUtils.nullToEmpty(matcher.group("suffix")).replaceAll("\\\\:", ":"), 1);
-                    msg = prefix + msg.replace(param.getRepWord().getWord(), content) + suffix;
+                    String prefix = StringUtils.substring(StringUtils.nullToEmpty(matcher.group("prefix")).replaceAll("\\\\:", ":").replaceAll("\\\\]", "]"), 1);
+                    String content = StringUtils.substring(StringUtils.nullToEmpty(matcher.group("content")).replaceAll("\\\\:", ":").replaceAll("\\\\]", "]"), 1);
+                    String suffix = StringUtils.substring(StringUtils.nullToEmpty(matcher.group("suffix")).replaceAll("\\\\:", ":").replaceAll("\\\\]", "]"), 1);
+                    String _msg = VanillaUtils.messageToString(param.getMsg());
+                    /*
+                    /va key add include \va say rep [vacode:rep:[[vacode:qnumber]\]\:]
+
+                    key:   /va say
+                    word:  [vacode:rep:[[vacode:qnumber]\]\:]
+                    msg:   /va say test
+
+                    ok [196468986]: test
+                     */
+                    msg = msg.replaceAll(StringUtils.escapeExprSpecialWord(matcher.group(0)), content);
+                    msg = _msg.replace(param.getRepWord().getWord(), msg);
+                    msg = prefix + msg + suffix;
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -540,7 +553,7 @@ public class RegExpConfig {
                         qqs.add(param.getBot().getId());
                         qq = String.valueOf(qqs.get((int) (Math.random() * qqs.size())));
                     }
-                    msg = msg.replaceAll(matcher.group(0), qq);
+                    msg = msg.replaceAll(StringUtils.escapeExprSpecialWord(matcher.group(0)), qq);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -574,7 +587,7 @@ public class RegExpConfig {
                             nick = stranger.getNick();
                         }
                     }
-                    msg = msg.replaceAll(matcher.group(0), nick);
+                    msg = msg.replaceAll(StringUtils.escapeExprSpecialWord(matcher.group(0)), nick);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -597,7 +610,7 @@ public class RegExpConfig {
                     }
                     Image image = Api.uploadImageByUrl(StringUtils.getAvatarUrl(qq, size), param.getTarget() == null ? param.getSender() : param.getTarget());
                     String serialize = image.serializeToMiraiCode();
-                    msg = msg.replaceAll(matcher.group(0), serialize);
+                    msg = msg.replaceAll(StringUtils.escapeExprSpecialWord(matcher.group(0)), serialize);
                 }
             } catch (Exception e) {
                 e.printStackTrace();

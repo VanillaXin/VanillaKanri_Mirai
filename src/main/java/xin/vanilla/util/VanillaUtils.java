@@ -647,7 +647,7 @@ public class VanillaUtils {
                 } else {
                     ran = String.valueOf(RandomUtil.randomInt(Integer.parseInt(numString1), Integer.parseInt(numString2) + 1));
                 }
-                result = result.replaceAll(matcher.group(0), ran);
+                result = result.replaceAll(StringUtils.escapeExprSpecialWord(matcher.group(0)), ran);
             }
         }
 
@@ -669,7 +669,7 @@ public class VanillaUtils {
                 } else {
                     sum = String.valueOf(Long.parseLong(numString1) + Long.parseLong(numString2));
                 }
-                result = result.replaceAll(matcher.group(0), sum);
+                result = result.replaceAll(StringUtils.escapeExprSpecialWord(matcher.group(0)), sum);
             }
         }
         return result;
@@ -746,7 +746,7 @@ public class VanillaUtils {
                         String image = Api.uploadImageByUrl(url, group != null ? group : sender).serializeToMiraiCode();
                         picCode.append(image);
                     }
-                    result = result.replaceAll(matcher.group(0), picCode.toString());
+                    result = result.replaceAll(StringUtils.escapeExprSpecialWord(matcher.group(0)), picCode.toString());
                 }
             }
 

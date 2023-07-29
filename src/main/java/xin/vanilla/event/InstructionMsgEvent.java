@@ -1007,6 +1007,7 @@ public class InstructionMsgEvent {
         ForwardMessageBuilder forwardMessageBuilder = new ForwardMessageBuilder(group);
         boolean tf = false;
         for (ForwardMessage.Node node : forwardMessage.getNodeList()) {
+            if (node.getSenderId() != bot.getId()) continue;
             String s = node.getMessageChain().contentToString();
             if (s.startsWith("关键词类型:\n")) {
                 type = StringUtils.getKeywordType(s.substring("关键词类型:\n".length()).trim());
