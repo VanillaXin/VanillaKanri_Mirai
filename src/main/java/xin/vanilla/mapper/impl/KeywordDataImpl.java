@@ -57,7 +57,7 @@ public class KeywordDataImpl extends Base implements KeywordData {
             sqliteUtil.executeSql(
                     "CREATE TABLE IF NOT EXISTS `" + table + "` (" +
                             " `" + LambdaUtils.getFiledName(KeyData::getId) + "`     INTEGER     PRIMARY KEY AUTOINCREMENT NOT NULL," +
-                            " `" + LambdaUtils.getFiledName(KeyData::getKey) + "`   TEXT                                  NOT NULL," +
+                            " `" + LambdaUtils.getFiledName(KeyData::getWord) + "`   TEXT                                  NOT NULL," +
                             " `" + LambdaUtils.getFiledName(KeyData::getRep) + "`    TEXT                                  NOT NULL," +
                             " `" + LambdaUtils.getFiledName(KeyData::getBot) + "`    INTEGER(10)                           NOT NULL," +
                             " `" + LambdaUtils.getFiledName(KeyData::getGroup) + "`  INTEGER(10)                           NOT NULL," +
@@ -66,11 +66,11 @@ public class KeywordDataImpl extends Base implements KeywordData {
                             " `" + LambdaUtils.getFiledName(KeyData::getStatus) + "` INTEGER(1)                            NOT NULL DEFAULT 0" +
                             ")");
             sqliteUtil.executeSql("CREATE UNIQUE INDEX IF NOT EXISTS `"
-                    + LambdaUtils.getFiledName(KeyData::getKey)
+                    + LambdaUtils.getFiledName(KeyData::getWord)
                     + "_" + LambdaUtils.getFiledName(KeyData::getRep)
                     + "_" + LambdaUtils.getFiledName(KeyData::getGroup)
                     + "_unique`" + " ON `" + table + "` (" +
-                    "`" + LambdaUtils.getFiledName(KeyData::getKey) + "`, " +
+                    "`" + LambdaUtils.getFiledName(KeyData::getWord) + "`, " +
                     "`" + LambdaUtils.getFiledName(KeyData::getRep) + "`, " +
                     "`" + LambdaUtils.getFiledName(KeyData::getGroup) + "`)");
         }
@@ -85,7 +85,7 @@ public class KeywordDataImpl extends Base implements KeywordData {
 
         // 查询该level创建的关键词数量是否超出限制
         Statement query = QueryStatement.produce(KeyData::getId).from(table)
-                .where(KeyData::getKey).eq(wordCode)
+                .where(KeyData::getWord).eq(wordCode)
                 .and(KeyData::getBot).eq(bot);
 
         if (group < -1000) {
@@ -109,7 +109,7 @@ public class KeywordDataImpl extends Base implements KeywordData {
         }
 
         InsertStatement insert = InsertStatement.produce(table)
-                .put(KeyData::getKey, wordCode)
+                .put(KeyData::getWord, wordCode)
                 .put(KeyData::getRep, rep)
                 .put(KeyData::getBot, bot)
                 .put(KeyData::getGroup, group)
@@ -247,19 +247,19 @@ public class KeywordDataImpl extends Base implements KeywordData {
     private void andWord(String word, @NotNull String table, Statement query) {
         // 完全匹配
         if (table.startsWith(KEYWORD_TYPE_EXACTLY)) {
-            query.and(KeyData::getKey).eq(word);
+            query.and(KeyData::getWord).eq(word);
         }
         // 包含匹配
         else if (table.startsWith(KEYWORD_TYPE_CONTAIN)) {
-            query.andLikeContains(KeyData::getKey, word);
+            query.andLikeContains(KeyData::getWord, word);
         }
         // 拼音包含匹配
         else if (table.startsWith(KEYWORD_TYPE_PINYIN)) {
-            query.andLikeContains(KeyData::getKey, PinyinHelper.toPinyin(word, PinyinStyleEnum.NORMAL).trim());
+            query.andLikeContains(KeyData::getWord, PinyinHelper.toPinyin(word, PinyinStyleEnum.NORMAL).trim());
         }
         // 正则匹配
         else if (table.startsWith(KEYWORD_TYPE_REGEXP)) {
-            query.andRegexp(KeyData::getKey, word);
+            query.andRegexp(KeyData::getWord, word);
         }
     }
 

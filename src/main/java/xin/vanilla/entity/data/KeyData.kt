@@ -19,7 +19,7 @@ class KeyData {
     /**
      * 关键词
      */
-    var key: String = ""
+    var word: String = ""
 
     /**
      * 回复词
@@ -90,6 +90,6 @@ class KeyData {
      * 获取解Va码后的消息
      */
     fun getWordDecode(): String {
-        return VanillaUtils.deVanillaCodeKey(this.key)
+        return VanillaUtils.deVanillaCodeKey(this.word)
     }
 }

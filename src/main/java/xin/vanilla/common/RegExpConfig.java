@@ -519,7 +519,7 @@ public class RegExpConfig {
                     String prefix = StringUtils.substring(StringUtils.nullToEmpty(matcher.group("prefix")).replaceAll("\\\\:", ":"), 1);
                     String content = StringUtils.substring(StringUtils.nullToEmpty(matcher.group("content")).replaceAll("\\\\:", ":"), 1);
                     String suffix = StringUtils.substring(StringUtils.nullToEmpty(matcher.group("suffix")).replaceAll("\\\\:", ":"), 1);
-                    msg = prefix + msg.replace(param.getRepWord().getKey(), content) + suffix;
+                    msg = prefix + msg.replace(param.getRepWord().getWord(), content) + suffix;
                 }
             } catch (Exception e) {
                 e.printStackTrace();

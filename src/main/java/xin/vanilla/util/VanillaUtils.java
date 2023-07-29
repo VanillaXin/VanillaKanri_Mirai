@@ -682,7 +682,7 @@ public class VanillaUtils {
      */
     public static String deVanillaCodeIns(@NotNull final DecodeKeyParam keyParam) {
         String result;
-        String word = keyParam.getRepWord().getKey();
+        String word = keyParam.getRepWord().getWord();
         String rep = keyParam.getRepWord().getRep();
         Bot bot = keyParam.getBot();
         Group group = keyParam.getTarget();
