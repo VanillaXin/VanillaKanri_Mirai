@@ -11,10 +11,12 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import xin.vanilla.VanillaKanri;
 import xin.vanilla.common.RegExpConfig;
+import xin.vanilla.entity.DecodeKeyParam;
 import xin.vanilla.enumeration.DataCacheKey;
 import xin.vanilla.enumeration.PermissionLevel;
 
 import java.util.*;
+import java.util.regex.Matcher;
 
 import static xin.vanilla.enumeration.PermissionLevel.*;
 
@@ -452,13 +454,13 @@ public class VanillaUtils {
     /**
      * 提取消息中的PlainText
      */
-    public static @NotNull String messageToPlainText(@NotNull MessageChain message, @NotNull Group group) {
+    public static @NotNull String messageToPlainText(@NotNull MessageChain message, Group group) {
         StringBuilder str = new StringBuilder();
         for (SingleMessage singleMessage : message) {
             if (singleMessage instanceof PlainText) {
                 PlainText plainText = (PlainText) singleMessage;
                 str.append(plainText.contentToString());
-            } else if (singleMessage instanceof At) {
+            } else if (singleMessage instanceof At && group != null) {
                 At at = (At) singleMessage;
                 NormalMember normalMember = group.get(at.getTarget());
                 if (normalMember != null) str.append(normalMember.getNick());
@@ -636,15 +638,16 @@ public class VanillaUtils {
                     .groupIgByName("num2", "-?[1-9]\\d{0,9}(?:\\.\\d{1,4})?")
                     .appendIg("].*?");
             while (regUtils.matcher(result).find()) {
-                String numString1 = regUtils.getMatcher().group("num1");
-                String numString2 = regUtils.getMatcher().group("num2");
+                Matcher matcher = regUtils.getMatcher();
+                String numString1 = matcher.group("num1");
+                String numString2 = matcher.group("num2");
                 String ran;
                 if (numString1.contains(".") || numString2.contains(".")) {
                     ran = NumberUtil.roundStr(RandomUtil.randomDouble(Double.parseDouble(numString1), Double.parseDouble(numString2) + 0.0001), 4);
                 } else {
                     ran = String.valueOf(RandomUtil.randomInt(Integer.parseInt(numString1), Integer.parseInt(numString2) + 1));
                 }
-                result = result.replaceAll("\\[vacode:rand:" + numString1 + ":" + numString2 + "]", ran);
+                result = result.replaceAll(matcher.group(0), ran);
             }
         }
 
@@ -657,15 +660,16 @@ public class VanillaUtils {
                     .groupIgByName("num2", "-?[1-9]\\d{0,9}(?:\\.\\d{1,4})?")
                     .appendIg("].*?");
             while (regUtils.matcher(result).find()) {
-                String numString1 = regUtils.getMatcher().group("num1");
-                String numString2 = regUtils.getMatcher().group("num2");
+                Matcher matcher = regUtils.getMatcher();
+                String numString1 = matcher.group("num1");
+                String numString2 = matcher.group("num2");
                 String sum;
                 if (numString1.contains(".") || numString2.contains(".")) {
                     sum = String.valueOf(Double.parseDouble(numString1) + Double.parseDouble(numString2));
                 } else {
                     sum = String.valueOf(Long.parseLong(numString1) + Long.parseLong(numString2));
                 }
-                result = result.replaceAll("\\[vacode:math:add:" + numString1 + "\\+" + numString2 + "]", sum);
+                result = result.replaceAll(matcher.group(0), sum);
             }
         }
         return result;
@@ -674,12 +678,17 @@ public class VanillaUtils {
     /**
      * 解析并执行群管操作
      *
-     * @param group        群聊对象
-     * @param sender       消息发送对象
-     * @param messageChain 原消息
+     * @param keyParam param
      */
-    public static String deVanillaCodeIns(@NotNull final String word, @NotNull final String rep, Bot bot, Group group, @NotNull Contact sender, MessageChain messageChain) {
+    public static String deVanillaCodeIns(@NotNull final DecodeKeyParam keyParam) {
         String result;
+        String word = keyParam.getRepWord().getKey();
+        String rep = keyParam.getRepWord().getRep();
+        Bot bot = keyParam.getBot();
+        Group group = keyParam.getTarget();
+        Contact sender = keyParam.getSender();
+        MessageChain messageChain = keyParam.getMsg();
+
         try {
             if (!rep.contains("[vacode:")) return rep;
 
@@ -697,6 +706,22 @@ public class VanillaUtils {
             // 非操作特殊码解码
             result = deVanillaCodeRep(result, false);
 
+            /*
+             *  [vacode:rep:prefix:content:suffix]
+             *  [vacode:head:qq:size]
+             *  [vacode:randomqq:1]
+             *  [vacode:nickname:qq]
+             * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+             *  [vacode:bool:exp:1:2] [vacode:odds:0.1:概率1:0.2:概率2:0.3]
+             *  [vacode:=:1:1] [vacode:>:1:1] [vacode:<:1:1] [vacode:>=:1:1] [vacode:<=:1:1] [vacode:|:1:1] [vacode:&:1:1]
+             */
+
+            // 随机群友QQ
+            result = RegExpConfig.VaCode.exeRandomQQ(keyParam, result);
+
+            // 昵称
+            result = RegExpConfig.VaCode.exeNickName(keyParam, result);
+
             // 解析图片特殊码
             if (result.contains("[vacode:pic:")) {
                 RegUtils regUtils = new RegUtils()
@@ -705,11 +730,12 @@ public class VanillaUtils {
                         .groupIgByName("num", ":[1-9]\\d?")
                         .appendIg("?]");
                 while (regUtils.matcher(result).find()) {
-                    String url = regUtils.getMatcher().group("url");
+                    Matcher matcher = regUtils.getMatcher();
+                    String url = matcher.group("url");
                     int num;
                     String numString;
                     try {
-                        numString = regUtils.getMatcher().group("num");
+                        numString = matcher.group("num");
                         num = Integer.parseInt(numString.substring(1));
                     } catch (Exception ignored) {
                         numString = "";
@@ -720,7 +746,7 @@ public class VanillaUtils {
                         String image = Api.uploadImageByUrl(url, group != null ? group : sender).serializeToMiraiCode();
                         picCode.append(image);
                     }
-                    result = result.replace("[vacode:pic:" + url + numString + "]", picCode);
+                    result = result.replaceAll(matcher.group(0), picCode.toString());
                 }
             }
 
@@ -731,12 +757,17 @@ public class VanillaUtils {
             // 踢出
             result = RegExpConfig.VaCode.exeKick(word, result, group != null ? (NormalMember) sender : null);
 
-            // ChatGPT
-            result = RegExpConfig.VaCode.exeGpt(messageToPlainText(messageChain, group), result, group != null ? (NormalMember) sender : null);
-
             // 戳一戳
             result = RegExpConfig.VaCode.exeTap(result, sender);
 
+            // 头像
+            result = RegExpConfig.VaCode.exeHead(keyParam, result);
+
+            // REP
+            result = RegExpConfig.VaCode.exeRep(keyParam, result);
+
+            // ChatGPT
+            result = RegExpConfig.VaCode.exeGpt(messageToPlainText(messageChain, group), result, (NormalMember) sender);
 
         } catch (Exception e) {
             e.printStackTrace();

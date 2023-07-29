@@ -5,6 +5,8 @@ import net.mamoe.mirai.Bot
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.message.data.MessageChain
+import net.mamoe.mirai.message.data.time
+import xin.vanilla.entity.DecodeKeyParam
 import xin.vanilla.util.VanillaUtils
 
 /**
@@ -17,7 +19,7 @@ class KeyData {
     /**
      * 关键词
      */
-    var word: String = ""
+    var key: String = ""
 
     /**
      * 回复词
@@ -79,13 +81,15 @@ class KeyData {
      * 执行群管操作
      */
     fun getRepDecode(group: Group?, bot: Bot, contact: Contact, messageChain: MessageChain): String {
-        return VanillaUtils.deVanillaCodeIns(this.word, this.rep, bot, group, contact, messageChain)
+        return VanillaUtils.deVanillaCodeIns(
+            DecodeKeyParam(bot, contact, group, messageChain.time, messageChain, this)
+        )
     }
 
     /**
      * 获取解Va码后的消息
      */
     fun getWordDecode(): String {
-        return VanillaUtils.deVanillaCodeKey(this.word)
+        return VanillaUtils.deVanillaCodeKey(this.key)
     }
 }

@@ -109,8 +109,8 @@ public class GroupMsgEvent extends BaseMsgEvent {
             String[] split = listStr.split(",");
             Map<String, Object> map = new HashMap<>();
             map.put("tag", split);
-            map.put("size",new String[] {"regular"});
-            map.put("r18",2);
+            map.put("size", new String[]{"regular"});
+            map.put("r18", 2);
             // Api.sendMessage(group,JSONUtil.parse(split).toString());
             // Api.sendMessage(group,JSONUtil.parse(map).toString());
             ExternalResource ex;
@@ -129,7 +129,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
                 String picUrl = JsonPath.read(data, "$.data[0].urls.regular");
                 String tags = JsonPath.read(data, "$.data[0].tags").toString();
 
-                try (HttpResponse execute = HttpRequest.get(picUrl).timeout(10000) .setHttpProxy("127.0.0.1", 10809).execute()) {
+                try (HttpResponse execute = HttpRequest.get(picUrl).timeout(10000).setHttpProxy("127.0.0.1", 10809).execute()) {
                     try (InputStream inputStream = execute.bodyStream()) {
                         ex = ExternalResource.Companion.create(inputStream);
                         Image img = ExternalResource.uploadAsImage(ex, group);
@@ -148,12 +148,12 @@ public class GroupMsgEvent extends BaseMsgEvent {
         return true;
     }
 
-    private void setuTemp(){
+    private void setuTemp() {
         String url = "https://api.lolicon.app/setu/v2";
         Map<String, Object> map = new HashMap<>();
         // map.put("tag", split);
-        map.put("size",new String[] {"regular"});
-        map.put("r18",0);
+        map.put("size", new String[]{"regular"});
+        map.put("r18", 0);
         // Api.sendMessage(group,JSONUtil.parse(split).toString());
         // Api.sendMessage(group,JSONUtil.parse(map).toString());
         ExternalResource ex;
@@ -172,7 +172,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
             String picUrl = JsonPath.read(data, "$.data[0].urls.regular");
             String tags = JsonPath.read(data, "$.data[0].tags").toString();
 
-            try (HttpResponse execute = HttpRequest.get(picUrl).timeout(10000) .setHttpProxy("127.0.0.1", 10809).execute()) {
+            try (HttpResponse execute = HttpRequest.get(picUrl).timeout(10000).setHttpProxy("127.0.0.1", 10809).execute()) {
                 try (InputStream inputStream = execute.bodyStream()) {
                     ex = ExternalResource.Companion.create(inputStream);
                     Image img = ExternalResource.uploadAsImage(ex, group);
@@ -201,8 +201,8 @@ public class GroupMsgEvent extends BaseMsgEvent {
             // String[] split = listStr.split(",");
             Map<String, Object> map = new HashMap<>();
             // map.put("tag", split);
-            map.put("size",new String[] {"regular"});
-            map.put("r18",1);
+            map.put("size", new String[]{"regular"});
+            map.put("r18", 1);
             // Api.sendMessage(group,JSONUtil.parse(split).toString());
             // Api.sendMessage(group,JSONUtil.parse(map).toString());
             ExternalResource ex;
@@ -221,7 +221,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
                 String picUrl = JsonPath.read(data, "$.data[0].urls.regular");
                 String tags = JsonPath.read(data, "$.data[0].tags").toString();
 
-                try (HttpResponse execute = HttpRequest.get(picUrl).timeout(10000) .setHttpProxy("127.0.0.1", 10809).execute()) {
+                try (HttpResponse execute = HttpRequest.get(picUrl).timeout(10000).setHttpProxy("127.0.0.1", 10809).execute()) {
                     try (InputStream inputStream = execute.bodyStream()) {
                         ex = ExternalResource.Companion.create(inputStream);
                         Image img = ExternalResource.uploadAsImage(ex, group);
@@ -312,6 +312,9 @@ public class GroupMsgEvent extends BaseMsgEvent {
          *  基于以上事件待实现功能:
          *  邀请人数、被禁言次数 等
          *  [vacode:chatgpt:key:上下文模式(仅发送者, 仅机器人, 发送者+机器人, 发送者+机器人+群友):上下文条数:预设风格:默认回复]
+         *  [vacode:rep:prefix:content:suffix] [vacode:head:qq] [vacode:randomqq:1] [vacode:nickname:qq]
+         *  [vacode:bool:exp:1:2] [vacode:odds:0.1:概率1:0.2:概率2:0.3]
+         *  [vacode:=:1:1] [vacode:>:1:1] [vacode:<:1:1] [vacode:>=:1:1] [vacode:<=:1:1] [vacode:|:1:1] [vacode:&:1:1]
          */
 
         // 关键词查询

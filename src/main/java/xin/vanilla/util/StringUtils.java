@@ -55,14 +55,6 @@ public class StringUtils {
         return back.toString();
     }
 
-    public static boolean isNullOrEmpty(String s) {
-        return null == s || s.equals("");
-    }
-
-    public static boolean isNullOrEmptyEx(String s) {
-        return null == s || s.trim().equals("");
-    }
-
     /**
      * 将数值数组 <code>[123456789, 234567890]</code>
      * <p>转换为形如 <code>123456789,234567890</code> 的字符串</p>
@@ -267,5 +259,75 @@ public class StringUtils {
             }
         }
         return sb.toString();
+    }
+
+
+    public static boolean isNullOrEmpty(String s) {
+        return null == s || s.equals("");
+    }
+
+    public static boolean isNullOrEmptyEx(String s) {
+        return null == s || s.trim().equals("");
+    }
+
+    public static boolean isNotNullOrEmpty(String s) {
+        return s != null && !"".equals(s);
+    }
+
+    public static boolean isNotNull(Object s) {
+        return s != null;
+    }
+
+    /**
+     * @param s 字符串
+     * @return 空字符串or本身
+     */
+    @NotNull
+    public static String nullToEmpty(String s) {
+        return s == null ? "" : s;
+    }
+
+    @NotNull
+    public static String substring(String s, int start, int end) {
+        if (isNullOrEmpty(s)) {
+            return "";
+        }
+        int length = s.length();
+        if (end < start) {
+            return s;
+        }
+        if (length >= start && length >= end) {
+            return s.substring(start, end);
+        }
+        return s;
+    }
+
+    @NotNull
+    public static String substring(String s, int start) {
+        if (isNullOrEmpty(s)) {
+            return "";
+        }
+        int length = s.length();
+        if (start > length) {
+            return s;
+        }
+        return s.substring(start);
+    }
+
+    @NotNull
+    public static String substringEnd(String s, int len) {
+        if (isNullOrEmpty(s)) {
+            return "";
+        }
+        int length = s.length();
+        if (len > length) {
+            return s;
+        }
+        return s.substring(0, length - len);
+    }
+
+
+    public static String getAvatarUrl(long qq, int size) {
+        return "http://q.qlogo.cn/g?b=qq&nk=" + qq + "&s=" + size;
     }
 }

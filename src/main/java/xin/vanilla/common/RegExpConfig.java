@@ -1,12 +1,10 @@
 package xin.vanilla.common;
 
-import net.mamoe.mirai.contact.Contact;
-import net.mamoe.mirai.contact.Friend;
-import net.mamoe.mirai.contact.Member;
-import net.mamoe.mirai.contact.NormalMember;
+import net.mamoe.mirai.contact.*;
 import net.mamoe.mirai.message.data.*;
 import org.jetbrains.annotations.NotNull;
 import xin.vanilla.VanillaKanri;
+import xin.vanilla.entity.DecodeKeyParam;
 import xin.vanilla.entity.config.instruction.BaseInstructions;
 import xin.vanilla.entity.config.instruction.KanriInstructions;
 import xin.vanilla.entity.config.instruction.KeywordInstructions;
@@ -15,11 +13,9 @@ import xin.vanilla.util.Api;
 import xin.vanilla.util.RegUtils;
 import xin.vanilla.util.StringUtils;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.regex.Matcher;
+import java.util.stream.Collectors;
 
 import static xin.vanilla.util.RegUtils.REG_SEPARATOR;
 
@@ -299,6 +295,37 @@ public class RegExpConfig {
                 .append("]");
 
         /**
+         * 回复特殊码
+         */
+        public static RegUtils REP = new RegUtils().append("[vacode:rep")
+                .groupIgByName("prefix", ":[^:\\]]+").appendIg("?")
+                .groupIgByName("content", ":[^:\\]]+")
+                .groupIgByName("suffix", ":[^:\\]]+").appendIg("?")
+                .append("]");
+
+        /**
+         * 头像特殊码
+         */
+        public static RegUtils HEAD = new RegUtils().append("[vacode:head:")
+                .groupIgByName("qq", "\\d{5,10}")
+                .groupIgByName("size", ":(?:40|41|100|140|640)").appendIg("?")
+                .append("]");
+
+        /**
+         * 随机群员QQ
+         */
+        public static RegUtils RANDOMQQ = new RegUtils().append("[vacode:randomqq")
+                .groupIgByName("flag", ":[^\\]]*?").appendIg("?")
+                .append("]");
+
+        /**
+         * QQ昵称
+         */
+        public static RegUtils NICKNAME = new RegUtils().append("[vacode:nickname:")
+                .groupIgByName("qq", "\\d{5,10}")
+                .append("]");
+
+        /**
          * 关键词 回复内容编码
          */
         public static Map<String, String> EN_REP = new HashMap<String, String>() {{
@@ -441,7 +468,7 @@ public class RegExpConfig {
         /**
          * 戳一戳
          */
-        public static String exeTap(String msg, Contact sender) {
+        public static @NotNull String exeTap(String msg, Contact sender) {
             Matcher matcher = TAP.matcher(msg);
             try {
                 if (matcher.find()) {
@@ -458,12 +485,20 @@ public class RegExpConfig {
                     } catch (Exception ignored) {
                         num = 1;
                     }
+
                     for (int i = 0; i < num; i++) {
+                        long finalQq = qq;
                         Va.delayed(i * 5 * 1000L, () -> {
                             if (sender instanceof Friend) {
                                 ((Friend) sender).nudge().sendTo(sender);
                             } else if (sender instanceof Member) {
-                                ((Member) sender).nudge().sendTo(((Member) sender).getGroup());
+                                Group group = ((Member) sender).getGroup();
+                                NormalMember member = group.get(finalQq);
+                                if (member != null) {
+                                    member.nudge().sendTo(group);
+                                } else {
+                                    ((Member) sender).nudge().sendTo(group);
+                                }
                             }
                         });
                     }
@@ -472,6 +507,102 @@ public class RegExpConfig {
                 e.printStackTrace();
             }
             return msg.replaceAll(TAP.build(), "");
+        }
+
+        /**
+         * 复读
+         */
+        public static @NotNull String exeRep(DecodeKeyParam param, String msg) {
+            Matcher matcher = REP.matcher(msg);
+            try {
+                if (matcher.find()) {
+                    String prefix = StringUtils.substring(StringUtils.nullToEmpty(matcher.group("prefix")).replaceAll("\\\\:", ":"), 1);
+                    String content = StringUtils.substring(StringUtils.nullToEmpty(matcher.group("content")).replaceAll("\\\\:", ":"), 1);
+                    String suffix = StringUtils.substring(StringUtils.nullToEmpty(matcher.group("suffix")).replaceAll("\\\\:", ":"), 1);
+                    msg = prefix + msg.replace(param.getRepWord().getKey(), content) + suffix;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return msg.replaceAll(REP.build(), "");
+        }
+
+        public static @NotNull String exeRandomQQ(DecodeKeyParam param, String msg) {
+            RegUtils regUtils = RANDOMQQ;
+            try {
+                while (regUtils.matcher(msg).find()) {
+                    Matcher matcher = regUtils.getMatcher();
+                    Group group = param.getTarget();
+                    String qq = "";
+                    if (group != null) {
+                        ContactList<NormalMember> members = group.getMembers();
+                        List<Long> qqs = members.stream().map(NormalMember::getId).collect(Collectors.toList());
+                        qqs.add(param.getBot().getId());
+                        qq = String.valueOf(qqs.get((int) (Math.random() * qqs.size())));
+                    }
+                    msg = msg.replaceAll(matcher.group(0), qq);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return msg.replaceAll(regUtils.build(), "");
+        }
+
+        public static @NotNull String exeNickName(DecodeKeyParam param, String msg) {
+            RegUtils regUtils = NICKNAME;
+            try {
+                while (regUtils.matcher(msg).find()) {
+                    Matcher matcher = regUtils.getMatcher();
+                    long qq = Long.parseLong((matcher.group("qq")));
+
+                    String nick = "";
+                    if (param.getTarget() != null) {
+                        NormalMember member = param.getTarget().get(qq);
+                        if (member != null) {
+                            nick = member.getNick();
+                        }
+                    }
+                    if ("".equals(nick)) {
+                        Friend friend = param.getBot().getFriend(qq);
+                        if (friend != null) {
+                            nick = friend.getNick();
+                        }
+                    }
+                    if ("".equals(nick)) {
+                        Stranger stranger = param.getBot().getStranger(qq);
+                        if (stranger != null) {
+                            nick = stranger.getNick();
+                        }
+                    }
+                    msg = msg.replaceAll(matcher.group(0), nick);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return msg.replaceAll(regUtils.build(), "");
+        }
+
+        public static @NotNull String exeHead(DecodeKeyParam param, String msg) {
+            RegUtils regUtils = HEAD;
+            try {
+                while (regUtils.matcher(msg).find()) {
+                    Matcher matcher = regUtils.getMatcher();
+                    long qq = Long.parseLong((matcher.group("qq")));
+
+                    int size;
+                    try {
+                        size = Integer.parseInt(StringUtils.substring(matcher.group("size"), 1));
+                    } catch (Exception ignored) {
+                        size = AvatarSpec.ORIGINAL.getSize();
+                    }
+                    Image image = Api.uploadImageByUrl(StringUtils.getAvatarUrl(qq, size), param.getTarget() == null ? param.getSender() : param.getTarget());
+                    String serialize = image.serializeToMiraiCode();
+                    msg = msg.replaceAll(matcher.group(0), serialize);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return msg.replaceAll(HEAD.build(), "");
         }
     }
 }
