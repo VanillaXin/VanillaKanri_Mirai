@@ -299,9 +299,9 @@ public class RegExpConfig {
          * 回复特殊码
          */
         public static RegUtils REP = new RegUtils().append("[vacode:rep")
-                .groupIgByName("prefix", ":(?:\\:|\\]|[^:\\]])+").appendIg("?")
-                .groupIgByName("content", ":(?:\\:|\\]|[^:\\]]|\\(vacode:void))+")
-                .groupIgByName("suffix", ":(?:\\:|\\]|[^:\\]])+").appendIg("?")
+                .groupIgByName("prefix", ":(?:\\:|\\]|[^:\\]]|\\(vacode:void\\))+").appendIg("?")
+                .groupIgByName("content", ":(?:\\:|\\]|[^:\\]]|\\(vacode:void\\))+")
+                .groupIgByName("suffix", ":(?:\\:|\\]|[^:\\]]|\\(vacode:void\\))+").appendIg("?")
                 .append("]");
 
         /**
