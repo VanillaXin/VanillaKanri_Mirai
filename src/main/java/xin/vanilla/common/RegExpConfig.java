@@ -299,9 +299,9 @@ public class RegExpConfig {
          * 回复特殊码
          */
         public static RegUtils REP = new RegUtils().append("[vacode:rep")
-                .groupIgByName("prefix", ":(?:\\:|\\]|[^:\\]]|\\(vacode:void\\))+").appendIg("?")
-                .groupIgByName("content", ":(?:\\:|\\]|[^:\\]]|\\(vacode:void\\))+")
-                .groupIgByName("suffix", ":(?:\\:|\\]|[^:\\]]|\\(vacode:void\\))+").appendIg("?")
+                .groupIgByName("prefix", ":(?:\\:|\\]|[^:\\]])+").appendIg("?")
+                .groupIgByName("content", ":(?:\\:|\\]|[^:\\]])+")
+                .groupIgByName("suffix", ":(?:\\:|\\]|[^:\\]])+").appendIg("?")
                 .append("]");
 
         /**
@@ -351,9 +351,9 @@ public class RegExpConfig {
          * 非重要特殊码_后置解码
          */
         public static Map<String, String> DE_REP_ = new HashMap<String, String>() {{
-            put("\\(vacode:void\\)", "");
-            put("\\(vacode:@(?<qq>\\d{6,10})\\)", "[mirai:at:${qq}]");
-            put("\\(vacode:@@\\)", AtAll.INSTANCE.serializeToMiraiCode());
+            put("\\(vacode;void\\)", "");
+            put("\\(vacode;@(?<qq>\\d{6,10})\\)", "[mirai:at:${qq}]");
+            put("\\(vacode;@@\\)", AtAll.INSTANCE.serializeToMiraiCode());
         }};
 
         /**

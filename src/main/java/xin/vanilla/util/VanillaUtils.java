@@ -690,7 +690,7 @@ public class VanillaUtils {
         MessageChain messageChain = keyParam.getMsg();
 
         try {
-            if (!rep.contains("[vacode:") && !rep.contains("(vacode:")) return rep;
+            if (!rep.contains("[vacode:") && !rep.contains("(vacode;")) return rep;
 
             // 转义艾特
             result = rep.replaceAll("\\[vacode:@]", new At(sender.getId()).serializeToMiraiCode());
