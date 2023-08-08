@@ -351,9 +351,9 @@ public class RegExpConfig {
          * 非重要特殊码_后置解码
          */
         public static Map<String, String> DE_REP_ = new HashMap<String, String>() {{
-            put("\\(vacode:void)", "");
-            put("\\(vacode:@(?<qq>\\d{6,10}))", "[mirai:at:${qq}]");
-            put("\\(vacode:@@)", AtAll.INSTANCE.serializeToMiraiCode());
+            put("\\(vacode:void\\)", "");
+            put("\\(vacode:@(?<qq>\\d{6,10})\\)", "[mirai:at:${qq}]");
+            put("\\(vacode:@@\\)", AtAll.INSTANCE.serializeToMiraiCode());
         }};
 
         /**
