@@ -300,7 +300,7 @@ public class RegExpConfig {
          */
         public static RegUtils REP = new RegUtils().append("[vacode:rep")
                 .groupIgByName("prefix", ":(?:\\:|\\]|[^:\\]])+").appendIg("?")
-                .groupIgByName("content", ":(?:\\:|\\]|[^:\\]])+")
+                .groupIgByName("content", ":(?:\\:|\\]|[^:\\]]|\\(vacode:void))+")
                 .groupIgByName("suffix", ":(?:\\:|\\]|[^:\\]])+").appendIg("?")
                 .append("]");
 
