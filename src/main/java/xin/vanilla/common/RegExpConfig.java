@@ -337,12 +337,23 @@ public class RegExpConfig {
         /**
          * 关键词 回复内容解码
          * <p>
-         * 非重要特殊码
+         * 非重要特殊码_前置解码
          */
         public static Map<String, String> DE_REP = new HashMap<String, String>() {{
             put("\\[vacode:void]", "");
             put("\\[vacode:@(?<qq>\\d{6,10})]", "[mirai:at:${qq}]");
             put("\\[vacode:@@]", AtAll.INSTANCE.serializeToMiraiCode());
+        }};
+
+        /**
+         * 关键词 回复内容解码
+         * <p>
+         * 非重要特殊码_后置解码
+         */
+        public static Map<String, String> DE_REP_ = new HashMap<String, String>() {{
+            put("\\(vacode:void)", "");
+            put("\\(vacode:@(?<qq>\\d{6,10}))", "[mirai:at:${qq}]");
+            put("\\(vacode:@@)", AtAll.INSTANCE.serializeToMiraiCode());
         }};
 
         /**

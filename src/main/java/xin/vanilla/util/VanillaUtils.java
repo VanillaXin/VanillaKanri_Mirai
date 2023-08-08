@@ -773,6 +773,12 @@ public class VanillaUtils {
             e.printStackTrace();
             result = "";
         }
+
+        // 非重要后置特殊码
+        Map<String, String> repCode = RegExpConfig.VaCode.DE_REP_;
+        for (String key : repCode.keySet()) {
+            result = result.replaceAll(key, repCode.get(key));
+        }
         return result;
     }
 
