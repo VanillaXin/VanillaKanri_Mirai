@@ -75,14 +75,17 @@ public class GroupMsgEvent extends BaseMsgEvent {
         if (capability.getOnlineAiPic()) onlineAiPic();
         searchMsg();
         searchMsgLen();
+        chatGPTVoiceVits();
         setu();
         setur();
-
+        dogGroup();
+//        vitsTest();
+        VoiceVits();
         // 测试
-        // audioTest();
+//         audioTest();
         // test();
         searchMsgAll();
-        // 核心功能: 关键词回复
+//         核心功能: 关键词回复
         if (capability.getKeyRep()) keyRep();
     }
 
@@ -148,6 +151,26 @@ public class GroupMsgEvent extends BaseMsgEvent {
         return true;
     }
 
+    private void vitsTest(){
+        final String prefix = "vitsdemo";
+        if (msg.contentToString().startsWith(prefix)) {
+            String command = msg.contentToString().substring(prefix.length());
+            try {
+                InputStream inputStream;
+                try (HttpResponse authorization = HttpRequest.get(command).timeout(1000000).execute()) {
+                    inputStream = authorization.bodyStream();
+                    ExternalResource externalResource = ExternalResource.create(inputStream);
+                    OfflineAudio offlineAudio = group.uploadAudio(externalResource);
+                    Api.sendMessage(group, offlineAudio);
+                    externalResource.close();
+                }
+            } catch (Exception e) {
+                Api.sendMessage(group, "可能是请求太快也可能是模型使用超时总之挂了，后续在改");
+                // throw new RuntimeException(e);
+            }
+        }
+    }
+
     private void setuTemp() {
         String url = "https://api.lolicon.app/setu/v2";
         Map<String, Object> map = new HashMap<>();
@@ -186,6 +209,17 @@ public class GroupMsgEvent extends BaseMsgEvent {
             setuTemp();
             // Api.sendMessage(group, new MessageChainBuilder().append(new At(sender.getId())).append("未找到该标签图片").build());
             e.printStackTrace();
+        }
+    }
+    private void dogGroup(){
+        if (group.getId()==855211670 || group.getId()==745664013){
+            if(msg.contentToString().matches(".*?群主.*?")){
+                if(msg.contentToString().matches(".*?狗.*?")){
+                    Api.sendMessage(group,new MessageChainBuilder().append(new At(1658936997)).append("狗是真的狗~~~").build());
+                }else {
+                    Api.sendMessage(group,new MessageChainBuilder().append(new At(sender.getId())).append("请叫狗群主~~~").build());
+                }
+            }
         }
     }
 
@@ -464,7 +498,8 @@ public class GroupMsgEvent extends BaseMsgEvent {
 
                     if (wife == 0) {
                         ContactList<NormalMember> members = group.getMembers();
-                        List<Long> qqs = members.stream().map(NormalMember::getId).collect(Collectors.toList());
+                        List<Long> qqs = members.stream().map(NormalMember::getId).collect(Collectors.toList()).
+                                stream().filter(qqId->qqId!=81236714).collect(Collectors.toList());  //这一行为新加排除指定号
                         qqs.add(bot.getId());
                         wife = qqs.get((int) (Math.random() * qqs.size()));
                         Va.getPluginData().getWife().put(key, nickKey + ":" + wife);
@@ -513,6 +548,62 @@ public class GroupMsgEvent extends BaseMsgEvent {
         return false;
     }
 
+    private boolean chatGPTVoiceVits() {
+        final String prefix = "/vitsgpt";
+        if (msg.contentToString().startsWith(prefix)) {
+            String command = msg.contentToString().substring(prefix.length());
+
+            String back = Api.chatGPT(command);
+            Api.sendMessage(group, new MessageChainBuilder().append(new At(sender.getId())).append(back).build());
+
+            String res = Api.translateToJP(back.replace("\r", "")).replace("\n", "").replace(" ", "");
+            String path = Api.vits_so_src(res);
+
+
+            try {
+                InputStream inputStream;
+                try (HttpResponse authorization = HttpRequest.get("http://192.168.6.128:1234"+path).timeout(1000000).execute()) {
+                    inputStream = authorization.bodyStream();
+                    ExternalResource externalResource = ExternalResource.create(inputStream);
+                    OfflineAudio offlineAudio = group.uploadAudio(externalResource);
+                    Api.sendMessage(group, offlineAudio);
+                    externalResource.close();
+                }
+            } catch (Exception e) {
+                Api.sendMessage(group, "可能是请求太快也可能是模型使用超时总之挂了，后续在改");
+                // throw new RuntimeException(e);
+            }
+        }
+        return false;
+    }
+    private boolean VoiceVits() {
+        final String prefix = "/say";
+        if (msg.contentToString().startsWith(prefix)) {
+            String command = msg.contentToString().substring(prefix.length());
+
+//            String back = Api.chatGPT(command);
+//            Api.sendMessage(group, new MessageChainBuilder().append(new At(sender.getId())).append(back).build());
+
+            String res = Api.translateToJP(command.replace("\r", "")).replace("\n", "").replace(" ", "");
+            String path = Api.vits_so_src(res);
+
+            try {
+                InputStream inputStream;
+                try (HttpResponse authorization = HttpRequest.get("http://192.168.6.128:1234"+path).timeout(1000000).execute()) {
+                    inputStream = authorization.bodyStream();
+                    ExternalResource externalResource = ExternalResource.create(inputStream);
+                    OfflineAudio offlineAudio = group.uploadAudio(externalResource);
+                    Api.sendMessage(group, offlineAudio);
+                    externalResource.close();
+                }
+            } catch (Exception e) {
+                Api.sendMessage(group, "可能是请求太快也可能是模型使用超时总之挂了，后续在改");
+                // throw new RuntimeException(e);
+            }
+
+        }
+        return false;
+    }
     private boolean chatGPT() {
         if (VanillaUtils.messageToString(msg).contains(new At(bot.getId()).toString())) {
             String command = VanillaUtils.messageToPlainText(msg, group);

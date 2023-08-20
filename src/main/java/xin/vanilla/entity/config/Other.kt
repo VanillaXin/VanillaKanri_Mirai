@@ -107,6 +107,11 @@ class Other {
     var aiDrawUrl: String = ""
 
     /**
+     * vits接口
+     */
+    var vitsUrl:String=""
+
+    /**
      * ai绘画认证 如果没设置就没有
      */
     var aiDrawKey: String = ""

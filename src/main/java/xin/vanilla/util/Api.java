@@ -196,6 +196,52 @@ public class Api {
         }
     }
 
+    public static String vits_so_src(String text){
+
+        String vitsUrl = Va.getGlobalConfig().getOther().getVitsUrl();
+        Map<String, Object> map = new HashMap<>();
+        JSONArray jsonArray = new JSONArray();
+        jsonArray.add(text);
+        jsonArray.add("Auto");
+        jsonArray.add("女");
+        jsonArray.add(0);
+        jsonArray.add(0);
+        jsonArray.add("msz2");
+        jsonArray.add("wav");
+        jsonArray.add(-4);
+        jsonArray.add(true);
+        jsonArray.add(0);
+        jsonArray.add(-40);
+        jsonArray.add(0.4);
+        jsonArray.add(0.5);
+        jsonArray.add(0);
+        jsonArray.add(0);
+        jsonArray.add(0.75);
+        jsonArray.add("dio");
+        jsonArray.add(0);
+        jsonArray.add(0.05);
+        jsonArray.add(100);
+        jsonArray.add(false);
+        jsonArray.add(false);
+        jsonArray.add(0);
+
+        map.put("data",jsonArray);
+        map.put("event_data",null);
+        map.put("fn_index",8);
+        System.out.println(vitsUrl);
+        try (HttpResponse response = HttpRequest.post(vitsUrl + "/run/predict/").header("Content-Type", "application/json").body(com.alibaba.fastjson2.JSONObject.toJSONString(map)).timeout(100000).execute()) {
+            String body = response.body();
+            JSONObject jsonObject1 = JSONUtil.parseObj(body);
+            JSONArray jsonArray1 = JSONUtil.parseArray(jsonObject1.get("data"));
+            JSONObject jsonObject = JSONUtil.parseObj(jsonArray1.get(1));
+            String name = jsonObject.get("name").toString();
+
+//            JSONObject jsonObject2 = JSONUtil.parseObj(jsonArray2.get(0));
+           return name;
+
+        }
+    }
+
     public static String aiPictureV2(String prompt, String unPrompt) {
 
 
