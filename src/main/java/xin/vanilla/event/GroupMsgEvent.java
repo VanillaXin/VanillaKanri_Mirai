@@ -78,9 +78,9 @@ public class GroupMsgEvent extends BaseMsgEvent {
         chatGPTVoiceVits();
         setu();
         setur();
-        dogGroup();
+//        dogGroup();
 //        vitsTest();
-        VoiceVits();
+//        VoiceVits();
         // 测试
 //         audioTest();
         // test();
@@ -138,7 +138,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
                         Image img = ExternalResource.uploadAsImage(ex, group);
                         // Api.sendMessage(group, img);
                         // Api.sendMessage(group, new MessageChainBuilder().append(img).append(new At(sender.getId())).append("tags:").append(tags).build());
-                        Api.sendMessage(group, new MessageChainBuilder().append(img).append(new At(sender.getId())).build());
+                        Api.sendMessage(group, new MessageChainBuilder().append(img).append(new At(sender.getId())).build()).recallIn(10*1000);
                         ex.close();
                     }
                 }
@@ -201,7 +201,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
                     Image img = ExternalResource.uploadAsImage(ex, group);
                     // Api.sendMessage(group, img);
                     // Api.sendMessage(group, new MessageChainBuilder().append(img).append(new At(sender.getId())).append("tags:").append(tags).build());
-                    Api.sendMessage(group, new MessageChainBuilder().append(img).append(new At(sender.getId())).build());
+                    Api.sendMessage(group, new MessageChainBuilder().append(img).append(new At(sender.getId())).build()).recallIn(10*1000);
                     ex.close();
                 }
             }
@@ -556,8 +556,8 @@ public class GroupMsgEvent extends BaseMsgEvent {
             String back = Api.chatGPT(command);
             Api.sendMessage(group, new MessageChainBuilder().append(new At(sender.getId())).append(back).build());
 
-            String res = Api.translateToJP(back.replace("\r", "")).replace("\n", "").replace(" ", "");
-            String path = Api.vits_so_src(res);
+//            String res = Api.translateToJP(back.replace("\r", "")).replace("\n", "").replace(" ", "");
+            String path = Api.vits_so_src(back.replace("\r", "").replace("\n", "").replace(" ", ""));
 
 
             try {
@@ -584,8 +584,8 @@ public class GroupMsgEvent extends BaseMsgEvent {
 //            String back = Api.chatGPT(command);
 //            Api.sendMessage(group, new MessageChainBuilder().append(new At(sender.getId())).append(back).build());
 
-            String res = Api.translateToJP(command.replace("\r", "")).replace("\n", "").replace(" ", "");
-            String path = Api.vits_so_src(res);
+//            String res = Api.translateToJP(command.replace("\r", "")).replace("\n", "").replace(" ", "");
+            String path = Api.vits_so_src(command.replace("\r", "").replace("\n", "").replace(" ", ""));
 
             try {
                 InputStream inputStream;

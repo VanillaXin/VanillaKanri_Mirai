@@ -199,14 +199,16 @@ public class Api {
     public static String vits_so_src(String text){
 
         String vitsUrl = Va.getGlobalConfig().getOther().getVitsUrl();
+        String vitsMoudelName = Va.getGlobalConfig().getOther().getVitsMoudelName();
+        String vitsLang = Va.getGlobalConfig().getOther().getVitsLang();
         Map<String, Object> map = new HashMap<>();
         JSONArray jsonArray = new JSONArray();
         jsonArray.add(text);
-        jsonArray.add("Auto");
+        jsonArray.add(vitsLang);
         jsonArray.add("女");
         jsonArray.add(0);
         jsonArray.add(0);
-        jsonArray.add("msz2");
+        jsonArray.add(vitsMoudelName);
         jsonArray.add("wav");
         jsonArray.add(-4);
         jsonArray.add(true);

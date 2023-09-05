@@ -72,6 +72,15 @@ class Other {
     var parentMessageId: String = ""
 
     /**
+     * vits输出语言
+     */
+    var vitsLang = "Auto"
+
+    /**
+     * vits模型名称
+     */
+    var vitsMoudelName = "nxd"
+    /**
      * chatGPT 请求失败后的默认回复
      */
     var chatGPTDefaultBack: String = ""
