@@ -562,7 +562,7 @@ public class RegExpConfig {
                         ContactList<NormalMember> members = group.getMembers();
                         List<Long> qqs = members.stream().map(NormalMember::getId).collect(Collectors.toList());
                         qqs.add(param.getBot().getId());
-                        qq = String.valueOf(qqs.get((int) (Math.random() * qqs.size())));
+                        qq = String.valueOf(qqs.get((int) (Va.getRandom().nextDouble() * qqs.size())));
                     }
                     msg = msg.replaceAll(StringUtils.escapeExprSpecialWord(matcher.group(0)), qq);
                 }

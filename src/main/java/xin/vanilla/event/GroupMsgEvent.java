@@ -501,7 +501,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
                         List<Long> qqs = members.stream().map(NormalMember::getId).collect(Collectors.toList()).
                                 stream().filter(qqId->qqId!=81236714).collect(Collectors.toList());  //这一行为新加排除指定号
                         qqs.add(bot.getId());
-                        wife = qqs.get((int) (Math.random() * qqs.size()));
+                        wife = qqs.get((int) (Va.getRandom().nextDouble() * qqs.size()));
                         Va.getPluginData().getWife().put(key, nickKey + ":" + wife);
                     }
                     NormalMember normalMember = group.get(wife);

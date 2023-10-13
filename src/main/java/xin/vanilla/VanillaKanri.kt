@@ -22,6 +22,7 @@ import xin.vanilla.mapper.MessageCache
 import xin.vanilla.mapper.impl.KeywordDataImpl
 import xin.vanilla.mapper.impl.MessageCacheImpl
 import xin.vanilla.util.sqlite.SqliteUtil
+import java.security.SecureRandom
 import java.util.*
 import java.util.concurrent.Callable
 import java.util.concurrent.CompletableFuture
@@ -32,6 +33,7 @@ object VanillaKanri : KotlinPlugin(
     JvmPluginDescription.loadFromResource()
 ) {
     var parentMessageId: String = "chatcmpl-72YBVdsjJU4ar30QpQnp4kqN7SXu5"
+
     /**
      * 消息缓存
      */
@@ -65,6 +67,11 @@ object VanillaKanri : KotlinPlugin(
      * 群独立设置
      */
     var groupConfig: GroupConfigFile = GroupConfigFile()
+
+    /**
+     * 随机数生成器
+     */
+    var random: SecureRandom = SecureRandom()
 
     /**
      * 插件启用事件

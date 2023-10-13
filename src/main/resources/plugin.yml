@@ -1,12 +1,12 @@
 #file: noinspection YAMLSchemaValidation
 id: "xin.vanilla.vanilla-kanri"
-# °æ±¾
-version: '2.0.0-dev.271'
-# Ãû³Æ
-name: "Ïã²İÈº¹Ü"
-# ×÷Õß
+# ç‰ˆæœ¬
+version: '2.0.0-dev.272'
+# åç§°
+name: "é¦™è‰ç¾¤ç®¡"
+# ä½œè€…
 author: "VanillaXin"
-# ÃèÊö
+# æè¿°
 #dependencies: [ ]
-# ÏêÏ¸ĞÅÏ¢
+# è¯¦ç»†ä¿¡æ¯
 #info: "..."
