@@ -74,7 +74,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
                 .collect(Collectors.toList());
         for (Map.Entry<String, Integer> entry : entryList) {
             Method method = methodList.stream()
-                    .filter(o -> o.getName().equals(this.getClass().getSimpleName() + "." + entry.getKey()))
+                    .filter(o -> (entry.getKey().equals(this.getClass().getSimpleName() + "." + o.getName())))
                     .findFirst()
                     .orElse(null);
             if (method != null) {
