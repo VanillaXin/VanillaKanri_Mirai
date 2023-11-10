@@ -48,12 +48,12 @@ class Base {
     /**
      * 可选功能开关(0为关闭, 数字越大执行顺序越优先)
      */
-    var capability: Map<String, Int> = mapOf(
+    var capability: Map<String, Int> = mutableMapOf(
         "GroupMsgEvent.keyRep" to 99,
         "FriendMsgEvent.keyRep" to 99,
         "GroupMsgEvent.rcon" to 0,
         "GroupMsgEvent.localRandomPic" to 0,
-        "GroupMsgEvent.getWife" to 0,
+        "GroupMsgEvent.getWife" to 1,
         "GroupMsgEvent.chatGPT" to 0,
         "GroupMsgEvent.chatGPTVoice" to 0,
         "GroupMsgEvent.onlineRandomPic" to 0,
