@@ -3,7 +3,7 @@ package xin.vanilla.common.annotation;
 import net.mamoe.mirai.contact.MemberPermission;
 import xin.vanilla.common.RegExpConfig;
 import xin.vanilla.entity.config.instruction.KanriInstructions;
-import xin.vanilla.enumeration.PermissionLevel;
+import xin.vanilla.enums.PermissionLevel;
 
 import java.lang.annotation.*;
 

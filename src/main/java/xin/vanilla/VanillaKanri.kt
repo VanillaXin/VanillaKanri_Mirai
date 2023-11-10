@@ -15,7 +15,7 @@ import net.mamoe.mirai.event.GlobalEventChannel
 import xin.vanilla.config.GlobalConfigFile
 import xin.vanilla.config.GroupConfigFile
 import xin.vanilla.config.PluginDataFile
-import xin.vanilla.enumeration.DataCacheKey.*
+import xin.vanilla.enums.DataCacheKey.*
 import xin.vanilla.event.EventHandlers
 import xin.vanilla.mapper.KeywordData
 import xin.vanilla.mapper.MessageCache

@@ -12,13 +12,13 @@ import org.jetbrains.annotations.NotNull;
 import xin.vanilla.VanillaKanri;
 import xin.vanilla.common.RegExpConfig;
 import xin.vanilla.entity.DecodeKeyParam;
-import xin.vanilla.enumeration.DataCacheKey;
-import xin.vanilla.enumeration.PermissionLevel;
+import xin.vanilla.enums.DataCacheKey;
+import xin.vanilla.enums.PermissionLevel;
 
 import java.util.*;
 import java.util.regex.Matcher;
 
-import static xin.vanilla.enumeration.PermissionLevel.*;
+import static xin.vanilla.enums.PermissionLevel.*;
 
 @SuppressWarnings("unused")
 public class VanillaUtils {

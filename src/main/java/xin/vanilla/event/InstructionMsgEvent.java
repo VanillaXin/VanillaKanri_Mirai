@@ -37,7 +37,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
-import static xin.vanilla.enumeration.PermissionLevel.*;
+import static xin.vanilla.enums.PermissionLevel.*;
 import static xin.vanilla.mapper.impl.MessageCacheImpl.MSG_TYPE_GROUP;
 
 @SuppressWarnings("unused")

@@ -46,44 +46,20 @@ class Base {
     var debugCustomException: Map<String, String> = mutableMapOf()
 
     /**
-     * 可选功能开关
+     * 可选功能开关(0为关闭, 数字越大执行顺序越优先)
      */
-    var capability = Capability()
-
-    /**
-     * 可选功能开关类
-     */
-    @Serializable
-    class Capability {
-        // 关键词回复
-        var keyRep = true
-
-        // MC RCON
-        var rcon = false
-
-        // 本地随机涩图
-        var localRandomPic = false
-
-        // 抽老婆
-        var getWife = false
-
-        // chatGpt
-        var chatGPT = false
-
-        // chatGPT Voice
-        var chatGPTVoice = false
-
-        // 在线随机涩图
-        var onlineRandomPic = false
-
-        // 在线AI画图
-        var onlineAiPic = false
-
-        // 查询测试
-        var queryTest = false
-
-        // 调试模式
-        var debug = true
-    }
+    var capability: Map<String, Int> = mapOf(
+        "GroupMsgEvent.keyRep" to 99,
+        "FriendMsgEvent.keyRep" to 99,
+        "GroupMsgEvent.rcon" to 0,
+        "GroupMsgEvent.localRandomPic" to 0,
+        "GroupMsgEvent.getWife" to 0,
+        "GroupMsgEvent.chatGPT" to 0,
+        "GroupMsgEvent.chatGPTVoice" to 0,
+        "GroupMsgEvent.onlineRandomPic" to 0,
+        "GroupMsgEvent.onlineAiPic" to 0,
+        "GroupMsgEvent.queryTest" to 0,
+        "EventHandlers.debug" to 1,
+    )
 
 }

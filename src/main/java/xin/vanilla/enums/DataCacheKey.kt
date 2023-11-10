@@ -1,4 +1,4 @@
-package xin.vanilla.enumeration
+package xin.vanilla.enums
 
 /**
  * 数据缓存键值

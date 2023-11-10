@@ -14,7 +14,7 @@ import xin.vanilla.common.annotation.KanriInsEvent;
 import xin.vanilla.common.annotation.KeywordInsEvent;
 import xin.vanilla.entity.config.instruction.KanriInstructions;
 import xin.vanilla.entity.event.events.GroupMessageEvents;
-import xin.vanilla.enumeration.PermissionLevel;
+import xin.vanilla.enums.PermissionLevel;
 import xin.vanilla.util.*;
 
 import java.io.PrintWriter;
@@ -27,7 +27,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static xin.vanilla.enumeration.DataCacheKey.PLUGIN_BOT_ONLINE_TIME;
+import static xin.vanilla.enums.DataCacheKey.PLUGIN_BOT_ONLINE_TIME;
 
 @SuppressWarnings("unused")
 public class EventHandlers extends SimpleListenerHost {
@@ -36,7 +36,8 @@ public class EventHandlers extends SimpleListenerHost {
     @Override
     public void handleException(@NotNull CoroutineContext context, @NotNull Throwable exception) {
         // 是否已启用调试模式
-        if (!Va.getGlobalConfig().getBase().getCapability().getDebug()) return;
+        Integer debug = Va.getGlobalConfig().getBase().getCapability().get("EventHandlers.debug");
+        if (debug != null && debug > 0) return;
 
         // 处理事件处理时抛出的异常
         Event event = ((ExceptionInEventHandlerException) exception).getEvent();

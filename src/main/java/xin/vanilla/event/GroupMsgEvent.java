@@ -15,13 +15,13 @@ import net.mamoe.mirai.contact.NormalMember;
 import net.mamoe.mirai.message.data.*;
 import net.mamoe.mirai.utils.ExternalResource;
 import xin.vanilla.common.RegExpConfig;
+import xin.vanilla.common.annotation.Capability;
 import xin.vanilla.entity.KeyRepEntity;
-import xin.vanilla.entity.config.Base;
 import xin.vanilla.entity.config.Other;
 import xin.vanilla.entity.data.KeyData;
 import xin.vanilla.entity.data.MsgCache;
 import xin.vanilla.entity.event.events.GroupMessageEvents;
-import xin.vanilla.enumeration.PermissionLevel;
+import xin.vanilla.enums.PermissionLevel;
 import xin.vanilla.rcon.Rcon;
 import xin.vanilla.util.Api;
 import xin.vanilla.util.StringUtils;
@@ -31,6 +31,8 @@ import xin.vanilla.util.sqlite.SqliteUtil;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -60,35 +62,33 @@ public class GroupMsgEvent extends BaseMsgEvent {
 
     public void run() {
         // logger.info("群聊: " + group.getId() + ":" + sender.getId() + " -> " + msg.serializeToMiraiCode());
-
-        Base.Capability capability = Va.getGlobalConfig().getBase().getCapability();
-
-        if (capability.getRcon()) if (rcon()) return;
-
-        if (capability.getLocalRandomPic()) if (localRandomPic()) return;
-        if (capability.getGetWife()) if (getWife()) return;
-        if (capability.getQueryTest()) queryTest();
-
-        if (capability.getChatGPT()) chatGPT();
-        if (capability.getChatGPTVoice()) chatGPTVoice();
-        if (capability.getOnlineRandomPic()) onlineRandomPic();
-        if (capability.getOnlineAiPic()) onlineAiPic();
-        searchMsg();
-        searchMsgLen();
-        chatGPTVoiceVits();
-        setu();
-        setur();
-//        dogGroup();
-//        vitsTest();
-//        VoiceVits();
-        // 测试
-//         audioTest();
-        // test();
-        searchMsgAll();
-//         核心功能: 关键词回复
-        if (capability.getKeyRep()) keyRep();
+        Map<String, Integer> capability = Va.getGlobalConfig().getBase().getCapability();
+        Method[] methods = this.getClass().getDeclaredMethods();
+        List<Method> methodList = Arrays.stream(methods)
+                .filter(method -> method.isAnnotationPresent(Capability.class)
+                        && method.getReturnType().equals(boolean.class))
+                .collect(Collectors.toList());
+        List<Map.Entry<String, Integer>> entryList = capability.entrySet().stream()
+                .filter(entry -> entry.getValue() != null && entry.getValue() > 0)
+                .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+                .collect(Collectors.toList());
+        for (Map.Entry<String, Integer> entry : entryList) {
+            Method method = methodList.stream()
+                    .filter(o -> o.getName().equals(this.getClass().getSimpleName() + "." + entry.getKey()))
+                    .findFirst()
+                    .orElse(null);
+            if (method != null) {
+                try {
+                    boolean result = (boolean) method.invoke(this);
+                    if (result) return;
+                } catch (IllegalAccessException | InvocationTargetException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
     }
 
+    @Capability
     private boolean searchMsgAll() {
         if (msg.contentToString().startsWith("/va get msg ")) {
             String no = msg.toString();
@@ -99,12 +99,12 @@ public class GroupMsgEvent extends BaseMsgEvent {
     }
     // https://api.lolicon.app/setu/v2
 
-
+    @Capability
     private boolean setu() {
         if (msg.contentToString().startsWith("色图来")) {
             String listStr;
             try {
-                listStr = msg.contentToString().substring("色图来 ".length());
+                listStr = msg.contentToString().substring("色图来 " .length());
             } catch (Exception e) {
                 listStr = "";
             }
@@ -138,7 +138,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
                         Image img = ExternalResource.uploadAsImage(ex, group);
                         // Api.sendMessage(group, img);
                         // Api.sendMessage(group, new MessageChainBuilder().append(img).append(new At(sender.getId())).append("tags:").append(tags).build());
-                        Api.sendMessage(group, new MessageChainBuilder().append(img).append(new At(sender.getId())).build()).recallIn(10*1000);
+                        Api.sendMessage(group, new MessageChainBuilder().append(img).append(new At(sender.getId())).build()).recallIn(10 * 1000);
                         ex.close();
                     }
                 }
@@ -151,7 +151,8 @@ public class GroupMsgEvent extends BaseMsgEvent {
         return true;
     }
 
-    private void vitsTest(){
+    @Capability
+    private void vitsTest() {
         final String prefix = "vitsdemo";
         if (msg.contentToString().startsWith(prefix)) {
             String command = msg.contentToString().substring(prefix.length());
@@ -171,6 +172,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
         }
     }
 
+    @Capability
     private void setuTemp() {
         String url = "https://api.lolicon.app/setu/v2";
         Map<String, Object> map = new HashMap<>();
@@ -201,7 +203,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
                     Image img = ExternalResource.uploadAsImage(ex, group);
                     // Api.sendMessage(group, img);
                     // Api.sendMessage(group, new MessageChainBuilder().append(img).append(new At(sender.getId())).append("tags:").append(tags).build());
-                    Api.sendMessage(group, new MessageChainBuilder().append(img).append(new At(sender.getId())).build()).recallIn(10*1000);
+                    Api.sendMessage(group, new MessageChainBuilder().append(img).append(new At(sender.getId())).build()).recallIn(10 * 1000);
                     ex.close();
                 }
             }
@@ -211,18 +213,21 @@ public class GroupMsgEvent extends BaseMsgEvent {
             e.printStackTrace();
         }
     }
-    private void dogGroup(){
-        if (group.getId()==855211670 || group.getId()==745664013){
-            if(msg.contentToString().matches(".*?群主.*?")){
-                if(msg.contentToString().matches(".*?狗.*?")){
-                    Api.sendMessage(group,new MessageChainBuilder().append(new At(1658936997)).append("狗是真的狗~~~").build());
-                }else {
-                    Api.sendMessage(group,new MessageChainBuilder().append(new At(sender.getId())).append("请叫狗群主~~~").build());
+
+    @Capability
+    private void dogGroup() {
+        if (group.getId() == 855211670 || group.getId() == 745664013) {
+            if (msg.contentToString().matches(".*?群主.*?")) {
+                if (msg.contentToString().matches(".*?狗.*?")) {
+                    Api.sendMessage(group, new MessageChainBuilder().append(new At(1658936997)).append("狗是真的狗~~~").build());
+                } else {
+                    Api.sendMessage(group, new MessageChainBuilder().append(new At(sender.getId())).append("请叫狗群主~~~").build());
                 }
             }
         }
     }
 
+    @Capability
     private boolean setur() {
         if (msg.contentToString().startsWith("stpicr18")) {
             String listStr;
@@ -273,9 +278,10 @@ public class GroupMsgEvent extends BaseMsgEvent {
         return true;
     }
 
+    @Capability
     private boolean searchMsgLen() {
         if (msg.contentToString().startsWith("/va get msgcachelen ")) {
-            String keyWord = VanillaUtils.jsonToText(msg).substring("/va get msgcachelen ".length());
+            String keyWord = VanillaUtils.jsonToText(msg).substring("/va get msgcachelen " .length());
             List<MsgCache> msgCache = Va.getMessageCache().getMsgChainByKeyWord(keyWord, sender.getId(), group.getId(), 0, MSG_TYPE_GROUP);
             ForwardMessageBuilder forwardMessageBuilder = new ForwardMessageBuilder(group).add(sender, msg);
             Map<Long, Long> collect = msgCache.stream().collect(Collectors.groupingBy(MsgCache::getSender, Collectors.counting()));
@@ -292,6 +298,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
         return false;
     }
 
+    @Capability
     private boolean searchMsg() {
         // TODO 丢到InstructionMsgEvent中解析
         if (msg.contentToString().startsWith("/va get msgcache ")) {
@@ -306,7 +313,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
             // }
             // String keyWord = VanillaUtils.serializeToJsonCode(messages.build());
 
-            String keyWord = VanillaUtils.jsonToText(msg).substring("/va get msgcache ".length());
+            String keyWord = VanillaUtils.jsonToText(msg).substring("/va get msgcache " .length());
             MessageSource source = msg.get(MessageSource.Key);
             assert source != null;
             List<MsgCache> msgCache = Va.getMessageCache().getMsgChainByKeyWord(keyWord, sender.getId(), group.getId(), 0, MSG_TYPE_GROUP);
@@ -330,6 +337,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
     /**
      * 解析关键词回复
      */
+    @Capability
     private boolean keyRep() {
         /*
          * TODO 关键词回复解析:
@@ -370,6 +378,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
      *
      * @return 是否不继续执行
      */
+    @Capability
     private boolean rcon() {
         final String prefix = "/va mc.rcon ";
 
@@ -419,6 +428,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
      *
      * @return 是否不继续执行
      */
+    @Capability
     private boolean localRandomPic() {
         if (msg.contentToString().matches(".*?(来.?|.*?不够)[射蛇色涩瑟铯\uD83D\uDC0D].*?")) {
             String path = Va.getGlobalConfig().getOther().getHentaiPath();
@@ -463,6 +473,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
     /**
      * 抽老婆
      */
+    @Capability
     private boolean getWife() {
         String wifePrefix = Va.getGlobalConfig().getOther().getWifePrefix();
         if (msg.contentToString().startsWith(wifePrefix)) {
@@ -499,7 +510,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
                     if (wife == 0) {
                         ContactList<NormalMember> members = group.getMembers();
                         List<Long> qqs = members.stream().map(NormalMember::getId).collect(Collectors.toList()).
-                                stream().filter(qqId->qqId!=81236714).collect(Collectors.toList());  //这一行为新加排除指定号
+                                stream().filter(qqId -> qqId != 81236714).collect(Collectors.toList());  // 这一行为新加排除指定号
                         qqs.add(bot.getId());
                         wife = qqs.get((int) (Va.getRandom().nextDouble() * qqs.size()));
                         Va.getPluginData().getWife().put(key, nickKey + ":" + wife);
@@ -520,6 +531,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
         return false;
     }
 
+    @Capability
     private boolean chatGPTVoice() {
         final String prefix = "chatGPTVoice";
         if (msg.contentToString().startsWith(prefix)) {
@@ -548,6 +560,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
         return false;
     }
 
+    @Capability
     private boolean chatGPTVoiceVits() {
         final String prefix = "/vitsgpt";
         if (msg.contentToString().startsWith(prefix)) {
@@ -562,7 +575,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
 
             try {
                 InputStream inputStream;
-                try (HttpResponse authorization = HttpRequest.get("http://192.168.6.128:1234"+path).timeout(1000000).execute()) {
+                try (HttpResponse authorization = HttpRequest.get("http://192.168.6.128:1234" + path).timeout(1000000).execute()) {
                     inputStream = authorization.bodyStream();
                     ExternalResource externalResource = ExternalResource.create(inputStream);
                     OfflineAudio offlineAudio = group.uploadAudio(externalResource);
@@ -576,7 +589,9 @@ public class GroupMsgEvent extends BaseMsgEvent {
         }
         return false;
     }
-    private boolean VoiceVits() {
+
+    @Capability
+    private boolean voiceVits() {
         final String prefix = "/say";
         if (msg.contentToString().startsWith(prefix)) {
             String command = msg.contentToString().substring(prefix.length());
@@ -589,7 +604,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
 
             try {
                 InputStream inputStream;
-                try (HttpResponse authorization = HttpRequest.get("http://192.168.6.128:1234"+path).timeout(1000000).execute()) {
+                try (HttpResponse authorization = HttpRequest.get("http://192.168.6.128:1234" + path).timeout(1000000).execute()) {
                     inputStream = authorization.bodyStream();
                     ExternalResource externalResource = ExternalResource.create(inputStream);
                     OfflineAudio offlineAudio = group.uploadAudio(externalResource);
@@ -604,6 +619,8 @@ public class GroupMsgEvent extends BaseMsgEvent {
         }
         return false;
     }
+
+    @Capability
     private boolean chatGPT() {
         if (VanillaUtils.messageToString(msg).contains(new At(bot.getId()).toString())) {
             String command = VanillaUtils.messageToPlainText(msg, group);
@@ -619,6 +636,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
         return true;
     }
 
+    @Capability
     private void onlineRandomPic() {
         if (msg.contentToString().matches(".*?cos.*?")) {
             ForwardMessageBuilder forwardMessageBuilder = new ForwardMessageBuilder(group).add(sender, msg);
@@ -649,6 +667,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
      * Prompt 后接tag
      * UnPrompt 后接反向tag
      */
+    @Capability
     private void onlineAiPic() {
         final String msgString = msg.contentToString();
         if (msgString.startsWith("/va ai draw Prompt:")) {
@@ -659,7 +678,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
             String prompt;
             String unprompt = "";
 
-            String[] split = msgString.substring("/va ai draw Prompt:".length()).split("/UnPrompt:");
+            String[] split = msgString.substring("/va ai draw Prompt:" .length()).split("/UnPrompt:");
             prompt = split[0];
             if (split.length == 2) unprompt = split[1];
 
@@ -687,6 +706,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
     /**
      * 查询测试
      */
+    @Capability
     private void queryTest() {
         Other.QueryTest queryTest = Va.getGlobalConfig().getOther().getQueryTest();
         String somethingPath = queryTest.getPath();
@@ -709,7 +729,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
         }
     }
 
-
+    @Capability
     private void fileTest() {
         final String prefix = "filetest";
 
@@ -722,6 +742,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
         }
     }
 
+    @Capability
     private void audioTest() {
         final String prefix = "audio";
         if (msg.contentToString().startsWith(prefix)) {
@@ -750,6 +771,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
 
     }
 
+    @Capability
     private void test() {
         // 构造消息
         MessageChain chain = new MessageChainBuilder()
@@ -774,7 +796,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
             // logger.info(Arrays.toString(source.getInternalIds()));
 
             if (msg.contentToString().startsWith("/va recall by ")) {
-                String s = msg.contentToString().substring("/va recall by ".length());
+                String s = msg.contentToString().substring("/va recall by " .length());
 
                 int[] ids = Arrays.stream(s.substring(0, s.indexOf("|")).split(","))
                         .mapToInt(Integer::parseInt).toArray();
@@ -795,7 +817,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
             Api.sendMessage(group, msg.serializeToMiraiCode());
 
         if (msg.contentToString().startsWith("/va get msgcache ")) {
-            int no = Integer.parseInt(msg.contentToString().substring("/va get msgcache ".length()));
+            int no = Integer.parseInt(msg.contentToString().substring("/va get msgcache " .length()));
             MessageSource source = msg.get(MessageSource.Key);
             assert source != null;
             no = source.getIds()[0] - no;

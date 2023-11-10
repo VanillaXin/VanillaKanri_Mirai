@@ -1,4 +1,4 @@
-package xin.vanilla.enumeration
+package xin.vanilla.enums
 
 enum class PermissionLevel(val level: Int, val describe: String) {
     /**
