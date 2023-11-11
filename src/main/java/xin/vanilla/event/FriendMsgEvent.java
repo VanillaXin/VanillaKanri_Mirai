@@ -61,7 +61,7 @@ public class FriendMsgEvent extends BaseMsgEvent {
      * 解析关键词回复
      */
     @Capability
-    private void keyRep() {
+    private boolean keyRep() {
         // 关键词查询
         KeyData keyword = Va.getKeywordData().getKeyword(VanillaUtils.messageToString(msg), bot.getId(), -2);
         if (keyword.getId() > 0) {
@@ -70,7 +70,8 @@ public class FriendMsgEvent extends BaseMsgEvent {
             keyRepEntity.setMsg(VanillaUtils.messageToString(msg));
             keyRepEntity.setSenderId(friend.getId());
             keyRepEntity.setSenderName(friend.getNick());
-            Api.sendMessage(keyRepEntity, rep);
+            return null != Api.sendMessage(keyRepEntity, rep);
         }
+        return false;
     }
 }

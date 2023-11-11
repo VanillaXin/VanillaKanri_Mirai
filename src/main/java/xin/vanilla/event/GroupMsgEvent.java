@@ -367,8 +367,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
             keyRepEntity.setMsg(VanillaUtils.messageToString(msg));
             keyRepEntity.setSenderId(sender.getId());
             keyRepEntity.setSenderName(sender.getNick());
-            Api.sendMessage(keyRepEntity, rep);
-            return true;
+            return null != Api.sendMessage(keyRepEntity, rep);
         }
         return false;
     }
