@@ -8,10 +8,7 @@ import cn.hutool.http.HttpResponse;
 import cn.hutool.json.JSONUtil;
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
-import net.mamoe.mirai.contact.ContactList;
-import net.mamoe.mirai.contact.Group;
-import net.mamoe.mirai.contact.Member;
-import net.mamoe.mirai.contact.NormalMember;
+import net.mamoe.mirai.contact.*;
 import net.mamoe.mirai.message.data.*;
 import net.mamoe.mirai.utils.ExternalResource;
 import xin.vanilla.common.RegExpConfig;
@@ -24,6 +21,7 @@ import xin.vanilla.entity.event.events.GroupMessageEvents;
 import xin.vanilla.enums.PermissionLevel;
 import xin.vanilla.rcon.Rcon;
 import xin.vanilla.util.Api;
+import xin.vanilla.util.Frame;
 import xin.vanilla.util.StringUtils;
 import xin.vanilla.util.VanillaUtils;
 import xin.vanilla.util.sqlite.SqliteUtil;
@@ -45,6 +43,7 @@ import java.util.stream.Stream;
 import static xin.vanilla.common.RegExpConfig.RCON_RESULT_LIST;
 import static xin.vanilla.mapper.impl.MessageCacheImpl.MSG_TYPE_GROUP;
 
+@SuppressWarnings("unused")
 public class GroupMsgEvent extends BaseMsgEvent {
     private final GroupMessageEvents event;
     private final Group group;
@@ -93,7 +92,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
         if (msg.contentToString().startsWith("/va get msg ")) {
             String no = msg.toString();
             // Image.fromId()
-            Api.sendMessage(group, no);
+            Frame.sendMessage(group, no);
         }
         return false;
     }
@@ -104,7 +103,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
         if (msg.contentToString().startsWith("色图来")) {
             String listStr;
             try {
-                listStr = msg.contentToString().substring("色图来 " .length());
+                listStr = msg.contentToString().substring("色图来 ".length());
             } catch (Exception e) {
                 listStr = "";
             }
@@ -114,8 +113,8 @@ public class GroupMsgEvent extends BaseMsgEvent {
             map.put("tag", split);
             map.put("size", new String[]{"regular"});
             map.put("r18", 2);
-            // Api.sendMessage(group,JSONUtil.parse(split).toString());
-            // Api.sendMessage(group,JSONUtil.parse(map).toString());
+            // Frame.sendMessage(group,JSONUtil.parse(split).toString());
+            // Frame.sendMessage(group,JSONUtil.parse(map).toString());
             ExternalResource ex;
             try (HttpResponse tagsResponse = HttpRequest.post(url).timeout(3000)
                     .setHttpProxy("127.0.0.1", 10809)
@@ -136,16 +135,16 @@ public class GroupMsgEvent extends BaseMsgEvent {
                     try (InputStream inputStream = execute.bodyStream()) {
                         ex = ExternalResource.Companion.create(inputStream);
                         Image img = ExternalResource.uploadAsImage(ex, group);
-                        // Api.sendMessage(group, img);
-                        // Api.sendMessage(group, new MessageChainBuilder().append(img).append(new At(sender.getId())).append("tags:").append(tags).build());
-                        Api.sendMessage(group, new MessageChainBuilder().append(img).append(new At(sender.getId())).build()).recallIn(10 * 1000);
+                        // Frame.sendMessage(group, img);
+                        // Frame.sendMessage(group, new MessageChainBuilder().append(img).append(new At(sender.getId())).append("tags:").append(tags).build());
+                        Frame.sendMessage(group, new MessageChainBuilder().append(img).append(new At(sender.getId())).build()).recallIn(10 * 1000);
                         ex.close();
                     }
                 }
             } catch (Exception e) {
                 setuTemp();
-                Api.sendMessage(group, new MessageChainBuilder().append(new At(sender.getId())).append("未找到该标签图片随机发送标签").build());
-                e.printStackTrace();
+                Frame.sendMessage(group, new MessageChainBuilder().append(new At(sender.getId())).append("未找到该标签图片随机发送标签").build());
+                Va.getLogger().debug(e);
             }
         }
         return true;
@@ -162,11 +161,12 @@ public class GroupMsgEvent extends BaseMsgEvent {
                     inputStream = authorization.bodyStream();
                     ExternalResource externalResource = ExternalResource.create(inputStream);
                     OfflineAudio offlineAudio = group.uploadAudio(externalResource);
-                    Api.sendMessage(group, offlineAudio);
+                    Frame.sendMessage(group, offlineAudio);
                     externalResource.close();
                 }
             } catch (Exception e) {
-                Api.sendMessage(group, "可能是请求太快也可能是模型使用超时总之挂了，后续在改");
+                Contact contact = Frame.buildPrivateChatContact(bot, sender.getId());
+                Frame.sendMessage(contact, "可能是请求太快也可能是模型使用超时总之挂了，后续在改");
                 // throw new RuntimeException(e);
             }
         }
@@ -179,8 +179,8 @@ public class GroupMsgEvent extends BaseMsgEvent {
         // map.put("tag", split);
         map.put("size", new String[]{"regular"});
         map.put("r18", 0);
-        // Api.sendMessage(group,JSONUtil.parse(split).toString());
-        // Api.sendMessage(group,JSONUtil.parse(map).toString());
+        // Frame.sendMessage(group,JSONUtil.parse(split).toString());
+        // Frame.sendMessage(group,JSONUtil.parse(map).toString());
         ExternalResource ex;
         try (HttpResponse tagsResponse = HttpRequest.post(url).timeout(3000)
                 .setHttpProxy("127.0.0.1", 10809)
@@ -201,16 +201,16 @@ public class GroupMsgEvent extends BaseMsgEvent {
                 try (InputStream inputStream = execute.bodyStream()) {
                     ex = ExternalResource.Companion.create(inputStream);
                     Image img = ExternalResource.uploadAsImage(ex, group);
-                    // Api.sendMessage(group, img);
-                    // Api.sendMessage(group, new MessageChainBuilder().append(img).append(new At(sender.getId())).append("tags:").append(tags).build());
-                    Api.sendMessage(group, new MessageChainBuilder().append(img).append(new At(sender.getId())).build()).recallIn(10 * 1000);
+                    // Frame.sendMessage(group, img);
+                    // Frame.sendMessage(group, new MessageChainBuilder().append(img).append(new At(sender.getId())).append("tags:").append(tags).build());
+                    Frame.sendMessage(group, new MessageChainBuilder().append(img).append(new At(sender.getId())).build()).recallIn(10 * 1000);
                     ex.close();
                 }
             }
         } catch (Exception e) {
             setuTemp();
-            // Api.sendMessage(group, new MessageChainBuilder().append(new At(sender.getId())).append("未找到该标签图片").build());
-            e.printStackTrace();
+            // Frame.sendMessage(group, new MessageChainBuilder().append(new At(sender.getId())).append("未找到该标签图片").build());
+            Va.getLogger().debug(e);
         }
     }
 
@@ -219,9 +219,9 @@ public class GroupMsgEvent extends BaseMsgEvent {
         if (group.getId() == 855211670 || group.getId() == 745664013) {
             if (msg.contentToString().matches(".*?群主.*?")) {
                 if (msg.contentToString().matches(".*?狗.*?")) {
-                    Api.sendMessage(group, new MessageChainBuilder().append(new At(1658936997)).append("狗是真的狗~~~").build());
+                    Frame.sendMessage(group, new MessageChainBuilder().append(new At(1658936997)).append("狗是真的狗~~~").build());
                 } else {
-                    Api.sendMessage(group, new MessageChainBuilder().append(new At(sender.getId())).append("请叫狗群主~~~").build());
+                    Frame.sendMessage(group, new MessageChainBuilder().append(new At(sender.getId())).append("请叫狗群主~~~").build());
                 }
             }
         }
@@ -242,8 +242,8 @@ public class GroupMsgEvent extends BaseMsgEvent {
             // map.put("tag", split);
             map.put("size", new String[]{"regular"});
             map.put("r18", 1);
-            // Api.sendMessage(group,JSONUtil.parse(split).toString());
-            // Api.sendMessage(group,JSONUtil.parse(map).toString());
+            // Frame.sendMessage(group,JSONUtil.parse(split).toString());
+            // Frame.sendMessage(group,JSONUtil.parse(map).toString());
             ExternalResource ex;
             try (HttpResponse tagsResponse = HttpRequest.post(url).timeout(3000)
                     .setHttpProxy("127.0.0.1", 10809)
@@ -264,15 +264,15 @@ public class GroupMsgEvent extends BaseMsgEvent {
                     try (InputStream inputStream = execute.bodyStream()) {
                         ex = ExternalResource.Companion.create(inputStream);
                         Image img = ExternalResource.uploadAsImage(ex, group);
-                        // Api.sendMessage(group, img);
-                        // Api.sendMessage(group, new MessageChainBuilder().append(img).append(new At(sender.getId())).append("tags:").append(tags).build()).recallIn(10 * 1000);
-                        Api.sendMessage(group, new MessageChainBuilder().append(img).append(new At(sender.getId())).build()).recallIn(10 * 1000);
+                        // Frame.sendMessage(group, img);
+                        // Frame.sendMessage(group, new MessageChainBuilder().append(img).append(new At(sender.getId())).append("tags:").append(tags).build()).recallIn(10 * 1000);
+                        Frame.sendMessage(group, new MessageChainBuilder().append(img).append(new At(sender.getId())).build()).recallIn(10 * 1000);
                         ex.close();
                     }
                 }
             } catch (Exception e) {
-                Api.sendMessage(group, new MessageChainBuilder().append(new At(sender.getId())).append("未找到该标签图片").build());
-                e.printStackTrace();
+                Frame.sendMessage(group, new MessageChainBuilder().append(new At(sender.getId())).append("未找到该标签图片").build());
+                Va.getLogger().debug(e);
             }
         }
         return true;
@@ -281,15 +281,17 @@ public class GroupMsgEvent extends BaseMsgEvent {
     @Capability
     private boolean searchMsgLen() {
         if (msg.contentToString().startsWith("/va get msgcachelen ")) {
-            String keyWord = VanillaUtils.jsonToText(msg).substring("/va get msgcachelen " .length());
+            String keyWord = VanillaUtils.jsonToText(msg).substring("/va get msgcachelen ".length());
             List<MsgCache> msgCache = Va.getMessageCache().getMsgChainByKeyWord(keyWord, sender.getId(), group.getId(), 0, MSG_TYPE_GROUP);
             ForwardMessageBuilder forwardMessageBuilder = new ForwardMessageBuilder(group).add(sender, msg);
             Map<Long, Long> collect = msgCache.stream().collect(Collectors.groupingBy(MsgCache::getSender, Collectors.counting()));
-            // Api.sendMessage(group,collect.toString());
+            // Frame.sendMessage(group,collect.toString());
             collect.forEach((k, v) -> {
                 Member normalMember = sender.getGroup().get(k);
                 // MessageChain singleMessages = VanillaUtils.deserializeJsonCode("总共发了"+ v +"次");
-                forwardMessageBuilder.add(normalMember, new MessageChainBuilder().append("总共发了" + v + "次").build());
+                if (normalMember != null) {
+                    forwardMessageBuilder.add(normalMember, new MessageChainBuilder().append("总共发了").append(String.valueOf(v)).append("次").build());
+                }
             });
             group.sendMessage(forwardMessageBuilder.build());
             // Member normalMember = sender.getGroup().get(collect.get());
@@ -313,7 +315,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
             // }
             // String keyWord = VanillaUtils.serializeToJsonCode(messages.build());
 
-            String keyWord = VanillaUtils.jsonToText(msg).substring("/va get msgcache " .length());
+            String keyWord = VanillaUtils.jsonToText(msg).substring("/va get msgcache ".length());
             MessageSource source = msg.get(MessageSource.Key);
             assert source != null;
             List<MsgCache> msgCache = Va.getMessageCache().getMsgChainByKeyWord(keyWord, sender.getId(), group.getId(), 0, MSG_TYPE_GROUP);
@@ -328,7 +330,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
                     break;
                 }
             }
-            Api.sendMessage(group, forwardMessageBuilder.build());
+            Frame.sendMessage(group, forwardMessageBuilder.build());
         }
         return false;
     }
@@ -346,7 +348,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
          *  3.然后解析概率选择、条件判断 等特殊码
          *  4.接着解析群管类特殊码(防止群管类特殊码注入(不是))
          *  5.最后解析post、get、pic图片、引用回复、复读 等特殊码
-         *  6.转义替换敏感数据(GPT key等)、图片消息、语音消息、文本消息 应在Api.sendMessage里面处理
+         *  6.转义替换敏感数据(GPT key等)、图片消息、语音消息、文本消息 应在Frame.sendMessage里面处理
          *  待实现特殊码清单(关键词):
          *  概率选择、条件判断、get、post、RCON、合并转发、GPT上下文、REP(复读消息)、黑名单、白名单、夸奖、警告、图片消息(将发送内容转为图片)、文本消息(将发送内容转为纯文本)、语音消息(将发送内容转为语音) 等
          *  待实现特殊码清单(事件):
@@ -367,7 +369,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
             keyRepEntity.setMsg(VanillaUtils.messageToString(msg));
             keyRepEntity.setSenderId(sender.getId());
             keyRepEntity.setSenderName(sender.getNick());
-            return null != Api.sendMessage(keyRepEntity, rep);
+            return null != Frame.sendMessage(keyRepEntity, rep);
         }
         return false;
     }
@@ -411,13 +413,13 @@ public class GroupMsgEvent extends BaseMsgEvent {
                         }
                     }
                 }
-                Api.sendMessage(group, back);
+                Frame.sendMessage(group, back);
             } else {
-                Api.sendMessage(group, "香草世界不属于你。");
+                Frame.sendMessage(group, "香草世界不属于你。");
             }
             return true;
         } catch (IOException e) {
-            Api.sendMessage(group, "香草世界一片混沌。");
+            Frame.sendMessage(group, "香草世界一片混沌。");
         }
         return false;
     }
@@ -462,7 +464,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
         try (Stream<Path> paths = Files.walk(Paths.get(path))) {
             paths.filter(Files::isRegularFile).forEach(files::add);
         } catch (IOException e) {
-            e.printStackTrace();
+            Va.getLogger().error(e);
         }
         Collections.shuffle(files);
         return files;
@@ -490,7 +492,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
                         wife = Long.parseLong(wifeVal[1]);
                         // 判断有无抽过其他角色
                         if (!nickKey.equals(wifeVal[0])) {
-                            Api.sendMessage(group, new MessageChainBuilder()
+                            Frame.sendMessage(group, new MessageChainBuilder()
                                     .append(new At(sender.getId()))
                                     .append(" 今天你已经有 ").append(wifeVal[0]).append(" 啦!").build());
                             return true;
@@ -516,10 +518,10 @@ public class GroupMsgEvent extends BaseMsgEvent {
                     }
                     NormalMember normalMember = group.get(wife);
                     assert normalMember != null;
-                    Api.sendMessage(group, new MessageChainBuilder()
+                    Frame.sendMessage(group, new MessageChainBuilder()
                             .append(new At(sender.getId()))
                             .append(" 今天你的群友").append(nick).append("是\n")
-                            .append(Api.uploadImageByUrl(normalMember.getAvatarUrl(), group))
+                            .append(Frame.buildImageByUrl(normalMember.getAvatarUrl(), group))
                             .append("\n『").append(normalMember.getNick()).append("』")
                             .append("(").append(String.valueOf(wife)).append(") 喵!")
                             .build());
@@ -537,7 +539,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
             String command = msg.contentToString().substring(prefix.length());
 
             String back = Api.chatGPT(command);
-            Api.sendMessage(group, new MessageChainBuilder().append(new At(sender.getId())).append(back).build());
+            Frame.sendMessage(group, new MessageChainBuilder().append(new At(sender.getId())).append(back).build());
 
             String res = Api.translateToJP(back.replace("\r", "")).replace("\n", "").replace(" ", "");
             String path = Va.getGlobalConfig().getOther().getVoiceSavePath() + "\\";
@@ -549,10 +551,11 @@ public class GroupMsgEvent extends BaseMsgEvent {
                 File file = new File(path);
                 ExternalResource externalResource = ExternalResource.create(file);
                 OfflineAudio offlineAudio = group.uploadAudio(externalResource);
-                Api.sendMessage(group, offlineAudio);
+                Frame.sendMessage(group, offlineAudio);
                 externalResource.close();
             } catch (Exception e) {
-                Api.sendMessage(group, "可能是请求太快也可能是模型使用超时总之挂了，后续在改");
+                Contact contact = Frame.buildPrivateChatContact(bot, sender.getId());
+                Frame.sendMessage(contact, "可能是请求太快也可能是模型使用超时总之挂了，后续在改");
                 // throw new RuntimeException(e);
             }
         }
@@ -566,7 +569,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
             String command = msg.contentToString().substring(prefix.length());
 
             String back = Api.chatGPT(command);
-            Api.sendMessage(group, new MessageChainBuilder().append(new At(sender.getId())).append(back).build());
+            Frame.sendMessage(group, new MessageChainBuilder().append(new At(sender.getId())).append(back).build());
 
 //            String res = Api.translateToJP(back.replace("\r", "")).replace("\n", "").replace(" ", "");
             String path = Api.vits_so_src(back.replace("\r", "").replace("\n", "").replace(" ", ""));
@@ -578,11 +581,12 @@ public class GroupMsgEvent extends BaseMsgEvent {
                     inputStream = authorization.bodyStream();
                     ExternalResource externalResource = ExternalResource.create(inputStream);
                     OfflineAudio offlineAudio = group.uploadAudio(externalResource);
-                    Api.sendMessage(group, offlineAudio);
+                    Frame.sendMessage(group, offlineAudio);
                     externalResource.close();
                 }
             } catch (Exception e) {
-                Api.sendMessage(group, "可能是请求太快也可能是模型使用超时总之挂了，后续在改");
+                Contact contact = Frame.buildPrivateChatContact(bot, sender.getId());
+                Frame.sendMessage(contact, "可能是请求太快也可能是模型使用超时总之挂了，后续在改");
                 // throw new RuntimeException(e);
             }
         }
@@ -596,7 +600,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
             String command = msg.contentToString().substring(prefix.length());
 
 //            String back = Api.chatGPT(command);
-//            Api.sendMessage(group, new MessageChainBuilder().append(new At(sender.getId())).append(back).build());
+//            Frame.sendMessage(group, new MessageChainBuilder().append(new At(sender.getId())).append(back).build());
 
 //            String res = Api.translateToJP(command.replace("\r", "")).replace("\n", "").replace(" ", "");
             String path = Api.vits_so_src(command.replace("\r", "").replace("\n", "").replace(" ", ""));
@@ -607,11 +611,12 @@ public class GroupMsgEvent extends BaseMsgEvent {
                     inputStream = authorization.bodyStream();
                     ExternalResource externalResource = ExternalResource.create(inputStream);
                     OfflineAudio offlineAudio = group.uploadAudio(externalResource);
-                    Api.sendMessage(group, offlineAudio);
+                    Frame.sendMessage(group, offlineAudio);
                     externalResource.close();
                 }
             } catch (Exception e) {
-                Api.sendMessage(group, "可能是请求太快也可能是模型使用超时总之挂了，后续在改");
+                Contact contact = Frame.buildPrivateChatContact(bot, sender.getId());
+                Frame.sendMessage(contact, "可能是请求太快也可能是模型使用超时总之挂了，后续在改");
                 // throw new RuntimeException(e);
             }
 
@@ -623,13 +628,14 @@ public class GroupMsgEvent extends BaseMsgEvent {
     private boolean chatGPT() {
         if (VanillaUtils.messageToString(msg).contains(new At(bot.getId()).toString())) {
             String command = VanillaUtils.messageToPlainText(msg, group);
-            // Api.sendMessage(group,command);
+            // Frame.sendMessage(group,command);
             // final String prefix = "chatGPT";
             String back = Api.chatGPT(command);
             if (StringUtils.isNullOrEmptyEx(back)) {
-                Api.sendMessage(group, "可能是请求太快也可能是模型使用超时总之挂了，后续在改");
+                Contact contact = Frame.buildPrivateChatContact(bot, sender.getId());
+                Frame.sendMessage(contact, "可能是请求太快也可能是模型使用超时总之挂了，后续在改");
             } else {
-                Api.sendMessage(group, back);
+                Frame.sendMessage(group, back);
             }
         }
         return true;
@@ -672,21 +678,21 @@ public class GroupMsgEvent extends BaseMsgEvent {
         if (msgString.startsWith("/va ai draw Prompt:")) {
             String key = Va.getGlobalConfig().getOther().getAiDrawKey();
             String aiDrawUrl = Va.getGlobalConfig().getOther().getAiDrawUrl();
-            // Api.sendMessage(group,msg.contentToString().substring("/va ai draw Prompt:".length(),msg.contentToString().indexOf("/UnPrompt:")));
+            // Frame.sendMessage(group,msg.contentToString().substring("/va ai draw Prompt:".length(),msg.contentToString().indexOf("/UnPrompt:")));
 
             String prompt;
             String unprompt = "";
 
-            String[] split = msgString.substring("/va ai draw Prompt:" .length()).split("/UnPrompt:");
+            String[] split = msgString.substring("/va ai draw Prompt:".length()).split("/UnPrompt:");
             prompt = split[0];
             if (split.length == 2) unprompt = split[1];
 
             String uri = null;
             try {
                 uri = Api.aiPictureV2(prompt, unprompt);
-                // Api.sendMessage(group,uri);
+                // Frame.sendMessage(group,uri);
             } catch (Exception e) {
-                Api.sendMessage(group, "请求出错");
+                Frame.sendMessage(group, "请求出错");
             }
 
             InputStream inputStream;
@@ -694,7 +700,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
                 inputStream = authorization.bodyStream();
                 try (ExternalResource externalResource = ExternalResource.Companion.create(inputStream)) {
                     Image image = ExternalResource.uploadAsImage(externalResource, group);
-                    Api.sendMessage(group, new MessageChainBuilder().append(new At(sender.getId())).append(image).build());
+                    Frame.sendMessage(group, new MessageChainBuilder().append(new At(sender.getId())).append(image).build());
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -721,8 +727,8 @@ public class GroupMsgEvent extends BaseMsgEvent {
                 SqliteUtil sqliteUtil = SqliteUtil.getInstance(somethingPath, properties);
                 String[][] strings = sqliteUtil.getStrings2(queryTest.getSql().replaceAll("\\$\\{value}", value));
                 if (strings != null && strings.length > 0)
-                    Api.sendMessage(group, "查询到数据: " + StringUtils.convertToString(strings, ", ", "\n"));
-                else Api.sendMessage(group, "啥也没有");
+                    Frame.sendMessage(group, "查询到数据: " + StringUtils.convertToString(strings, ", ", "\n"));
+                else Frame.sendMessage(group, "啥也没有");
             } catch (SQLException ignored) {
             }
         }
@@ -734,10 +740,10 @@ public class GroupMsgEvent extends BaseMsgEvent {
 
         if (msg.contentToString().startsWith(prefix)) {
             String s = Va.getGlobalConfig().getChatGptKey().get();
-            Api.sendMessage(group, s);
+            Frame.sendMessage(group, s);
             String chatGPTKey = Va.getGlobalConfig().getOther().getChatGPTKey();
 
-            Api.sendMessage(group, new MessageChainBuilder().append(new At(sender.getId())).append(chatGPTKey).build());
+            Frame.sendMessage(group, new MessageChainBuilder().append(new At(sender.getId())).append(chatGPTKey).build());
         }
     }
 
@@ -750,7 +756,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
             String path = Va.getGlobalConfig().getOther().getVoiceSavePath() + "\\";
             String id = IdUtil.randomUUID();
             path = path + id + ".wav";
-            Api.sendMessage(group, new MessageChainBuilder()
+            Frame.sendMessage(group, new MessageChainBuilder()
                     .append(new At(sender.getId()))
                     .append(res)
                     .build());
@@ -761,9 +767,10 @@ public class GroupMsgEvent extends BaseMsgEvent {
                 File file = new File(path);
                 ExternalResource externalResource = ExternalResource.create(file);
                 OfflineAudio offlineAudio = group.uploadAudio(externalResource);
-                Api.sendMessage(group, offlineAudio);
+                Frame.sendMessage(group, offlineAudio);
             } catch (Exception e) {
-                Api.sendMessage(group, "可能是请求太快也可能是模型使用超时总之挂了，后续在改");
+                Contact contact = Frame.buildPrivateChatContact(bot, sender.getId());
+                Frame.sendMessage(contact, "可能是请求太快也可能是模型使用超时总之挂了，后续在改");
                 // throw new RuntimeException(e);
             }
         }
@@ -795,7 +802,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
             // logger.info(Arrays.toString(source.getInternalIds()));
 
             if (msg.contentToString().startsWith("/va recall by ")) {
-                String s = msg.contentToString().substring("/va recall by " .length());
+                String s = msg.contentToString().substring("/va recall by ".length());
 
                 int[] ids = Arrays.stream(s.substring(0, s.indexOf("|")).split(","))
                         .mapToInt(Integer::parseInt).toArray();
@@ -813,59 +820,59 @@ public class GroupMsgEvent extends BaseMsgEvent {
 
         // 序列化转码消息
         if (msg.contentToString().startsWith("/va to string "))
-            Api.sendMessage(group, msg.serializeToMiraiCode());
+            Frame.sendMessage(group, msg.serializeToMiraiCode());
 
         if (msg.contentToString().startsWith("/va get msgcache ")) {
-            int no = Integer.parseInt(msg.contentToString().substring("/va get msgcache " .length()));
+            int no = Integer.parseInt(msg.contentToString().substring("/va get msgcache ".length()));
             MessageSource source = msg.get(MessageSource.Key);
             assert source != null;
             no = source.getIds()[0] - no;
             String msgCache = Va.getMessageCache().getMsgJsonCode(String.valueOf(no), group.getId(), MSG_TYPE_GROUP);
-            Api.sendMessage(group, msgCache);
+            Frame.sendMessage(group, msgCache);
         }
 
         // if (msg.contentToString().equals("/va get string")) {
-        //     Api.sendMessage(group, "testString is: " + Va.getGlobalConfig().getMc_rcon_ip());
+        //     Frame.sendMessage(group, "testString is: " + Va.getGlobalConfig().getMc_rcon_ip());
         // }
         // if (msg.contentToString().startsWith("/va set string ")) {
         //     String s = msg.contentToString().substring("/va set string ".length());
         //     Va.getGlobalConfig().setMc_rcon_ip(s);
-        //     Api.sendMessage(group, "testString now is: " + Va.getGlobalConfig().getMc_rcon_ip());
+        //     Frame.sendMessage(group, "testString now is: " + Va.getGlobalConfig().getMc_rcon_ip());
         // }
 
         // if (msg.contentToString().equals("/va get int")) {
-        //     Api.sendMessage(group, "testInt is: " + Va.getGlobalConfig().getMc_rcon_port());
+        //     Frame.sendMessage(group, "testInt is: " + Va.getGlobalConfig().getMc_rcon_port());
         // }
         // if (msg.contentToString().startsWith("/va set int ")) {
         //     int s = Integer.parseInt(msg.contentToString().substring("/va set int ".length()));
         //     Va.getGlobalConfig().setMc_rcon_port(s);
-        //     Api.sendMessage(group, "testInt now is: " + Va.getGlobalConfig().getMc_rcon_port());
+        //     Frame.sendMessage(group, "testInt now is: " + Va.getGlobalConfig().getMc_rcon_port());
         // }
 
         if (msg.contentToString().equals("/va get owner")) {
-            Api.sendMessage(group, "botOwner is: " + Va.getGlobalConfig().getPermissions().get(bot.getId()).getBotOwner());
+            Frame.sendMessage(group, "botOwner is: " + Va.getGlobalConfig().getPermissions().get(bot.getId()).getBotOwner());
         }
         // if (msg.contentToString().startsWith("/va set owner ")) {
         //     String s = msg.contentToString().substring("/va set owner ".length());
         //     Va.getGlobalConfig().getPermissions().get(bot.getId()).setBotOwner(Long.parseLong(s));
-        //     Api.sendMessage(group, "botOwner now is: " + Va.getGlobalConfig().getPermissions().get(bot.getId()).getBotOwner());
+        //     Frame.sendMessage(group, "botOwner now is: " + Va.getGlobalConfig().getPermissions().get(bot.getId()).getBotOwner());
         // }
 
         if (msg.contentToString().equals("/va get superAdmin")) {
-            Api.sendMessage(group, "superAdmin is: " + Va.getGlobalConfig().getPermissions().get(bot.getId()).getSuperAdmin());
+            Frame.sendMessage(group, "superAdmin is: " + Va.getGlobalConfig().getPermissions().get(bot.getId()).getSuperAdmin());
         }
         // if (msg.contentToString().startsWith("/va set superAdmin ")) {
         //     String s = msg.contentToString().substring("/va set superAdmin ".length());
         //     Va.getGlobalConfig().getPermissions().get(bot.getId()).setSuperAdmin(new HashSet<Long>() {{
         //         addAll(Arrays.stream(s.split(" ")).map(Long::parseLong).collect(Collectors.toList()));
         //     }});
-        //     Api.sendMessage(group, "superAdmin now is: " + Va.getGlobalConfig().getPermissions().get(bot.getId()).getSuperAdmin());
+        //     Frame.sendMessage(group, "superAdmin now is: " + Va.getGlobalConfig().getPermissions().get(bot.getId()).getSuperAdmin());
         // }
 
         // Va.config.refreshSource();
 
         if (msg.contentToString().equals("/va get secondaryPrefix")) {
-            Api.sendMessage(group, Va.getGlobalConfig().getInstructions().getSecondaryPrefix().toString());
+            Frame.sendMessage(group, Va.getGlobalConfig().getInstructions().getSecondaryPrefix().toString());
         }
     }
 }

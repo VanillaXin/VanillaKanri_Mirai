@@ -743,7 +743,7 @@ public class VanillaUtils {
                     }
                     StringBuilder picCode = new StringBuilder();
                     for (int i = 0; i < num; i++) {
-                        String image = Api.uploadImageByUrl(url, group != null ? group : sender).serializeToMiraiCode();
+                        String image = Frame.buildImageByUrl(url, group != null ? group : sender).serializeToMiraiCode();
                         picCode.append(image);
                     }
                     result = result.replaceAll(StringUtils.escapeExprSpecialWord(matcher.group(0)), picCode.toString());

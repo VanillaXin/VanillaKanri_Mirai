@@ -127,8 +127,8 @@ public class InstructionMsgEvent {
         rep.append("CPU占用: ").append(cpuInfo.getUsed()).append("%\n");
 
         rep.append("Mirai Console - ").append(version);
-        if (group != null) Api.sendMessage(group, rep.toString());
-        else Api.sendMessage(sender, rep.toString());
+        if (group != null) Frame.sendMessage(group, rep.toString());
+        else Frame.sendMessage(sender, rep.toString());
         return RETURN_BREAK_TRUE;
     }
 
@@ -157,7 +157,7 @@ public class InstructionMsgEvent {
             String tapTimeKey = StringUtils.getTapTimeKey(thatGroup.getId(), sender.getId());
             long last = VanillaUtils.getDataCacheAsLong(tapTimeKey);
             if (last > new Date().getTime()) {
-                Api.sendMessage(thatGroup, "操作太快啦，休息一下吧。");
+                Frame.sendMessage(thatGroup, "操作太快啦，休息一下吧。");
                 return RETURN_CONTINUE;
             } else {
                 VanillaUtils.setDateCache(tapTimeKey, i * 10L * 1000L + new Date().getTime());
@@ -174,7 +174,7 @@ public class InstructionMsgEvent {
                 });
             }
             if (qqs.length == 0)
-                Api.sendMessage(thatGroup, "待操作对象为空");
+                Frame.sendMessage(thatGroup, "待操作对象为空");
         }
         return RETURN_BREAK_TRUE;
     }
@@ -208,15 +208,15 @@ public class InstructionMsgEvent {
             if (!StringUtils.isNullOrEmpty(rep.toString())) {
                 rep.delete(0, 1);
                 if (rep.toString().equals("")) {
-                    Api.sendMessage(thatGroup, "操作失败");
+                    Frame.sendMessage(thatGroup, "操作失败");
                 } else {
                     if (StringUtils.isNullOrEmpty(text))
-                        Api.sendMessage(thatGroup, "已清除 " + rep + " 的名片");
+                        Frame.sendMessage(thatGroup, "已清除 " + rep + " 的名片");
                     else
-                        Api.sendMessage(thatGroup, "已将 " + rep + " 的名片修改为:\n" + text);
+                        Frame.sendMessage(thatGroup, "已将 " + rep + " 的名片修改为:\n" + text);
                 }
             } else {
-                Api.sendMessage(thatGroup, "待操作对象为空");
+                Frame.sendMessage(thatGroup, "待操作对象为空");
             }
         }
         return RETURN_BREAK_TRUE;
@@ -242,7 +242,7 @@ public class InstructionMsgEvent {
                 NormalMember normalMember = thatGroup.get(sender.getId());
                 if (normalMember != null) {
                     normalMember.setSpecialTitle(tag);
-                    Api.sendMessage(thatGroup, "已将阁下的头衔修改为:\n" + tag);
+                    Frame.sendMessage(thatGroup, "已将阁下的头衔修改为:\n" + tag);
                 }
             } else {
                 StringBuilder successMsg = new StringBuilder();
@@ -257,12 +257,12 @@ public class InstructionMsgEvent {
                 if (!StringUtils.isNullOrEmpty(successMsg.toString())) {
                     successMsg.delete(0, 1);
                     if (successMsg.toString().equals("")) {
-                        Api.sendMessage(thatGroup, "操作失败");
+                        Frame.sendMessage(thatGroup, "操作失败");
                     } else {
-                        Api.sendMessage(thatGroup, "已修改 " + successMsg + " 的头衔为:\n" + tag);
+                        Frame.sendMessage(thatGroup, "已修改 " + successMsg + " 的头衔为:\n" + tag);
                     }
                 } else {
-                    Api.sendMessage(thatGroup, "待操作对象为空");
+                    Frame.sendMessage(thatGroup, "待操作对象为空");
                 }
             }
         }
@@ -290,9 +290,9 @@ public class InstructionMsgEvent {
                 QuoteReply quoteReply = msg.get(QuoteReply.Key);
                 if (quoteReply != null) {
                     if (thatGroup.setEssenceMessage(quoteReply.getSource())) {
-                        Api.sendMessage(thatGroup, new MessageChainBuilder().append(quoteReply).append("已将该消息设为精华").build());
+                        Frame.sendMessage(thatGroup, new MessageChainBuilder().append(quoteReply).append("已将该消息设为精华").build());
                     } else {
-                        Api.sendMessage(thatGroup, "精华消息设置失败");
+                        Frame.sendMessage(thatGroup, "精华消息设置失败");
                     }
                 }
             }
@@ -303,11 +303,11 @@ public class InstructionMsgEvent {
             // }
             // }
             else {
-                MessageReceipt<Contact> contactMessageReceipt = Api.sendMessage(thatGroup, MessageChain.deserializeFromMiraiCode(text, thatGroup));
+                MessageReceipt<Contact> contactMessageReceipt = Frame.sendMessage(thatGroup, MessageChain.deserializeFromMiraiCode(text, thatGroup));
                 if (!thatGroup.setEssenceMessage(contactMessageReceipt.getSource())) {
                     // 设置失败就撤回消息
                     contactMessageReceipt.recall();
-                    Api.sendMessage(thatGroup, "精华消息设置失败");
+                    Frame.sendMessage(thatGroup, "精华消息设置失败");
                 }
             }
         }
@@ -335,7 +335,7 @@ public class InstructionMsgEvent {
             if (qqs.length == 1 && base.getAtAllId().contains(String.valueOf(qqs[0]))) {
                 if (thatGroup.getSettings().isMuteAll()) {
                     thatGroup.getSettings().setMuteAll(false);
-                    Api.sendMessage(thatGroup, "已关闭全体禁言");
+                    Frame.sendMessage(thatGroup, "已关闭全体禁言");
                 }
             } else {
                 for (long qq : qqs) {
@@ -350,12 +350,12 @@ public class InstructionMsgEvent {
                 }
                 if (!StringUtils.isNullOrEmpty(rep.toString())) {
                     if (rep.toString().equals(",")) {
-                        Api.sendMessage(thatGroup, "操作失败");
+                        Frame.sendMessage(thatGroup, "操作失败");
                     } else {
-                        Api.sendMessage(thatGroup, "已解除 " + rep.delete(0, 1) + " 的禁言");
+                        Frame.sendMessage(thatGroup, "已解除 " + rep.delete(0, 1) + " 的禁言");
                     }
                 } else {
-                    Api.sendMessage(thatGroup, "待操作对象为空或未被禁言");
+                    Frame.sendMessage(thatGroup, "待操作对象为空或未被禁言");
                 }
             }
         }
@@ -382,14 +382,14 @@ public class InstructionMsgEvent {
             if (qqs.length == 1 && base.getAtAllId().contains(String.valueOf(qqs[0]))) {
                 if (!thatGroup.getSettings().isMuteAll()) {
                     thatGroup.getSettings().setMuteAll(true);
-                    Api.sendMessage(thatGroup, "已开启全体禁言");
+                    Frame.sendMessage(thatGroup, "已开启全体禁言");
                     if (!StringUtils.isNullOrEmpty(time)) {
                         Va.delayed(Math.round(Float.parseFloat(time)) * 60L * 1000L, () -> {
                             if (thatGroup.getSettings().isMuteAll()) {
                                 thatGroup.getSettings().setMuteAll(false);
                             }
                         });
-                        Api.sendMessage(thatGroup, "并将在 " + time + " 分钟后关闭全体禁言");
+                        Frame.sendMessage(thatGroup, "并将在 " + time + " 分钟后关闭全体禁言");
                     }
                 }
             } else if (!StringUtils.isNullOrEmpty(time)) {
@@ -412,12 +412,12 @@ public class InstructionMsgEvent {
                 if (!StringUtils.isNullOrEmpty(successMsg.toString())) {
                     successMsg.delete(0, 1);
                     if (successMsg.toString().equals("")) {
-                        Api.sendMessage(thatGroup, "权限不足");
+                        Frame.sendMessage(thatGroup, "权限不足");
                     } else {
-                        Api.sendMessage(thatGroup, "已禁言 " + successMsg + " " + time + "分钟");
+                        Frame.sendMessage(thatGroup, "已禁言 " + successMsg + " " + time + "分钟");
                     }
                 } else {
-                    Api.sendMessage(thatGroup, "待操作对象为空");
+                    Frame.sendMessage(thatGroup, "待操作对象为空");
                 }
             }
         }
@@ -477,7 +477,7 @@ public class InstructionMsgEvent {
                         recall(id);
                     }
                 } else {
-                    Api.sendMessage(group, "表达式『" + text + "』有误");
+                    Frame.sendMessage(group, "表达式『" + text + "』有误");
                 }
             }
         }
@@ -515,10 +515,10 @@ public class InstructionMsgEvent {
             if (!StringUtils.isNullOrEmpty(rep.toString())) {
                 rep.delete(0, 1);
                 if (operation)
-                    Api.sendMessage(thatGroup, "已将 " + rep + " 添加为管理员");
-                else Api.sendMessage(thatGroup, "已取消 " + rep + " 的管理员");
+                    Frame.sendMessage(thatGroup, "已将 " + rep + " 添加为管理员");
+                else Frame.sendMessage(thatGroup, "已取消 " + rep + " 的管理员");
             } else {
-                Api.sendMessage(thatGroup, "待操作对象为空");
+                Frame.sendMessage(thatGroup, "待操作对象为空");
             }
         }
         return RETURN_BREAK_TRUE;
@@ -544,7 +544,7 @@ public class InstructionMsgEvent {
                 rep.append(groupId).append(":\n");
                 rep.append(StringUtils.toString(Va.getGroupConfig().getDeputyAdmin(groupId)));
             }
-            Api.sendMessage(group, "副管列表:" + rep);
+            Frame.sendMessage(group, "副管列表:" + rep);
             return RETURN_BREAK_TRUE;
         }
         for (long qq : qqs) {
@@ -577,11 +577,11 @@ public class InstructionMsgEvent {
             if (groups[0] >= 0) flag = "群副管";
 
             if (base.getAdd().contains(text))
-                Api.sendMessage(group, "已将 " + rep + " 添加为" + flag);
+                Frame.sendMessage(group, "已将 " + rep + " 添加为" + flag);
             else if (base.getDelete().contains(text))
-                Api.sendMessage(group, "已取消 " + rep + " 的" + flag + "权限");
+                Frame.sendMessage(group, "已取消 " + rep + " 的" + flag + "权限");
         } else {
-            Api.sendMessage(group, "待操作对象为空");
+            Frame.sendMessage(group, "待操作对象为空");
         }
         return RETURN_BREAK_TRUE;
     }
@@ -605,7 +605,7 @@ public class InstructionMsgEvent {
                 rep.append(groupId).append(":\n");
                 rep.append(StringUtils.toString(Va.getGroupConfig().getDeputyAdmin(groupId)));
             }
-            Api.sendMessage(group, "副管列表:" + rep);
+            Frame.sendMessage(group, "副管列表:" + rep);
             return RETURN_BREAK_TRUE;
         }
         for (long qq : qqs) {
@@ -623,11 +623,11 @@ public class InstructionMsgEvent {
         if (!StringUtils.isNullOrEmpty(rep.toString())) {
             rep.delete(0, 1);
             if (base.getAdd().contains(text))
-                Api.sendMessage(group, "已将 " + rep + " 添加为群副管");
+                Frame.sendMessage(group, "已将 " + rep + " 添加为群副管");
             else if (base.getDelete().contains(text))
-                Api.sendMessage(group, "已取消 " + rep + " 的群副管权限");
+                Frame.sendMessage(group, "已取消 " + rep + " 的群副管权限");
         } else {
-            Api.sendMessage(group, "待操作对象为空");
+            Frame.sendMessage(group, "待操作对象为空");
         }
 
         return RETURN_BREAK_TRUE;
@@ -645,7 +645,7 @@ public class InstructionMsgEvent {
         if (qqs.length == 0 && base.getSelect().contains(text)) {
             rep.append("主管列表:\n");
             rep.append(StringUtils.toString(Va.getGlobalConfig().getPermissions(bot.getId()).getBotAdmin()));
-            Api.sendMessage(group, rep.toString());
+            Frame.sendMessage(group, rep.toString());
             return RETURN_BREAK_TRUE;
         }
         for (long qq : qqs) {
@@ -661,11 +661,11 @@ public class InstructionMsgEvent {
             rep.delete(0, 1);
 
             if (base.getAdd().contains(text))
-                Api.sendMessage(group, "已将 " + rep + " 添加为主管");
+                Frame.sendMessage(group, "已将 " + rep + " 添加为主管");
             else if (base.getDelete().contains(text))
-                Api.sendMessage(group, "已取消 " + rep + " 的主管权限");
+                Frame.sendMessage(group, "已取消 " + rep + " 的主管权限");
         } else {
-            Api.sendMessage(group, "待操作对象为空");
+            Frame.sendMessage(group, "待操作对象为空");
         }
         return RETURN_BREAK_TRUE;
     }
@@ -682,7 +682,7 @@ public class InstructionMsgEvent {
         if (qqs.length == 0 && base.getSelect().contains(text)) {
             rep.append("超管列表:\n");
             rep.append(StringUtils.toString(Va.getGlobalConfig().getPermissions(bot.getId()).getSuperAdmin()));
-            Api.sendMessage(group, rep.toString());
+            Frame.sendMessage(group, rep.toString());
             return RETURN_BREAK_TRUE;
         }
         for (long qq : qqs) {
@@ -698,11 +698,11 @@ public class InstructionMsgEvent {
             rep.delete(0, 1);
 
             if (base.getAdd().contains(text))
-                Api.sendMessage(group, "已将 " + rep + " 添加为超管");
+                Frame.sendMessage(group, "已将 " + rep + " 添加为超管");
             else if (base.getDelete().contains(text))
-                Api.sendMessage(group, "已取消 " + rep + " 的超管权限");
+                Frame.sendMessage(group, "已取消 " + rep + " 的超管权限");
         } else {
-            Api.sendMessage(group, "待操作对象为空");
+            Frame.sendMessage(group, "待操作对象为空");
         }
         return RETURN_BREAK_TRUE;
     }
@@ -719,18 +719,18 @@ public class InstructionMsgEvent {
             long qq = qqs[0];
             if (base.getAdd().contains(text)) {
                 Va.getGlobalConfig().getPermissions(bot.getId()).setBotOwner(qq);
-                Api.sendMessage(group, "已将 " + qq + "设置为主人");
+                Frame.sendMessage(group, "已将 " + qq + "设置为主人");
             } else if (base.getDelete().contains(text)) {
                 if (Va.getGlobalConfig().getPermissions(bot.getId()).getBotOwner() == qq) {
                     Va.getGlobalConfig().getPermissions(bot.getId()).setBotOwner(0);
-                    Api.sendMessage(group, "已删除主人 " + qq);
+                    Frame.sendMessage(group, "已删除主人 " + qq);
                 } else {
-                    Api.sendMessage(group, qq + "并不是我的主人");
+                    Frame.sendMessage(group, qq + "并不是我的主人");
                 }
             }
             return RETURN_BREAK_TRUE;
         }
-        Api.sendMessage(group, "待操作对象为空");
+        Frame.sendMessage(group, "待操作对象为空");
         return RETURN_BREAK_TRUE;
     }
 
@@ -768,12 +768,12 @@ public class InstructionMsgEvent {
             if (!StringUtils.isNullOrEmpty(successMsg.toString())) {
                 successMsg.delete(0, 1);
                 if (successMsg.toString().equals("")) {
-                    Api.sendMessage(thatGroup, "权限不足");
+                    Frame.sendMessage(thatGroup, "权限不足");
                 } else {
-                    Api.sendMessage(thatGroup, "已将 " + successMsg + " 移除群聊");
+                    Frame.sendMessage(thatGroup, "已将 " + successMsg + " 移除群聊");
                 }
             } else {
-                Api.sendMessage(thatGroup, "待操作对象为空");
+                Frame.sendMessage(thatGroup, "待操作对象为空");
             }
         }
         return RETURN_BREAK_TRUE;
@@ -838,7 +838,7 @@ public class InstructionMsgEvent {
             } else {
                 forwardMessageBuilder.add(bot, new PlainText("添加失败"));
             }
-            Api.sendMessage(group, forwardMessageBuilder.build());
+            Frame.sendMessage(group, forwardMessageBuilder.build());
             return RETURN_BREAK_TRUE;
         }
         return RETURN_CONTINUE;
@@ -858,7 +858,7 @@ public class InstructionMsgEvent {
 
             groups = getGroups(reg);
             if (groups.length > 1) {
-                Api.sendMessage(group, "表达式有误: 只能同时操作一个群");
+                Frame.sendMessage(group, "表达式有误: 只能同时操作一个群");
             }
 
             long groupId = groups[0];
@@ -874,7 +874,7 @@ public class InstructionMsgEvent {
             }
 
             if (page < 1) {
-                Api.sendMessage(group, "查询的页数有误");
+                Frame.sendMessage(group, "查询的页数有误");
                 return RETURN_BREAK_TRUE;
             }
 
@@ -901,7 +901,7 @@ public class InstructionMsgEvent {
                     forwardMessageBuilder.add(bot, MessageChain.deserializeFromMiraiCode(keyData.getRepDecode(true).replaceAll("\\[vacode:", "[☣:").replaceAll(":chatgpt:.*?]", ":chatgpt:***]"), group));
                 }
             }
-            Api.sendMessage(group, forwardMessageBuilder.build());
+            Frame.sendMessage(group, forwardMessageBuilder.build());
             return RETURN_BREAK_TRUE;
         }
         return RETURN_CONTINUE;
@@ -926,7 +926,7 @@ public class InstructionMsgEvent {
 
             groups = getGroups(reg);
             if (groups.length > 1) {
-                Api.sendMessage(group, "表达式有误: 只能同时操作一个群");
+                Frame.sendMessage(group, "表达式有误: 只能同时操作一个群");
             }
 
             type = reg.getMatcher().group("type");
@@ -934,7 +934,7 @@ public class InstructionMsgEvent {
                 String key = reg.getMatcher().group("keyIds");
                 keyIds = Arrays.stream(key.split("\\s")).mapToLong(Long::parseLong).toArray();
             } catch (Exception ignored) {
-                Api.sendMessage(group, "表达式有误");
+                Frame.sendMessage(group, "表达式有误");
                 return RETURN_BREAK_TRUE;
             }
 
@@ -954,7 +954,7 @@ public class InstructionMsgEvent {
                     forwardMessageBuilder.add(bot, new PlainText("关键词编号: " + keyId + "\n删除失败"));
                 }
             }
-            Api.sendMessage(group, forwardMessageBuilder.build());
+            Frame.sendMessage(group, forwardMessageBuilder.build());
             return RETURN_BREAK_TRUE;
         }
         return RETURN_CONTINUE;
@@ -1020,7 +1020,7 @@ public class InstructionMsgEvent {
                     String groupIdString = s.substring("群号: ".length(), s.indexOf("\n关键词编号: "));
                     groupId = Long.parseLong(groupIdString.equals("全局") ? "-1" : groupIdString);
                 } catch (Exception e) {
-                    Api.sendMessage(group, "无法解析该消息");
+                    Frame.sendMessage(group, "无法解析该消息");
                     return RETURN_BREAK_TRUE;
                 }
                 long keyId = Long.parseLong(s.substring(s.indexOf("\n关键词编号: ") + "\n关键词编号: ".length()));
@@ -1044,9 +1044,9 @@ public class InstructionMsgEvent {
             }
         }
         if (tf) {
-            Api.sendMessage(group, forwardMessageBuilder.build());
+            Frame.sendMessage(group, forwardMessageBuilder.build());
         } else {
-            Api.sendMessage(group, "无法解析该消息");
+            Frame.sendMessage(group, "无法解析该消息");
         }
         return RETURN_BREAK_TRUE;
     }
@@ -1068,7 +1068,7 @@ public class InstructionMsgEvent {
 
             groups = getGroups(reg);
             if (groups.length > 1) {
-                Api.sendMessage(group, "表达式有误: 只能同时操作一个群");
+                Frame.sendMessage(group, "表达式有误: 只能同时操作一个群");
             }
 
             type = reg.getMatcher().group("type");
@@ -1076,7 +1076,7 @@ public class InstructionMsgEvent {
                 String key = reg.getMatcher().group("keyIds");
                 keyIds = Arrays.stream(key.split("\\s")).mapToLong(Long::parseLong).toArray();
             } catch (Exception ignored) {
-                Api.sendMessage(group, "表达式有误");
+                Frame.sendMessage(group, "表达式有误");
                 return RETURN_BREAK_TRUE;
             }
 
@@ -1093,7 +1093,7 @@ public class InstructionMsgEvent {
                     forwardMessageBuilder.add(bot, new PlainText("关键词编号: " + keyId + "\n操作失败"));
                 }
             }
-            Api.sendMessage(group, forwardMessageBuilder.build());
+            Frame.sendMessage(group, forwardMessageBuilder.build());
             return RETURN_BREAK_TRUE;
         }
         return RETURN_CONTINUE;

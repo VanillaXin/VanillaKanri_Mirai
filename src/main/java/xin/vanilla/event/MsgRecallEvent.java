@@ -8,8 +8,8 @@ import net.mamoe.mirai.contact.UserOrBot;
 import net.mamoe.mirai.event.events.MessageRecallEvent;
 import net.mamoe.mirai.message.data.*;
 import xin.vanilla.VanillaKanri;
-import xin.vanilla.util.Api;
 import xin.vanilla.util.DateUtils;
+import xin.vanilla.util.Frame;
 import xin.vanilla.util.SettingsUtils;
 import xin.vanilla.util.StringUtils;
 
@@ -89,11 +89,14 @@ public class MsgRecallEvent extends BaseMsgEvent {
                     || this.msg.get(Dice.Key) != null
                     || this.msg.get(RockPaperScissors.Key) != null
                     || this.msg.get(FileMessage.Key) != null
-                    || this.msg.get(Audio.Key) != null) {
-                Api.sendMessage(backGroup, stringBuilder.toString());
-                Api.sendMessage(backGroup, this.msg);
+                    || this.msg.get(Audio.Key) != null
+                    || this.msg.get(ShortVideo.Key) != null
+                    || this.msg.get(VipFace.Key) != null) {
+
+                Frame.sendMessage(backGroup, stringBuilder.toString());
+                Frame.sendMessage(backGroup, this.msg);
             } else {
-                Api.sendMessage(backGroup, new MessageChainBuilder()
+                Frame.sendMessage(backGroup, new MessageChainBuilder()
                         .append(stringBuilder.append("\n"))
                         .append(this.msg)
                         .build()

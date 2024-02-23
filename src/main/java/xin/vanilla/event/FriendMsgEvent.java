@@ -8,6 +8,7 @@ import xin.vanilla.common.annotation.Capability;
 import xin.vanilla.entity.KeyRepEntity;
 import xin.vanilla.entity.data.KeyData;
 import xin.vanilla.util.Api;
+import xin.vanilla.util.Frame;
 import xin.vanilla.util.VanillaUtils;
 
 import java.lang.reflect.InvocationTargetException;
@@ -70,7 +71,7 @@ public class FriendMsgEvent extends BaseMsgEvent {
             keyRepEntity.setMsg(VanillaUtils.messageToString(msg));
             keyRepEntity.setSenderId(friend.getId());
             keyRepEntity.setSenderName(friend.getNick());
-            return null != Api.sendMessage(keyRepEntity, rep);
+            return null != Frame.sendMessage(keyRepEntity, rep);
         }
         return false;
     }

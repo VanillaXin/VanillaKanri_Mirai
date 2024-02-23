@@ -75,11 +75,11 @@ public class EventHandlers extends SimpleListenerHost {
         type %= 10;
         if (event instanceof GroupMessageEvent && (type & ENABLE_GROUP) != 0) {
             GroupMessageEvent groupMessageEvent = (GroupMessageEvent) event;
-            Api.sendMessage(groupMessageEvent.getGroup(), eString);
+            Frame.sendMessage(groupMessageEvent.getGroup(), eString);
         }
         if (event instanceof FriendMessageEvent && (type & ENABLE_FRIEND) != 0) {
             FriendMessageEvent friendMessageEvent = (FriendMessageEvent) event;
-            Api.sendMessage(friendMessageEvent.getFriend(), eString);
+            Frame.sendMessage(friendMessageEvent.getFriend(), eString);
         }
         if (event instanceof BotEvent && (type & ENABLE_BACKEND) != 0) {
             BotEvent botEvent = (BotEvent) event;
@@ -87,7 +87,7 @@ public class EventHandlers extends SimpleListenerHost {
             for (Long groupId : groups) {
                 // 获取该机器人账号下的后台管理群对象
                 Group backGroup = Bot.getInstance(botEvent.getBot().getId()).getGroup(groupId);
-                Api.sendMessage(backGroup, eString);
+                Frame.sendMessage(backGroup, eString);
             }
         }
 
@@ -210,7 +210,7 @@ public class EventHandlers extends SimpleListenerHost {
                         if (groups.length > 0) {
                             if (groups.length > 1 || groups[0] > 0) {
                                 if (VanillaUtils.hasNotPermissionAndMore(insEvent.getBot(), null, insEvent.getSender().getId(), PermissionLevel.PERMISSION_LEVEL_SUPER_ADMIN)) {
-                                    Api.sendMessage(insEvent.getGroup(), "权限不足");
+                                    Frame.sendMessage(insEvent.getGroup(), "权限不足");
                                     return;
                                 }
                             }

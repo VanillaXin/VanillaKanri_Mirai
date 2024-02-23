@@ -9,10 +9,7 @@ import xin.vanilla.entity.config.instruction.BaseInstructions;
 import xin.vanilla.entity.config.instruction.KanriInstructions;
 import xin.vanilla.entity.config.instruction.KeywordInstructions;
 import xin.vanilla.entity.config.instruction.TimedTaskInstructions;
-import xin.vanilla.util.Api;
-import xin.vanilla.util.RegUtils;
-import xin.vanilla.util.StringUtils;
-import xin.vanilla.util.VanillaUtils;
+import xin.vanilla.util.*;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -619,7 +616,7 @@ public class RegExpConfig {
                     } catch (Exception ignored) {
                         size = AvatarSpec.ORIGINAL.getSize();
                     }
-                    Image image = Api.uploadImageByUrl(StringUtils.getAvatarUrl(qq, size), param.getTarget() == null ? param.getSender() : param.getTarget());
+                    Image image = Frame.buildImageByUrl(StringUtils.getAvatarUrl(qq, size), param.getTarget() == null ? param.getSender() : param.getTarget());
                     String serialize = image.serializeToMiraiCode();
                     msg = msg.replaceAll(StringUtils.escapeExprSpecialWord(matcher.group(0)), serialize);
                 }
