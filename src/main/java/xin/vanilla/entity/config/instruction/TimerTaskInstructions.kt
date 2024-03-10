@@ -10,7 +10,7 @@ import lombok.experimental.Accessors
 @Data
 @Accessors(chain = true)
 @Serializable
-class TimedTaskInstructions {
+class TimerTaskInstructions {
     // 定时任务指令前缀*
     var prefix: String = "timer"
 

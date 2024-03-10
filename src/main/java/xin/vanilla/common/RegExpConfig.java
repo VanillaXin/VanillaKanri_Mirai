@@ -8,7 +8,7 @@ import xin.vanilla.entity.DecodeKeyParam;
 import xin.vanilla.entity.config.instruction.BaseInstructions;
 import xin.vanilla.entity.config.instruction.KanriInstructions;
 import xin.vanilla.entity.config.instruction.KeywordInstructions;
-import xin.vanilla.entity.config.instruction.TimedTaskInstructions;
+import xin.vanilla.entity.config.instruction.TimerTaskInstructions;
 import xin.vanilla.util.*;
 
 import java.util.*;
@@ -22,7 +22,7 @@ public class RegExpConfig {
 
     private static final KanriInstructions kanri = Va.getGlobalConfig().getInstructions().getKanri();
     private static final KeywordInstructions keyword = Va.getGlobalConfig().getInstructions().getKeyword();
-    private static final TimedTaskInstructions timer = Va.getGlobalConfig().getInstructions().getTimed();
+    private static final TimerTaskInstructions timer = Va.getGlobalConfig().getInstructions().getTimer();
     private static final BaseInstructions base = Va.getGlobalConfig().getInstructions().getBase();
 
 
@@ -256,9 +256,11 @@ public class RegExpConfig {
         // /va timer add [<group>] [exp] rep [content]
         return RegUtils.start().groupNon(prefix).separator()
                 .groupIgByName("group", GROUP_CODE).appendIg("?").separator("?")
-                .appendIg("[\"'\\<\\[\\{\\(]")
-                .groupIgByName("exp", ".*?")
-                .appendIg("[\"'\\>\\]\\}\\)]").separator()
+                .appendIg("[\"\\'\\<\\[\\{\\(]")
+                .groupIgByName("exp"
+                        , "(?:\\d{1,6}(?:\\.\\d{1,4})?(?:ms|s|m|h|d|MS|S|M|H|D|Ms|mS)?"
+                        , "(?:[\\d\\*\\-,\\?LW#/]+" + REG_SEPARATOR + "){4,6}(?:[\\d\\*\\-,\\?LW#/]+))")
+                .appendIg("[\"\\'\\>\\]\\}\\)]").separator()
                 .groupNon(timer.getSuffix()).separator()
                 .groupIgByName("rep", ".*?").end();
     }

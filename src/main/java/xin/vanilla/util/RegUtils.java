@@ -325,7 +325,7 @@ public class RegUtils {
 
     public static String processGroup(Collection<?> values) {
         StringBuilder stringBuilder = new StringBuilder();
-        if (values != null && values.size() > 0) {
+        if (values != null && !values.isEmpty()) {
             int i = 0;
             for (Object value : values) {
                 if (i > 0) stringBuilder.append("|");

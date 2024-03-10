@@ -27,7 +27,7 @@ import xin.vanilla.common.annotation.TimerInrsEvent;
 import xin.vanilla.entity.config.instruction.BaseInstructions;
 import xin.vanilla.entity.config.instruction.KanriInstructions;
 import xin.vanilla.entity.config.instruction.KeywordInstructions;
-import xin.vanilla.entity.config.instruction.TimedTaskInstructions;
+import xin.vanilla.entity.config.instruction.TimerTaskInstructions;
 import xin.vanilla.entity.data.KeyData;
 import xin.vanilla.entity.data.MsgCache;
 import xin.vanilla.entity.data.TimerData;
@@ -85,7 +85,7 @@ public class InstructionMsgEvent {
     @Getter
     private final KeywordInstructions keyword = Va.getGlobalConfig().getInstructions().getKeyword();
     @Getter
-    private final TimedTaskInstructions timed = Va.getGlobalConfig().getInstructions().getTimed();
+    private final TimerTaskInstructions timer = Va.getGlobalConfig().getInstructions().getTimer();
     @Getter
     private final BaseInstructions base = Va.getGlobalConfig().getInstructions().getBase();
 
@@ -1106,9 +1106,9 @@ public class InstructionMsgEvent {
     // region 定时任务指令
 
     @TimerInrsEvent
-    public int timerAdd(@NotNull String prefix) {
-        if (!base.getAdd().contains(prefix)) return RETURN_CONTINUE;
-        RegUtils reg = RegExpConfig.timerAddRegExp(prefix);
+    public int timerAdd(@NotNull String thirdPrefix) {
+        if (!base.getAdd().contains(thirdPrefix)) return RETURN_CONTINUE;
+        RegUtils reg = RegExpConfig.timerAddRegExp(thirdPrefix);
         if (reg.matcher(this.ins).find()) {
             String exp, rep;
             long[] groups = getGroups(reg);
@@ -1127,13 +1127,15 @@ public class InstructionMsgEvent {
                     .add(bot, new MessageChainBuilder().append("触发条件:\n").append(keyFormat).build())
                     .add(bot, new MessageChainBuilder().append("任务内容:\n").append(repFormat).build());
             for (long groupId : groups) {
+                boolean tf = true;
+
                 TimerData timer = new TimerData();
                 timer.setId(NanoIdUtils.randomNanoId());
                 timer.setBot(this.bot);
                 timer.setBotNum(this.bot.getId());
                 timer.setSender(Frame.buildPrivateChatContact(this.bot, this.sender.getId(), groupId, false));
                 timer.setSenderNum(this.sender.getId());
-                timer.setOnce(true);
+                timer.setOnce(!validExpression);
                 timer.setMsg(rep);
                 timer.setGroupNum(groupId);
                 timer.setCron(exp);
@@ -1155,25 +1157,29 @@ public class InstructionMsgEvent {
                         }});
                     }
                 } else {
-                    String unit = exp.replaceAll("\\d", "");
-                    float time = Float.parseFloat(exp.replace(unit, ""));
-                    Date startDate;
-                    switch (unit) {
-                        case "s":
-                            startDate = DateUtils.addSecond(new Date(), time);
-                            break;
-                        case "m":
-                            startDate = DateUtils.addMinute(new Date(), time);
-                            break;
-                        case "h":
-                            startDate = DateUtils.addHour(new Date(), time);
-                            break;
-                        case "d":
-                            startDate = DateUtils.addDay(new Date(), time);
-                            break;
-                        case "ms":
-                        default:
-                            startDate = DateUtils.addMilliSecond(new Date(), (int) time);
+                    String unit = exp.replaceAll("[\\d.]", "");
+                    Date startDate = new Date();
+                    try {
+                        float timeNum = Float.parseFloat(exp.replace(unit, ""));
+                        switch (unit) {
+                            case "s":
+                                startDate = DateUtils.addSecond(new Date(), timeNum);
+                                break;
+                            case "m":
+                                startDate = DateUtils.addMinute(new Date(), timeNum);
+                                break;
+                            case "h":
+                                startDate = DateUtils.addHour(new Date(), timeNum);
+                                break;
+                            case "d":
+                                startDate = DateUtils.addDay(new Date(), timeNum);
+                                break;
+                            case "ms":
+                            default:
+                                startDate = DateUtils.addMilliSecond(new Date(), (int) timeNum);
+                        }
+                    } catch (Exception ignored) {
+                        tf = false;
                     }
                     trigger = TriggerBuilder.newTrigger()
                             .withIdentity(timer.getId(), timer.getGroupNum() + ".trigger")
@@ -1181,7 +1187,6 @@ public class InstructionMsgEvent {
                             .startAt(startDate)
                             .build();
                 }
-
                 // 构建任务, 装载任务数据
                 JobDataMap jobDataMap = new JobDataMap();
                 jobDataMap.put("timer", timer);
@@ -1189,13 +1194,13 @@ public class InstructionMsgEvent {
                         .withIdentity(timer.getId(), timer.getGroupNum() + ".job")
                         .usingJobData(jobDataMap)
                         .build();
-
-                boolean tf = true;
-                try {
-                    Va.getScheduler().scheduleJob(jobDetail, trigger);
-                } catch (SchedulerException e) {
-                    Va.getLogger().error(e);
-                    tf = false;
+                if (tf) {
+                    try {
+                        Va.getScheduler().scheduleJob(jobDetail, trigger);
+                    } catch (SchedulerException e) {
+                        Va.getLogger().error(e);
+                        tf = false;
+                    }
                 }
                 forwardMessageBuilder.add(bot, new PlainText("群号: " + (groupId == 0 ? "仅好友" : groupId) + "\n定时任务编号: " + timer.getId() + "\n" + (tf ? "添加成功" : "添加失败")));
             }
@@ -1206,9 +1211,9 @@ public class InstructionMsgEvent {
     }
 
     @TimerInrsEvent
-    public int timerDel(@NotNull String prefix) {
-        if (!base.getDelete().contains(prefix)) return RETURN_CONTINUE;
-        RegUtils reg = RegExpConfig.timerDelRegExp(prefix);
+    public int timerDel(@NotNull String thirdPrefix) {
+        if (!base.getDelete().contains(thirdPrefix)) return RETURN_CONTINUE;
+        RegUtils reg = RegExpConfig.timerDelRegExp(thirdPrefix);
         if (reg.matcher(this.ins).find()) {
             // 判断发送者是否有删除定时任务的权限
             if (VanillaUtils.hasNotPermissionAndMore(bot, group, sender.getId(), PERMISSION_LEVEL_DEPUTY_ADMIN))

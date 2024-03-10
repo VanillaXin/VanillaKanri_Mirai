@@ -114,18 +114,18 @@ public class EventHandlers extends SimpleListenerHost {
         } else if (!StringUtils.isNullOrEmpty(insEvent.getKeyword().getPrefix())
                 && insEvent.getIns().startsWith(insEvent.getKeyword().getPrefix())) {
             if (insEvent.delPrefix(insEvent.getKeyword().getPrefix())) return;
-        } else if (!StringUtils.isNullOrEmpty(insEvent.getTimed().getPrefix())
-                && insEvent.getIns().startsWith(insEvent.getTimed().getPrefix())) {
-            if (insEvent.delPrefix(insEvent.getTimed().getPrefix())) return;
+        } else if (!StringUtils.isNullOrEmpty(insEvent.getTimer().getPrefix())
+                && insEvent.getIns().startsWith(insEvent.getTimer().getPrefix())) {
+            if (insEvent.delPrefix(insEvent.getTimer().getPrefix())) return;
         } else {
             if (insEvent.delPrefix("")) return;
         }
 
         // 三级前缀
-        String prefix;
+        String thirdPrefix;
         int index = RegUtils.containsRegSeparator(insEvent.getIns());
-        if (index >= 0) prefix = insEvent.getIns().substring(0, index);
-        else prefix = insEvent.getIns();
+        if (index >= 0) thirdPrefix = insEvent.getIns().substring(0, index);
+        else thirdPrefix = insEvent.getIns();
 
         for (Method method : insEvent.getClass().getMethods()) {
             int back = InstructionMsgEvent.RETURN_CONTINUE;
@@ -141,7 +141,7 @@ public class EventHandlers extends SimpleListenerHost {
                             try {
                                 Object obj = kanriInsMethod.invoke(insEvent.getKanri());
                                 if (prefixName.equalsIgnoreCase("kick")) {
-                                    if (((String) obj).startsWith(prefix)) {
+                                    if (((String) obj).startsWith(thirdPrefix)) {
                                         success = true;
                                         break;
                                     }
@@ -152,7 +152,7 @@ public class EventHandlers extends SimpleListenerHost {
                                     } else if (obj instanceof String) {
                                         values.add((String) obj);
                                     }
-                                    if (values.contains(prefix)) {
+                                    if (values.contains(thirdPrefix)) {
                                         success = true;
                                         break;
                                     }
@@ -185,7 +185,7 @@ public class EventHandlers extends SimpleListenerHost {
                 String regexpName = annotation.regexp();
                 try {
                     Method regMethod = RegExpConfig.class.getMethod(regexpName, String.class);
-                    RegUtils reg = (RegUtils) regMethod.invoke(null, prefix);
+                    RegUtils reg = (RegUtils) regMethod.invoke(null, thirdPrefix);
                     if (reg.matcher(insEvent.getIns()).find()) {
                         String operation;
                         long[] groups;
@@ -236,7 +236,7 @@ public class EventHandlers extends SimpleListenerHost {
 
             } else if (method.isAnnotationPresent(KeywordInsEvent.class)) {
                 try {
-                    back = (int) method.invoke(insEvent, prefix);
+                    back = (int) method.invoke(insEvent, thirdPrefix);
                 } catch (IllegalAccessException | InvocationTargetException e) {
                     throw new RuntimeException(e);
                 }
@@ -244,7 +244,7 @@ public class EventHandlers extends SimpleListenerHost {
             // TODO 解析定时任务指令
             else if (method.isAnnotationPresent(TimerInrsEvent.class)) {
                 try {
-                    back = (int) method.invoke(insEvent, prefix);
+                    back = (int) method.invoke(insEvent, thirdPrefix);
                 } catch (IllegalAccessException | InvocationTargetException e) {
                     throw new RuntimeException(e);
                 }

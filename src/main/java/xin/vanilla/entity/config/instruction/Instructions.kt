@@ -44,7 +44,7 @@ class Instructions {
     /**
      * 定时任务指令
      */
-    var timed: TimedTaskInstructions = TimedTaskInstructions()
+    var timer: TimerTaskInstructions = TimerTaskInstructions()
 
     fun getSecondaryPrefix(): Set<String> {
         if (secondaryPrefix.isEmpty())

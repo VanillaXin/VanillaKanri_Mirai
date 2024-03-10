@@ -122,17 +122,17 @@ public class GlobalConfigFile extends JavaAutoSavePluginConfig {
             }
         }
 
-        if (!StringUtils.isNullOrEmpty(this.instructions.get().getTimed().getPrefix())) {
-            secondaryPrefix.add(this.instructions.get().getTimed().getPrefix());
+        if (!StringUtils.isNullOrEmpty(this.instructions.get().getTimer().getPrefix())) {
+            secondaryPrefix.add(this.instructions.get().getTimer().getPrefix());
         } else {
-            for (Field field : this.instructions.get().getTimed().getClass().getFields()) {
+            for (Field field : this.instructions.get().getTimer().getClass().getFields()) {
                 try {
                     if (field.getType() == String.class
-                            && !StringUtils.isNullOrEmpty((String) field.get(this.instructions.get().getTimed())))
-                        secondaryPrefix.add((String) field.get(this.instructions.get().getTimed()));
+                            && !StringUtils.isNullOrEmpty((String) field.get(this.instructions.get().getTimer())))
+                        secondaryPrefix.add((String) field.get(this.instructions.get().getTimer()));
                     else if (field.getType() == Set.class) {
                         secondaryPrefix.addAll(
-                                ((Set<?>) field.get(this.instructions.get().getTimed())).stream()
+                                ((Set<?>) field.get(this.instructions.get().getTimer())).stream()
                                         .map(Object::toString)
                                         .collect(Collectors.toList())
                         );
