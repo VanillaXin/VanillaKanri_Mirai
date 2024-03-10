@@ -488,7 +488,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
                     long wife = 0;
                     try {
                         // 今天已抽过的角色名称及角色
-                        String[] wifeVal = Va.getPluginData().getWife().get(key).split(":");
+                        String[] wifeVal = Va.getWifeData().getWife().get(key).split(":");
                         wife = Long.parseLong(wifeVal[1]);
                         // 判断有无抽过其他角色
                         if (!nickKey.equals(wifeVal[0])) {
@@ -514,7 +514,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
                                 stream().filter(qqId -> qqId != 81236714).collect(Collectors.toList());  // 这一行为新加排除指定号
                         qqs.add(bot.getId());
                         wife = qqs.get((int) (Va.getRandom().nextDouble() * qqs.size()));
-                        Va.getPluginData().getWife().put(key, nickKey + ":" + wife);
+                        Va.getWifeData().getWife().put(key, nickKey + ":" + wife);
                     }
                     NormalMember normalMember = group.get(wife);
                     assert normalMember != null;

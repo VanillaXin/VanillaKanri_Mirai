@@ -13,4 +13,9 @@ import lombok.experimental.Accessors
 class TimedTaskInstructions {
     // 定时任务指令前缀*
     var prefix: String = "timer"
+
+    /**
+     * 定时任务指令后缀*
+     */
+    var suffix: String = "rep"
 }

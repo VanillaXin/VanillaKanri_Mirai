@@ -7,20 +7,27 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.future.future
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runInterruptible
+import net.mamoe.mirai.Bot
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescription
 import net.mamoe.mirai.console.plugin.jvm.KotlinPlugin
 import net.mamoe.mirai.console.plugin.jvm.reloadPluginConfig
 import net.mamoe.mirai.console.plugin.jvm.reloadPluginData
 import net.mamoe.mirai.event.GlobalEventChannel
+import org.quartz.*
+import org.quartz.impl.StdSchedulerFactory
 import xin.vanilla.config.GlobalConfigFile
 import xin.vanilla.config.GroupConfigFile
-import xin.vanilla.config.PluginDataFile
+import xin.vanilla.config.TimerDataFile
+import xin.vanilla.config.WifeDataFile
+import xin.vanilla.entity.data.TimerData
 import xin.vanilla.enums.DataCacheKey.*
 import xin.vanilla.event.EventHandlers
+import xin.vanilla.event.TimerMsgEvent
 import xin.vanilla.mapper.KeywordData
 import xin.vanilla.mapper.MessageCache
 import xin.vanilla.mapper.impl.KeywordDataImpl
 import xin.vanilla.mapper.impl.MessageCacheImpl
+import xin.vanilla.util.Frame
 import xin.vanilla.util.sqlite.SqliteUtil
 import java.security.SecureRandom
 import java.util.*
@@ -32,6 +39,9 @@ import java.util.concurrent.ConcurrentHashMap
 object VanillaKanri : KotlinPlugin(
     JvmPluginDescription.loadFromResource()
 ) {
+
+    // region 变量定义
+
     var parentMessageId: String = "chatcmpl-72YBVdsjJU4ar30QpQnp4kqN7SXu5"
 
     /**
@@ -52,11 +62,18 @@ object VanillaKanri : KotlinPlugin(
     var dataCache: ConcurrentHashMap<String, Any> = ConcurrentHashMap()
 
     /**
-     * 插件数据缓存
+     * 抽老婆数据缓存
      *
      * 持久化
      */
-    var pluginData: PluginDataFile = PluginDataFile()
+    var wifeData: WifeDataFile = WifeDataFile()
+
+    /**
+     * 定时任务数据缓存
+     *
+     * 持久化
+     */
+    var timerData: TimerDataFile = TimerDataFile()
 
     /**
      * 全局设置
@@ -73,6 +90,12 @@ object VanillaKanri : KotlinPlugin(
      */
     var random: SecureRandom = SecureRandom()
 
+    var scheduler: Scheduler = StdSchedulerFactory.getDefaultScheduler()
+
+    // endregion 变量定义
+
+    // region Override
+
     /**
      * 插件启用事件
      */
@@ -86,8 +109,8 @@ object VanillaKanri : KotlinPlugin(
         // 获取到简单任务调度器。例子:
         // 延时
         launch {
-            delay(1000)
-            logger.info("插件在一秒前就加载好了！")
+            delay(1)
+            logger.info("插件在一毫秒前就加载好了！")
         }
 
         // 记录插件启用时刻
@@ -101,17 +124,30 @@ object VanillaKanri : KotlinPlugin(
         reloadPluginConfig(globalConfig)
         // 群聊配置
         reloadPluginConfig(groupConfig)
-        // 插件数据
-        reloadPluginData(pluginData)
+        // 抽老婆数据
+        reloadPluginData(wifeData)
+        // 定时任务数据
+        reloadPluginData(timerData)
+
+        logger.info("创建定时任务")
+        this.initTimerJob()
+        logger.info("创建定时任务完成")
+
     }
 
     override fun onDisable() {
         // 插件创建的所有线程或异步任务都需要在 onDisable() 时关闭。
         logger.info("插件被禁用了！")
-        // 关闭SQLite连接
+        logger.info("关闭SQLite连接")
         SqliteUtil.closeAll(SqliteUtil.CLOSE_MODE_COMMIT)
+        logger.info("关闭定时任务调度器")
+        scheduler.shutdown()
         super.onDisable()
     }
+
+    // endregion Override
+
+    // region 延时任务
 
     fun delayed(delayMillis: Long, runnable: Runnable): CompletableFuture<Void?> {
         return future {
@@ -130,6 +166,10 @@ object VanillaKanri : KotlinPlugin(
             runInterruptible(Dispatchers.IO) { callable.call() }
         }
     }
+
+    // endregion 延时任务
+
+    // region 统计相关
 
     /**
      * 消息发送计数++
@@ -200,4 +240,51 @@ object VanillaKanri : KotlinPlugin(
     fun getBotOnlineTimeAsLong(bot: Long): Long {
         return this.dataCache[PLUGIN_BOT_ONLINE_TIME.getKey(bot)] as Long - System.currentTimeMillis()
     }
+
+    // endregion 统计相关
+
+    // region 数据/任务初始化
+
+    /**
+     * 初始化定时任务数据
+     */
+    private fun initTimerJob() {
+        val timerMap = timerData.getTimer()
+        for (target in timerMap.keys) {
+            timerMap[target]?.removeIf(TimerData::once)
+            for (timer in timerMap[target]!!) {
+                if (timer.senderNum == 0L) continue
+
+                timer.bot = Bot.getInstanceOrNull(timer.botNum)
+                if (timer.bot == null) continue
+
+                timer.sender = Frame.buildPrivateChatContact(timer.bot, timer.senderNum, timer.groupNum, false)
+                if (timer.sender == null) continue
+
+                // 构建任务, 装载任务数据
+                val jobDataMap = JobDataMap()
+                jobDataMap["timer"] = timer
+                val jobDetail = JobBuilder.newJob(TimerMsgEvent::class.java)
+                    .withIdentity(timer.id, timer.groupNum.toString() + ".job")
+                    .usingJobData(jobDataMap)
+                    .build()
+
+                // 构建任务触发器
+                val trigger = TriggerBuilder.newTrigger()
+                    .withIdentity(timer.id, timer.groupNum.toString() + ".trigger")
+                    .withSchedule(CronScheduleBuilder.cronSchedule(timer.cron))
+                    .build()
+
+                try {
+                    scheduler.scheduleJob(jobDetail, trigger)
+                } catch (_: SchedulerException) {
+                    logger.warning(String.format("定时任务创建失败: %s - %s - %s", timer.groupNum, timer.id, timer.cron))
+                }
+            }
+        }
+        scheduler.start()
+    }
+
+    // endregion 数据/任务初始化
+
 }

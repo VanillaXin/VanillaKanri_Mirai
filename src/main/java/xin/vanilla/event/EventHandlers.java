@@ -12,6 +12,7 @@ import xin.vanilla.VanillaKanri;
 import xin.vanilla.common.RegExpConfig;
 import xin.vanilla.common.annotation.KanriInsEvent;
 import xin.vanilla.common.annotation.KeywordInsEvent;
+import xin.vanilla.common.annotation.TimerInrsEvent;
 import xin.vanilla.entity.config.instruction.KanriInstructions;
 import xin.vanilla.entity.event.events.GroupMessageEvents;
 import xin.vanilla.enums.PermissionLevel;
@@ -236,23 +237,25 @@ public class EventHandlers extends SimpleListenerHost {
             } else if (method.isAnnotationPresent(KeywordInsEvent.class)) {
                 try {
                     back = (int) method.invoke(insEvent, prefix);
-
                 } catch (IllegalAccessException | InvocationTargetException e) {
                     throw new RuntimeException(e);
                 }
             }
+            // TODO 解析定时任务指令
+            else if (method.isAnnotationPresent(TimerInrsEvent.class)) {
+                try {
+                    back = (int) method.invoke(insEvent, prefix);
+                } catch (IllegalAccessException | InvocationTargetException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
             // 根据返回值判断是否继续执行事件
             if (back == InstructionMsgEvent.RETURN_BREAK_TRUE) {
                 event.intercept();
                 return;
             } else if (back == InstructionMsgEvent.RETURN_BREAK_FALSE)
                 return;
-
-            // TODO 解析定时任务指令
-            // else if (method.isAnnotationPresent(TimedInsEvent.class)) {
-            //
-            // }
-
         }
     }
 

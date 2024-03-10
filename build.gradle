@@ -30,6 +30,7 @@ dependencies {
     implementation 'com.github.oshi:oshi-core:6.4.12' // 系统信息工具类
     implementation 'com.unfbx:chatgpt-java:1.1.5' // ChatGPT工具类
     implementation 'com.jayway.jsonpath:json-path:2.9.0' // JsonPath工具类
+    implementation 'org.quartz-scheduler:quartz:2.3.2' // 定时任务库
 
 
     testCompileOnly 'org.apiguardian:apiguardian-api:1.1.2'

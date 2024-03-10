@@ -29,9 +29,9 @@ import java.util.stream.Collectors;
  */
 public class GlobalConfigFile extends JavaAutoSavePluginConfig {
 
-
+    @Setter
+    @Getter
     public SerializerAwareValue<String> chatGptKey = value("chatGptKey", "");
-
 
     /**
      * 超人
@@ -192,13 +192,6 @@ public class GlobalConfigFile extends JavaAutoSavePluginConfig {
             return new Permissions();
         }
         return permissions.get().get(bot);
-    }
-    public SerializerAwareValue<String> getChatGptKey() {
-        return chatGptKey;
-    }
-
-    public void setChatGptKey(SerializerAwareValue<String> chatGptKey) {
-        this.chatGptKey = chatGptKey;
     }
 
     public void setPermissions(Map<Long, Permissions> permissions) {

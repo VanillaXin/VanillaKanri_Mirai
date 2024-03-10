@@ -51,6 +51,7 @@ class Base {
     var capability: Map<String, Int> = mutableMapOf(
         "GroupMsgEvent.keyRep" to 99,
         "FriendMsgEvent.keyRep" to 99,
+        "TimerMsgEvent.timer" to 99,
         "GroupMsgEvent.rcon" to 0,
         "GroupMsgEvent.localRandomPic" to 0,
         "GroupMsgEvent.getWife" to 1,

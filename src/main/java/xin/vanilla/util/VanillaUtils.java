@@ -685,7 +685,7 @@ public class VanillaUtils {
         String word = keyParam.getRepWord().getWord();
         String rep = keyParam.getRepWord().getRep();
         Bot bot = keyParam.getBot();
-        Group group = keyParam.getTarget();
+        Group group = keyParam.getGroup();
         Contact sender = keyParam.getSender();
         MessageChain messageChain = keyParam.getMsg();
 
@@ -733,12 +733,10 @@ public class VanillaUtils {
                     Matcher matcher = regUtils.getMatcher();
                     String url = matcher.group("url");
                     int num;
-                    String numString;
                     try {
-                        numString = matcher.group("num");
+                        String numString = matcher.group("num");
                         num = Integer.parseInt(numString.substring(1));
                     } catch (Exception ignored) {
-                        numString = "";
                         num = 1;
                     }
                     StringBuilder picCode = new StringBuilder();
@@ -753,7 +751,9 @@ public class VanillaUtils {
             // 禁言
             result = RegExpConfig.VaCode.exeMute(result, group != null ? (NormalMember) sender : null);
             // 撤回
-            result = RegExpConfig.VaCode.exeRecall(result, messageChain);
+            if (messageChain != null) {
+                result = RegExpConfig.VaCode.exeRecall(result, messageChain);
+            }
             // 踢出
             result = RegExpConfig.VaCode.exeKick(word, result, group != null ? (NormalMember) sender : null);
 
@@ -767,7 +767,9 @@ public class VanillaUtils {
             result = RegExpConfig.VaCode.exeRep(keyParam, result);
 
             // ChatGPT
-            result = RegExpConfig.VaCode.exeGpt(messageToPlainText(messageChain, group), result, (NormalMember) sender);
+            if (messageChain != null) {
+                result = RegExpConfig.VaCode.exeGpt(messageToPlainText(messageChain, group), result, (NormalMember) sender);
+            }
 
         } catch (Exception e) {
             e.printStackTrace();

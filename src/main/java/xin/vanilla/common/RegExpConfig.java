@@ -22,7 +22,7 @@ public class RegExpConfig {
 
     private static final KanriInstructions kanri = Va.getGlobalConfig().getInstructions().getKanri();
     private static final KeywordInstructions keyword = Va.getGlobalConfig().getInstructions().getKeyword();
-    private static final TimedTaskInstructions timed = Va.getGlobalConfig().getInstructions().getTimed();
+    private static final TimedTaskInstructions timer = Va.getGlobalConfig().getInstructions().getTimed();
     private static final BaseInstructions base = Va.getGlobalConfig().getInstructions().getBase();
 
 
@@ -244,7 +244,55 @@ public class RegExpConfig {
                 .groupIgByName("keyIds", "(?:\\d+\\s?)+").end();
     }
 
-    // endregion
+    // endregion 关键词指令
+
+
+    // region 定时任务指令
+
+    /**
+     * 添加定时任务指令
+     */
+    public static RegUtils timerAddRegExp(String prefix) {
+        // /va timer add [<group>] [exp] rep [content]
+        return RegUtils.start().groupNon(prefix).separator()
+                .groupIgByName("group", GROUP_CODE).appendIg("?").separator("?")
+                .appendIg("[\"'\\<\\[\\{\\(]")
+                .groupIgByName("exp", ".*?")
+                .appendIg("[\"'\\>\\]\\}\\)]").separator()
+                .groupNon(timer.getSuffix()).separator()
+                .groupIgByName("rep", ".*?").end();
+    }
+
+    /**
+     * 查询定时任务指令
+     */
+    public static RegUtils timerSelRegExp(String prefix) {
+        // /va timer sel [<group>]
+        return RegUtils.start().groupNon(prefix).separator()
+                .groupIgByName("group", GROUP_CODE).appendIg("?").separator("?")
+                .groupIgByName("page", "\\d+").appendIg("?")
+                .end();
+    }
+
+    /**
+     * 删除定时任务指令
+     */
+    public static RegUtils timerDelRegExp(String prefix) {
+        // /va timer del [timerId timerId]
+        return RegUtils.start().groupNon(prefix).separator()
+                .groupIgByName("keyIds", "(?:\\w+\\s?)+").end();
+    }
+
+    /**
+     * 审核定时任务指令
+     */
+    public static RegUtils timerExamineRegExp(String prefix) {
+        // /va key add|del [timerId timerId]
+        return RegUtils.start().groupNon(prefix).separator()
+                .groupIgByName("keyIds", "(?:\\w+\\s?)+").end();
+    }
+
+    // endregion 定时任务指令
 
 
     /**
@@ -524,7 +572,7 @@ public class RegExpConfig {
         public static @NotNull String exeRep(DecodeKeyParam param, String msg) {
             Matcher matcher = REP.matcher(msg);
             try {
-                if (matcher.find()) {
+                if (param.getMsg() != null && matcher.find()) {
                     String prefix = StringUtils.substring(StringUtils.nullToEmpty(matcher.group("prefix")).replaceAll("\\\\:", ":").replaceAll("\\\\]", "]"), 1);
                     String content = StringUtils.substring(StringUtils.nullToEmpty(matcher.group("content")).replaceAll("\\\\:", ":").replaceAll("\\\\]", "]"), 1);
                     String suffix = StringUtils.substring(StringUtils.nullToEmpty(matcher.group("suffix")).replaceAll("\\\\:", ":").replaceAll("\\\\]", "]"), 1);
@@ -553,7 +601,7 @@ public class RegExpConfig {
             try {
                 while (regUtils.matcher(msg).find()) {
                     Matcher matcher = regUtils.getMatcher();
-                    Group group = param.getTarget();
+                    Group group = param.getGroup();
                     String qq = "";
                     if (group != null) {
                         ContactList<NormalMember> members = group.getMembers();
@@ -577,8 +625,8 @@ public class RegExpConfig {
                     long qq = Long.parseLong((matcher.group("qq")));
 
                     String nick = "";
-                    if (param.getTarget() != null) {
-                        NormalMember member = param.getTarget().get(qq);
+                    if (param.getGroup() != null) {
+                        NormalMember member = param.getGroup().get(qq);
                         if (member != null) {
                             nick = member.getNick();
                         }
@@ -616,7 +664,7 @@ public class RegExpConfig {
                     } catch (Exception ignored) {
                         size = AvatarSpec.ORIGINAL.getSize();
                     }
-                    Image image = Frame.buildImageByUrl(StringUtils.getAvatarUrl(qq, size), param.getTarget() == null ? param.getSender() : param.getTarget());
+                    Image image = Frame.buildImageByUrl(StringUtils.getAvatarUrl(qq, size), param.getGroup() == null ? param.getSender() : param.getGroup());
                     String serialize = image.serializeToMiraiCode();
                     msg = msg.replaceAll(StringUtils.escapeExprSpecialWord(matcher.group(0)), serialize);
                 }

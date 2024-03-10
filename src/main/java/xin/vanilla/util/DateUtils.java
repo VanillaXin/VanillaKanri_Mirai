@@ -176,14 +176,16 @@ public class DateUtils {
         return calendar.getTime();
     }
 
-    public static Date addDay(Date current, int day) {
+    public static Date addYear(Date current, float year) {
         if (current == null) {
             current = new Date();
         }
 
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(current);
-        calendar.add(Calendar.DATE, day);
+        double floor = Math.floor(year);
+        calendar.add(Calendar.YEAR, (int) floor);
+        calendar.add(Calendar.DATE, (int) (DateUtils.getDaysOfYear(current) * (year - floor)));
         return calendar.getTime();
     }
 
@@ -195,6 +197,126 @@ public class DateUtils {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(current);
         calendar.add(Calendar.MONTH, month);
+        return calendar.getTime();
+    }
+
+    public static Date addMonth(Date current, float month) {
+        if (current == null) {
+            current = new Date();
+        }
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(current);
+        double floor = Math.floor(month);
+        calendar.add(Calendar.MONTH, (int) floor);
+        calendar.add(Calendar.DATE, (int) (DateUtils.getDaysOfMonth(calendar.getTime()) * (month - floor)));
+        return calendar.getTime();
+    }
+
+    public static Date addDay(Date current, int day) {
+        if (current == null) {
+            current = new Date();
+        }
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(current);
+        calendar.add(Calendar.DATE, day);
+        return calendar.getTime();
+    }
+
+    public static Date addDay(Date current, float day) {
+        if (current == null) {
+            current = new Date();
+        }
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(current);
+        double floor = Math.floor(day);
+        calendar.add(Calendar.DATE, (int) floor);
+        calendar.add(Calendar.MILLISECOND, (int) (24 * 60 * 60 * 1000 * (day - floor)));
+        return calendar.getTime();
+    }
+
+    public static Date addHour(Date current, int hour) {
+        if (current == null) {
+            current = new Date();
+        }
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(current);
+        calendar.add(Calendar.HOUR, hour);
+        return calendar.getTime();
+    }
+
+    public static Date addHour(Date current, float hour) {
+        if (current == null) {
+            current = new Date();
+        }
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(current);
+        double floor = Math.floor(hour);
+        calendar.add(Calendar.HOUR, (int) floor);
+        calendar.add(Calendar.MILLISECOND, (int) (60 * 60 * 1000 * (hour - floor)));
+        return calendar.getTime();
+    }
+
+    public static Date addMinute(Date current, int minute) {
+        if (current == null) {
+            current = new Date();
+        }
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(current);
+        calendar.add(Calendar.MINUTE, minute);
+        return calendar.getTime();
+    }
+
+    public static Date addMinute(Date current, float minute) {
+        if (current == null) {
+            current = new Date();
+        }
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(current);
+        double floor = Math.floor(minute);
+        calendar.add(Calendar.MINUTE, (int) floor);
+        calendar.add(Calendar.MILLISECOND, (int) (60 * 1000 * (minute - floor)));
+        return calendar.getTime();
+    }
+
+    public static Date addSecond(Date current, int second) {
+        if (current == null) {
+            current = new Date();
+        }
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(current);
+        calendar.add(Calendar.SECOND, second);
+        return calendar.getTime();
+    }
+
+    public static Date addSecond(Date current, float second) {
+        if (current == null) {
+            current = new Date();
+        }
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(current);
+        double floor = Math.floor(second);
+        calendar.add(Calendar.SECOND, (int) floor);
+        calendar.add(Calendar.MILLISECOND, (int) (1000 * (second - floor)));
+        return calendar.getTime();
+    }
+
+    public static Date addMilliSecond(Date current, int ms) {
+        if (current == null) {
+            current = new Date();
+        }
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(current);
+        calendar.add(Calendar.MILLISECOND, ms);
         return calendar.getTime();
     }
 
@@ -527,6 +649,24 @@ public class DateUtils {
         } else {
             throw new RuntimeException("月展开范围超出索引");
         }
+    }
+
+    public static int getDaysOfYear(Date date) {
+        Calendar ca = Calendar.getInstance();
+        ca.setTime(date);
+        return ca.getActualMaximum(Calendar.DAY_OF_YEAR);
+    }
+
+    public static int getDaysOfYear(int year) {
+        Calendar ca = Calendar.getInstance();
+        ca.set(year, Calendar.JANUARY, 1);
+        return ca.getActualMaximum(Calendar.DAY_OF_YEAR);
+    }
+
+    public static int getDaysOfMonth(Date date) {
+        Calendar ca = Calendar.getInstance();
+        ca.setTime(date);
+        return ca.getActualMaximum(Calendar.DAY_OF_MONTH);
     }
 
 }

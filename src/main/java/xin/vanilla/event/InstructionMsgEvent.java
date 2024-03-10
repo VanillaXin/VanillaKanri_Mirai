@@ -2,6 +2,7 @@ package xin.vanilla.event;
 
 import cn.hutool.system.oshi.CpuInfo;
 import cn.hutool.system.oshi.OshiUtil;
+import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
 import com.github.houbb.pinyin.constant.enums.PinyinStyleEnum;
 import com.github.houbb.pinyin.util.PinyinHelper;
 import lombok.Getter;
@@ -16,26 +17,26 @@ import net.mamoe.mirai.event.events.MessageEvent;
 import net.mamoe.mirai.message.MessageReceipt;
 import net.mamoe.mirai.message.data.*;
 import org.jetbrains.annotations.NotNull;
+import org.quartz.*;
 import oshi.hardware.GlobalMemory;
 import xin.vanilla.VanillaKanri;
 import xin.vanilla.common.RegExpConfig;
 import xin.vanilla.common.annotation.KanriInsEvent;
 import xin.vanilla.common.annotation.KeywordInsEvent;
-import xin.vanilla.common.annotation.TimedInsEvent;
+import xin.vanilla.common.annotation.TimerInrsEvent;
 import xin.vanilla.entity.config.instruction.BaseInstructions;
 import xin.vanilla.entity.config.instruction.KanriInstructions;
 import xin.vanilla.entity.config.instruction.KeywordInstructions;
 import xin.vanilla.entity.config.instruction.TimedTaskInstructions;
 import xin.vanilla.entity.data.KeyData;
 import xin.vanilla.entity.data.MsgCache;
+import xin.vanilla.entity.data.TimerData;
 import xin.vanilla.util.*;
 import xin.vanilla.util.sqlite.PaginationList;
 
 import java.math.BigDecimal;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static xin.vanilla.enums.PermissionLevel.*;
 import static xin.vanilla.mapper.impl.MessageCacheImpl.MSG_TYPE_GROUP;
@@ -207,7 +208,7 @@ public class InstructionMsgEvent {
             }
             if (!StringUtils.isNullOrEmpty(rep.toString())) {
                 rep.delete(0, 1);
-                if (rep.toString().equals("")) {
+                if (rep.toString().isEmpty()) {
                     Frame.sendMessage(thatGroup, "操作失败");
                 } else {
                     if (StringUtils.isNullOrEmpty(text))
@@ -256,7 +257,7 @@ public class InstructionMsgEvent {
                 }
                 if (!StringUtils.isNullOrEmpty(successMsg.toString())) {
                     successMsg.delete(0, 1);
-                    if (successMsg.toString().equals("")) {
+                    if (successMsg.toString().isEmpty()) {
                         Frame.sendMessage(thatGroup, "操作失败");
                     } else {
                         Frame.sendMessage(thatGroup, "已修改 " + successMsg + " 的头衔为:\n" + tag);
@@ -411,7 +412,7 @@ public class InstructionMsgEvent {
                 }
                 if (!StringUtils.isNullOrEmpty(successMsg.toString())) {
                     successMsg.delete(0, 1);
-                    if (successMsg.toString().equals("")) {
+                    if (successMsg.toString().isEmpty()) {
                         Frame.sendMessage(thatGroup, "权限不足");
                     } else {
                         Frame.sendMessage(thatGroup, "已禁言 " + successMsg + " " + time + "分钟");
@@ -767,7 +768,7 @@ public class InstructionMsgEvent {
             }
             if (!StringUtils.isNullOrEmpty(successMsg.toString())) {
                 successMsg.delete(0, 1);
-                if (successMsg.toString().equals("")) {
+                if (successMsg.toString().isEmpty()) {
                     Frame.sendMessage(thatGroup, "权限不足");
                 } else {
                     Frame.sendMessage(thatGroup, "已将 " + successMsg + " 移除群聊");
@@ -888,7 +889,7 @@ public class InstructionMsgEvent {
                             + "\n数据页数: " + keywordByPage.getCurPageNo() + "/" + keywordByPage.getTotalPageCount()
                             + "\n每页条数: " + keywordByPage.getPageItemCount()
             ));
-            if (keywordByPage.size() > 0) {
+            if (!keywordByPage.isEmpty()) {
                 for (KeyData keyData : keywordByPage) {
                     forwardMessageBuilder.add(bot, new PlainText(
                             "关键词ID: " + keyData.getId() + "\n" +
@@ -1103,17 +1104,165 @@ public class InstructionMsgEvent {
 
 
     // region 定时任务指令
-    // TODO 定义定时任务指令
 
-    @TimedInsEvent
-    public int timedAdd() {
+    @TimerInrsEvent
+    public int timerAdd(@NotNull String prefix) {
+        if (!base.getAdd().contains(prefix)) return RETURN_CONTINUE;
+        RegUtils reg = RegExpConfig.timerAddRegExp(prefix);
+        if (reg.matcher(this.ins).find()) {
+            String exp, rep;
+            long[] groups = getGroups(reg);
 
+            exp = reg.getMatcher().group("exp");
+            rep = reg.getMatcher().group("rep");
+            boolean validExpression = CronExpression.isValidExpression(exp);
+            MessageChain keyFormat;
+            MessageChain repFormat = MessageChain.deserializeFromMiraiCode(rep, group);
+
+            keyFormat = MessageChain.deserializeFromMiraiCode(exp, group);
+
+            ForwardMessageBuilder forwardMessageBuilder = new ForwardMessageBuilder(group)
+                    .add(sender, new PlainText(VanillaUtils.messageToString(msg)))
+                    .add(bot, new PlainText("定时任务类型:\n" + (validExpression ? "cron" : "once")))
+                    .add(bot, new MessageChainBuilder().append("触发条件:\n").append(keyFormat).build())
+                    .add(bot, new MessageChainBuilder().append("任务内容:\n").append(repFormat).build());
+            for (long groupId : groups) {
+                TimerData timer = new TimerData();
+                timer.setId(NanoIdUtils.randomNanoId());
+                timer.setBot(this.bot);
+                timer.setBotNum(this.bot.getId());
+                timer.setSender(Frame.buildPrivateChatContact(this.bot, this.sender.getId(), groupId, false));
+                timer.setSenderNum(this.sender.getId());
+                timer.setOnce(true);
+                timer.setMsg(rep);
+                timer.setGroupNum(groupId);
+                timer.setCron(exp);
+
+                // 构建任务触发器
+                Trigger trigger;
+                // 判断是否为cron表达式
+                if (validExpression) {
+                    trigger = TriggerBuilder.newTrigger()
+                            .withIdentity(timer.getId(), timer.getGroupNum() + ".trigger")
+                            .withSchedule(CronScheduleBuilder.cronSchedule(exp))
+                            .build();
+                    // 若为cron表达式则做持久化处理
+                    if (Va.getTimerData().getTimer().containsKey(timer.getGroupNum())) {
+                        Va.getTimerData().getTimer().get(timer.getGroupNum()).add(timer);
+                    } else {
+                        Va.getTimerData().getTimer().put(timer.getGroupNum(), new ArrayList<TimerData>() {{
+                            add(timer);
+                        }});
+                    }
+                } else {
+                    String unit = exp.replaceAll("\\d", "");
+                    float time = Float.parseFloat(exp.replace(unit, ""));
+                    Date startDate;
+                    switch (unit) {
+                        case "s":
+                            startDate = DateUtils.addSecond(new Date(), time);
+                            break;
+                        case "m":
+                            startDate = DateUtils.addMinute(new Date(), time);
+                            break;
+                        case "h":
+                            startDate = DateUtils.addHour(new Date(), time);
+                            break;
+                        case "d":
+                            startDate = DateUtils.addDay(new Date(), time);
+                            break;
+                        case "ms":
+                        default:
+                            startDate = DateUtils.addMilliSecond(new Date(), (int) time);
+                    }
+                    trigger = TriggerBuilder.newTrigger()
+                            .withIdentity(timer.getId(), timer.getGroupNum() + ".trigger")
+                            .withSchedule(SimpleScheduleBuilder.simpleSchedule())
+                            .startAt(startDate)
+                            .build();
+                }
+
+                // 构建任务, 装载任务数据
+                JobDataMap jobDataMap = new JobDataMap();
+                jobDataMap.put("timer", timer);
+                JobDetail jobDetail = JobBuilder.newJob(TimerMsgEvent.class)
+                        .withIdentity(timer.getId(), timer.getGroupNum() + ".job")
+                        .usingJobData(jobDataMap)
+                        .build();
+
+                boolean tf = true;
+                try {
+                    Va.getScheduler().scheduleJob(jobDetail, trigger);
+                } catch (SchedulerException e) {
+                    Va.getLogger().error(e);
+                    tf = false;
+                }
+                forwardMessageBuilder.add(bot, new PlainText("群号: " + (groupId == 0 ? "仅好友" : groupId) + "\n定时任务编号: " + timer.getId() + "\n" + (tf ? "添加成功" : "添加失败")));
+            }
+            Frame.sendMessage(group, forwardMessageBuilder.build());
+            return RETURN_BREAK_TRUE;
+        }
         return RETURN_CONTINUE;
     }
 
-    @TimedInsEvent
-    public int timedDel() {
+    @TimerInrsEvent
+    public int timerDel(@NotNull String prefix) {
+        if (!base.getDelete().contains(prefix)) return RETURN_CONTINUE;
+        RegUtils reg = RegExpConfig.timerDelRegExp(prefix);
+        if (reg.matcher(this.ins).find()) {
+            // 判断发送者是否有删除定时任务的权限
+            if (VanillaUtils.hasNotPermissionAndMore(bot, group, sender.getId(), PERMISSION_LEVEL_DEPUTY_ADMIN))
+                return RETURN_CONTINUE;
 
+            String[] keyIds;
+            String type, rep;
+
+            try {
+                String key = reg.getMatcher().group("keyIds");
+                keyIds = key.split("\\s");
+            } catch (Exception ignored) {
+                Frame.sendMessage(group, "表达式有误");
+                return RETURN_BREAK_TRUE;
+            }
+
+            ForwardMessageBuilder forwardMessageBuilder = new ForwardMessageBuilder(group)
+                    .add(sender, msg);
+
+            for (String keyId : keyIds) {
+                Map<Long, List<TimerData>> map = Va.getTimerData().getTimer();
+                TimerData timerData = map.values().stream()
+                        .flatMap(List::stream)
+                        .filter(o -> o.getId().equals(keyId))
+                        .findFirst().orElse(new TimerData());
+                map.entrySet().removeIf(entry -> {
+                    entry.setValue(entry.getValue().stream()
+                            .filter(o -> !o.getId().equals(keyId))
+                            .collect(Collectors.toList())
+                    );
+                    return entry.getValue().isEmpty();
+                });
+                boolean tf = false;
+                try {
+                    tf = Va.getScheduler().deleteJob(new JobKey(timerData.getId(), timerData.getGroupNum() + ".job"));
+                } catch (SchedulerException e) {
+                    Va.getLogger().error(e);
+                }
+                if (tf) {
+                    forwardMessageBuilder
+                            .add(bot, new MessageChainBuilder().append("定时任务编号:\n").append(keyId).build())
+                            .add(bot, new MessageChainBuilder().append("群号:\n").append(String.valueOf(timerData.getGroupNum())).build())
+                            .add(bot, new MessageChainBuilder().append("触发条件:\n").append(timerData.getCron()).build())
+                            .add(bot, new MessageChainBuilder().append("任务内容:\n").append(timerData.getMsg()).build())
+                            .add(bot, new PlainText("删除成功"));
+                } else {
+                    forwardMessageBuilder
+                            .add(bot, new MessageChainBuilder().append("定时任务编号:\n").append(keyId).build())
+                            .add(bot, new PlainText("删除失败"));
+                }
+            }
+            Frame.sendMessage(group, forwardMessageBuilder.build());
+            return RETURN_BREAK_TRUE;
+        }
         return RETURN_CONTINUE;
     }
 

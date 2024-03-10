@@ -2,6 +2,7 @@ package xin.vanilla.util;
 
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
+import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.contact.Contact;
 import net.mamoe.mirai.contact.Group;
@@ -10,8 +11,11 @@ import net.mamoe.mirai.message.data.*;
 import net.mamoe.mirai.utils.ExternalResource;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.quartz.*;
 import xin.vanilla.VanillaKanri;
 import xin.vanilla.entity.KeyRepEntity;
+import xin.vanilla.entity.data.TimerData;
+import xin.vanilla.event.TimerMsgEvent;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,7 +23,9 @@ import java.io.InputStream;
 import java.net.Proxy;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -131,14 +137,15 @@ public class Frame {
      */
     @NotNull
     public static Contact buildPrivateChatContact(Bot bot, long qqNum) {
-        return Frame.buildPrivateChatContact(bot, qqNum, 0);
+        return Frame.buildPrivateChatContact(bot, qqNum, 0, true);
     }
 
     /**
      * 获取私聊对象
+     *
+     * @param fail 未获取到对象是否抛出异常
      */
-    @NotNull
-    public static Contact buildPrivateChatContact(Bot bot, long qqNum, long groupNum) {
+    public static Contact buildPrivateChatContact(Bot bot, long qqNum, long groupNum, boolean fail) {
         Contact contact = null;
         if (groupNum > 0) {
             Group group = bot.getGroup(groupNum);
@@ -150,7 +157,10 @@ public class Frame {
             contact = bot.getFriend(qqNum);
         }
         if (contact == null) {
-            contact = bot.getStrangerOrFail(qqNum);
+            if (fail)
+                contact = bot.getStrangerOrFail(qqNum);
+            else
+                contact = bot.getStranger(qqNum);
         }
         return contact;
     }
@@ -242,14 +252,11 @@ public class Frame {
             while (regUtils.matcher(textMsg).find()) {
                 long qq = Long.parseLong(regUtils.getMatcher().group("qq"));
                 textMsg = textMsg.replace("[vacode:tofriend:" + qq + "]", "");
-                Contact friend;
+                long group = 0;
                 if (rep.getContact() instanceof Group) {
-                    Group group = (Group) rep.getContact();
-                    friend = group.get(qq);
-                } else {
-                    friend = rep.getContact().getBot().getFriend(qq);
+                    group = rep.getContact().getId();
                 }
-                rep.setContact(friend);
+                rep.setContact(Frame.buildPrivateChatContact(rep.getContact().getBot(), qq, group, true));
             }
         }
 
@@ -280,6 +287,94 @@ public class Frame {
                 String key = regUtils.getMatcher().group("key");
                 textMsg = textMsg.replaceAll(regUtils.build(), ":chatgpt:***]");
             }
+        }
+
+        // 定时任务特殊码(此处的)
+        if (textMsg.contains("[vacode:timer:")) {
+            RegUtils regUtils = new RegUtils().appendIg(".*?").append("[vacode:timer:")
+                    .groupIgByName("time", "(?:\\d{1,6}(?:\\.\\d{1,4})?|(?:[\\d\\*\\-,\\?LW#/]+ ){4,6}(?:[\\d\\*\\-,\\?LW#/]+))")
+                    .groupIgByName("unit", "(?:ms|s|m|h|d|MS|S|M|H|D|Ms|mS)?")
+                    .appendIg("].*?");
+            List<String> timeList = new ArrayList<>();
+            while (regUtils.matcher(textMsg).find()) {
+                String time = regUtils.getMatcher().group("time");
+                String unit = regUtils.getMatcher().group("unit");
+                textMsg = textMsg.replace("[vacode:timer:" + time + unit + "]", "");
+                unit = StringUtils.isNullOrEmpty(unit) ? "ms" : unit;
+                timeList.add(time + "=" + unit.toLowerCase());
+            }
+            for (String timeAndUnit : timeList) {
+                String[] array = timeAndUnit.split("=");
+
+                TimerData timer = new TimerData();
+                timer.setId(NanoIdUtils.randomNanoId());
+                timer.setBot(rep.getContact().getBot());
+                timer.setBotNum(rep.getContact().getBot().getId());
+                timer.setSender(Frame.buildPrivateChatContact(timer.getBot(), rep.getSenderId(), rep.getContact().getId(), false));
+                timer.setSenderNum(rep.getSenderId());
+                timer.setOnce(true);
+                timer.setMsg(textMsg);
+                timer.setGroupNum(rep.getContact().getBot().getGroup(rep.getContact().getId()) != null ? rep.getContact().getId() : 0);
+
+                // 构建任务触发器
+                Trigger trigger;
+                // 判断是否为cron表达式
+                if (CronExpression.isValidExpression(array[0])) {
+                    timer.setCron(array[0]);
+                    trigger = TriggerBuilder.newTrigger()
+                            .withIdentity(timer.getId(), timer.getGroupNum() + ".trigger")
+                            .withSchedule(CronScheduleBuilder.cronSchedule(array[0]))
+                            .build();
+                    // 若为cron表达式则做持久化处理
+                    if (Va.getTimerData().getTimer().containsKey(timer.getGroupNum())) {
+                        Va.getTimerData().getTimer().get(timer.getGroupNum()).add(timer);
+                    } else {
+                        Va.getTimerData().getTimer().put(timer.getGroupNum(), new ArrayList<TimerData>() {{
+                            add(timer);
+                        }});
+                    }
+                } else {
+                    timer.setCron(array[0] + array[1]);
+                    float time = Float.parseFloat(array[0]);
+                    Date startDate;
+                    switch (array[1]) {
+                        case "s":
+                            startDate = DateUtils.addSecond(new Date(), time);
+                            break;
+                        case "m":
+                            startDate = DateUtils.addMinute(new Date(), time);
+                            break;
+                        case "h":
+                            startDate = DateUtils.addHour(new Date(), time);
+                            break;
+                        case "d":
+                            startDate = DateUtils.addDay(new Date(), time);
+                            break;
+                        case "ms":
+                        default:
+                            startDate = DateUtils.addMilliSecond(new Date(), (int) time);
+                    }
+                    trigger = TriggerBuilder.newTrigger()
+                            .withIdentity(timer.getId(), timer.getGroupNum() + ".trigger")
+                            .withSchedule(SimpleScheduleBuilder.simpleSchedule())
+                            .startAt(startDate)
+                            .build();
+                }
+
+                // 构建任务, 装载任务数据
+                JobDataMap jobDataMap = new JobDataMap();
+                jobDataMap.put("timer", timer);
+                JobDetail jobDetail = JobBuilder.newJob(TimerMsgEvent.class)
+                        .withIdentity(timer.getId(), timer.getGroupNum() + ".job")
+                        .usingJobData(jobDataMap)
+                        .build();
+
+                try {
+                    Va.getScheduler().scheduleJob(jobDetail, trigger);
+                } catch (SchedulerException ignored) {
+                }
+            }
+            textMsg = "";
         }
         return textMsg;
     }

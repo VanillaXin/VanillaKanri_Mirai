@@ -7,9 +7,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 插件数据
+ * 抽老婆数据
  */
-public class PluginDataFile extends JavaAutoSavePluginData {
+public class WifeDataFile extends JavaAutoSavePluginData {
 
     /**
      * 抽老婆记录
@@ -17,8 +17,8 @@ public class PluginDataFile extends JavaAutoSavePluginData {
     public SerializerAwareValue<Map<String, String>> wife = typedValue("wife",
             createKType(HashMap.class, createKType(String.class), createKType(String.class)));
 
-    public PluginDataFile() {
-        super("plugin_data");
+    public WifeDataFile() {
+        super("wife_data");
     }
 
     public Map<String, String> getWife() {
