@@ -1124,7 +1124,6 @@ public class InstructionMsgEvent {
 
             ForwardMessageBuilder forwardMessageBuilder = new ForwardMessageBuilder(group)
                     .add(sender, new PlainText(VanillaUtils.messageToString(msg)))
-                    .add(bot, new PlainText("定时任务类型:\n" + (validExpression ? "cron" : "once")))
                     .add(bot, new MessageChainBuilder().append("触发条件:\n").append(keyFormat).build())
                     .add(bot, new MessageChainBuilder().append("任务内容:\n").append(repFormat).build());
             for (long groupId : groups) {
@@ -1243,7 +1242,9 @@ public class InstructionMsgEvent {
                         tf = false;
                     }
                 }
-                forwardMessageBuilder.add(bot, new PlainText("群号: " + (groupId == 0 ? "仅好友" : groupId) + "\n编号: " + timer.getId() + "\n" + (tf ? "添加成功" : "添加失败")));
+                forwardMessageBuilder
+                        .add(bot, new PlainText("定时任务类型:\n" + (validExpression ? (level > 0 ? "cron" : "cron but once") : "once")))
+                        .add(bot, new PlainText("群号: " + (groupId == 0 ? "仅好友" : groupId) + "\n编号: " + timer.getId() + "\n" + (tf ? "添加成功" : "添加失败")));
             }
             Frame.sendMessage(group, forwardMessageBuilder.build());
             return RETURN_BREAK_TRUE;
