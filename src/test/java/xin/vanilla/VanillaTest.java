@@ -12,7 +12,6 @@ import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson2.JSON;
 import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
 import org.junit.Test;
-import xin.vanilla.common.RegExpConfig;
 import xin.vanilla.entity.TestEntities;
 import xin.vanilla.entity.TestEntity;
 import xin.vanilla.entity.TestTable;

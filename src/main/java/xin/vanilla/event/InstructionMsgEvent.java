@@ -1188,7 +1188,7 @@ public class InstructionMsgEvent {
                         int second = Integer.parseInt(StringUtils.toString(dateTimeReg.getMatcher().group("second"), "0"));
                         int millisecond = Integer.parseInt(StringUtils.toString(dateTimeReg.getMatcher().group("millisecond"), "0"));
                         startDate = DateUtils.getDate(year, month, day, hour, minute, second, millisecond);
-                        tf = startDate.before(new Date());
+                        tf = startDate.after(new Date());
                     }
                     // 否则为加减时间
                     else {
