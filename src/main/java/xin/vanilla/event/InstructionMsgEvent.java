@@ -2,7 +2,6 @@ package xin.vanilla.event;
 
 import cn.hutool.system.oshi.CpuInfo;
 import cn.hutool.system.oshi.OshiUtil;
-import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
 import com.github.houbb.pinyin.constant.enums.PinyinStyleEnum;
 import com.github.houbb.pinyin.util.PinyinHelper;
 import lombok.Getter;
@@ -35,6 +34,7 @@ import xin.vanilla.util.*;
 import xin.vanilla.util.sqlite.PaginationList;
 
 import java.math.BigDecimal;
+import java.text.ParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -1116,6 +1116,7 @@ public class InstructionMsgEvent {
             exp = reg.getMatcher().group("exp");
             rep = reg.getMatcher().group("rep");
             boolean validExpression = CronExpression.isValidExpression(exp);
+            RegUtils dateTimeReg = RegExpConfig.DATE_TIME;
             MessageChain keyFormat;
             MessageChain repFormat = MessageChain.deserializeFromMiraiCode(rep, group);
 
@@ -1128,9 +1129,10 @@ public class InstructionMsgEvent {
                     .add(bot, new MessageChainBuilder().append("任务内容:\n").append(repFormat).build());
             for (long groupId : groups) {
                 boolean tf = true;
+                int level = VanillaUtils.getPermissionLevel(bot, groupId, sender.getId());
 
                 TimerData timer = new TimerData();
-                timer.setId(NanoIdUtils.randomNanoId());
+                timer.setId(StringUtils.randString());
                 timer.setBot(this.bot);
                 timer.setBotNum(this.bot.getId());
                 timer.setSender(Frame.buildPrivateChatContact(this.bot, this.sender.getId(), groupId, false));
@@ -1142,8 +1144,8 @@ public class InstructionMsgEvent {
 
                 // 构建任务触发器
                 Trigger trigger;
-                // 判断是否为cron表达式
-                if (validExpression) {
+                // 判断是否为cron表达式 且 人员权级大于0
+                if (validExpression && level > 0) {
                     trigger = TriggerBuilder.newTrigger()
                             .withIdentity(timer.getId(), timer.getGroupNum() + ".trigger")
                             .withSchedule(CronScheduleBuilder.cronSchedule(exp))
@@ -1156,36 +1158,75 @@ public class InstructionMsgEvent {
                             add(timer);
                         }});
                     }
-                } else {
-                    String unit = exp.replaceAll("[\\d.]", "");
-                    Date startDate = new Date();
                     try {
-                        float timeNum = Float.parseFloat(exp.replace(unit, ""));
-                        switch (unit) {
-                            case "s":
-                                startDate = DateUtils.addSecond(new Date(), timeNum);
-                                break;
-                            case "m":
-                                startDate = DateUtils.addMinute(new Date(), timeNum);
-                                break;
-                            case "h":
-                                startDate = DateUtils.addHour(new Date(), timeNum);
-                                break;
-                            case "d":
-                                startDate = DateUtils.addDay(new Date(), timeNum);
-                                break;
-                            case "ms":
-                            default:
-                                startDate = DateUtils.addMilliSecond(new Date(), (int) timeNum);
+                        CronExpression cron = new CronExpression(exp);
+                        Date nextTime1 = cron.getNextValidTimeAfter(new Date());
+                        Date nextTime2 = cron.getNextValidTimeAfter(nextTime1);
+                        forwardMessageBuilder.add(bot, new PlainText("未来两次执行时间: \n"
+                                + "1. " + DateUtils.toDateTimeString(nextTime1)
+                                + "2. " + DateUtils.toDateTimeString(nextTime2))
+                        );
+                    } catch (ParseException ignored) {
+                    }
+                } else {
+                    Date startDate = new Date();
+                    // 若为普通群员添加
+                    if (validExpression) {
+                        try {
+                            CronExpression cron = new CronExpression(exp);
+                            startDate = cron.getNextValidTimeAfter(new Date());
+                        } catch (ParseException ignored) {
+                            tf = false;
                         }
-                    } catch (Exception ignored) {
-                        tf = false;
+                    }
+                    // 判断是否指定时间
+                    else if (dateTimeReg.matcher(exp).find()) {
+                        int year = Integer.parseInt(StringUtils.toString(dateTimeReg.getMatcher().group("year"), String.valueOf(DateUtils.getYearOfDate(new Date()))));
+                        int month = Integer.parseInt(StringUtils.toString(dateTimeReg.getMatcher().group("month"), "1"));
+                        int day = Integer.parseInt(StringUtils.toString(dateTimeReg.getMatcher().group("day"), "1"));
+                        int hour = Integer.parseInt(StringUtils.toString(dateTimeReg.getMatcher().group("hour"), "0"));
+                        int minute = Integer.parseInt(StringUtils.toString(dateTimeReg.getMatcher().group("minute"), "0"));
+                        int second = Integer.parseInt(StringUtils.toString(dateTimeReg.getMatcher().group("second"), "0"));
+                        int millisecond = Integer.parseInt(StringUtils.toString(dateTimeReg.getMatcher().group("millisecond"), "0"));
+                        startDate = DateUtils.getDate(year, month, day, hour, minute, second, millisecond);
+                        tf = startDate.before(new Date());
+                    }
+                    // 否则为加减时间
+                    else {
+                        try {
+                            String unit = exp.replaceAll("[\\d.]", "");
+                            float timeNum = Float.parseFloat(exp.replace(unit, ""));
+                            switch (unit) {
+                                case "s":
+                                    startDate = DateUtils.addSecond(new Date(), timeNum);
+                                    break;
+                                case "m":
+                                    startDate = DateUtils.addMinute(new Date(), timeNum);
+                                    break;
+                                case "h":
+                                    startDate = DateUtils.addHour(new Date(), timeNum);
+                                    break;
+                                case "d":
+                                    startDate = DateUtils.addDay(new Date(), timeNum);
+                                    break;
+                                case "ms":
+                                default:
+                                    startDate = DateUtils.addMilliSecond(new Date(), (int) timeNum);
+                            }
+                        } catch (Exception ignored) {
+                            tf = false;
+                        }
                     }
                     trigger = TriggerBuilder.newTrigger()
                             .withIdentity(timer.getId(), timer.getGroupNum() + ".trigger")
                             .withSchedule(SimpleScheduleBuilder.simpleSchedule())
                             .startAt(startDate)
                             .build();
+
+                    forwardMessageBuilder.add(bot, new PlainText("未来两次执行时间: \n"
+                            + "1. " + DateUtils.toDateTimeString(startDate)
+                            + "2. 无")
+                    );
                 }
                 // 构建任务, 装载任务数据
                 JobDataMap jobDataMap = new JobDataMap();
@@ -1202,7 +1243,7 @@ public class InstructionMsgEvent {
                         tf = false;
                     }
                 }
-                forwardMessageBuilder.add(bot, new PlainText("群号: " + (groupId == 0 ? "仅好友" : groupId) + "\n定时任务编号: " + timer.getId() + "\n" + (tf ? "添加成功" : "添加失败")));
+                forwardMessageBuilder.add(bot, new PlainText("群号: " + (groupId == 0 ? "仅好友" : groupId) + "\n编号: " + timer.getId() + "\n" + (tf ? "添加成功" : "添加失败")));
             }
             Frame.sendMessage(group, forwardMessageBuilder.build());
             return RETURN_BREAK_TRUE;

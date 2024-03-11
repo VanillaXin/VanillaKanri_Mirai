@@ -1,16 +1,38 @@
 package xin.vanilla.util;
 
+import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
 import org.jetbrains.annotations.NotNull;
 import xin.vanilla.VanillaKanri;
 import xin.vanilla.entity.config.instruction.KeywordInstructions;
 
+import java.security.SecureRandom;
 import java.util.Collection;
 
+@SuppressWarnings("unused")
 public class StringUtils {
 
     public static final String METHOD_SET_PREFIX = "set";
     public static final String METHOD_GET_PREFIX = "get";
     public static final String COMMON_MARK = ",<.>/?;:'\"[{]}\\|`~!@#$%^&*()-_=+，《。》、？；：‘“【】·~！￥…（）—";
+    /**
+     * NanoId默认随机字符串生成器
+     */
+    public static final SecureRandom DEFAULT_NUMBER_GENERATOR = new SecureRandom();
+
+    /**
+     * NanoId默认随机字符串序列
+     */
+    public static final char[] DEFAULT_ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
+
+    /**
+     * NanoId默认随机字符串序列
+     */
+    public static final char[] NUMBER_ALPHABET = "0123456789".toCharArray();
+
+    /**
+     * NanoId默认随机字符串长度
+     */
+    public static final int DEFAULT_SIZE = 21;
 
     /**
      * 字符串是否为常用标点符号
@@ -261,17 +283,16 @@ public class StringUtils {
         return sb.toString();
     }
 
-
     public static boolean isNullOrEmpty(String s) {
-        return null == s || s.equals("");
+        return null == s || s.isEmpty();
     }
 
     public static boolean isNullOrEmptyEx(String s) {
-        return null == s || s.trim().equals("");
+        return null == s || s.trim().isEmpty();
     }
 
     public static boolean isNotNullOrEmpty(String s) {
-        return s != null && !"".equals(s);
+        return s != null && !s.isEmpty();
     }
 
     public static boolean isNotNull(Object s) {
@@ -326,6 +347,40 @@ public class StringUtils {
         return s.substring(0, length - len);
     }
 
+    @NotNull
+    public static String toString(String s, @NotNull String emptyDefault) {
+        return StringUtils.isNullOrEmpty(s) ? emptyDefault : s;
+    }
+
+    @NotNull
+    public static String randString() {
+        return NanoIdUtils.randomNanoId(DEFAULT_NUMBER_GENERATOR, DEFAULT_ALPHABET, DEFAULT_SIZE);
+    }
+
+    @NotNull
+    public static String randString(String alphabet) {
+        return NanoIdUtils.randomNanoId(DEFAULT_NUMBER_GENERATOR, alphabet.toCharArray(), DEFAULT_SIZE);
+    }
+
+    @NotNull
+    public static String randString(int size) {
+        return NanoIdUtils.randomNanoId(DEFAULT_NUMBER_GENERATOR, DEFAULT_ALPHABET, size);
+    }
+
+    @NotNull
+    public static String randString(String alphabet, int size) {
+        return NanoIdUtils.randomNanoId(DEFAULT_NUMBER_GENERATOR, alphabet.toCharArray(), size);
+    }
+
+    @NotNull
+    public static String randNumberString() {
+        return NanoIdUtils.randomNanoId(DEFAULT_NUMBER_GENERATOR, NUMBER_ALPHABET, DEFAULT_SIZE);
+    }
+
+    @NotNull
+    public static String randNumberString(int size) {
+        return NanoIdUtils.randomNanoId(DEFAULT_NUMBER_GENERATOR, NUMBER_ALPHABET, size);
+    }
 
     public static String getAvatarUrl(long qq, int size) {
         return "http://q.qlogo.cn/g?b=qq&nk=" + qq + "&s=" + size;

@@ -2,7 +2,6 @@ package xin.vanilla.util;
 
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
-import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.contact.Contact;
 import net.mamoe.mirai.contact.Group;
@@ -13,6 +12,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.quartz.*;
 import xin.vanilla.VanillaKanri;
+import xin.vanilla.common.RegExpConfig;
 import xin.vanilla.entity.KeyRepEntity;
 import xin.vanilla.entity.data.TimerData;
 import xin.vanilla.event.TimerMsgEvent;
@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.net.Proxy;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -31,6 +32,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static xin.vanilla.util.RegUtils.REG_SEPARATOR;
 
 /**
  * 框架部分接口
@@ -292,38 +295,46 @@ public class Frame {
         // 定时任务特殊码(此处的)
         if (textMsg.contains("[vacode:timer:")) {
             RegUtils regUtils = new RegUtils().appendIg(".*?").append("[vacode:timer:")
-                    .groupIgByName("time", "(?:\\d{1,6}(?:\\.\\d{1,4})?|(?:[\\d\\*\\-,\\?LW#/]+ ){4,6}(?:[\\d\\*\\-,\\?LW#/]+))")
-                    .groupIgByName("unit", "(?:ms|s|m|h|d|MS|S|M|H|D|Ms|mS)?")
+                    .groupIgByName("exp"
+                            , "(?:\\d{1,6}(?:\\.\\d{1,4})?(?:ms|s|m|h|d|MS|S|M|H|D|Ms|mS)?"
+                            , "(?:[\\d\\*\\-,\\?LW#/]+" + REG_SEPARATOR + "){4,6}(?:[\\d\\*\\-,\\?LW#/]+))"
+                            , RegExpConfig.DATE_TIME_CODE)
                     .appendIg("].*?");
-            List<String> timeList = new ArrayList<>();
+            List<String> expList = new ArrayList<>();
             while (regUtils.matcher(textMsg).find()) {
-                String time = regUtils.getMatcher().group("time");
-                String unit = regUtils.getMatcher().group("unit");
-                textMsg = textMsg.replace("[vacode:timer:" + time + unit + "]", "");
-                unit = StringUtils.isNullOrEmpty(unit) ? "ms" : unit;
-                timeList.add(time + "=" + unit.toLowerCase());
+                String exp = regUtils.getMatcher().group("exp");
+                textMsg = textMsg.replace("[vacode:timer:" + exp + "]", "");
+                expList.add(exp);
             }
-            for (String timeAndUnit : timeList) {
-                String[] array = timeAndUnit.split("=");
+
+            RegUtils dateTimeReg = RegExpConfig.DATE_TIME;
+            Bot bot = rep.getContact().getBot();
+            Contact sender = Frame.buildPrivateChatContact(bot, rep.getSenderId(), rep.getContact().getId(), false);
+            long groupId = rep.getContact().getBot().getGroup(rep.getContact().getId()) != null ? rep.getContact().getId() : 0;
+            int level = VanillaUtils.getPermissionLevel(bot, groupId, sender.getId());
+
+            for (String exp : expList) {
+                boolean tf = true;
+                boolean validExpression = CronExpression.isValidExpression(exp);
 
                 TimerData timer = new TimerData();
-                timer.setId(NanoIdUtils.randomNanoId());
-                timer.setBot(rep.getContact().getBot());
-                timer.setBotNum(rep.getContact().getBot().getId());
-                timer.setSender(Frame.buildPrivateChatContact(timer.getBot(), rep.getSenderId(), rep.getContact().getId(), false));
-                timer.setSenderNum(rep.getSenderId());
-                timer.setOnce(true);
+                timer.setId(StringUtils.randString());
+                timer.setBot(bot);
+                timer.setBotNum(bot.getId());
+                timer.setSender(Frame.buildPrivateChatContact(bot, sender.getId(), groupId, false));
+                timer.setSenderNum(sender.getId());
+                timer.setOnce(!validExpression);
                 timer.setMsg(textMsg);
-                timer.setGroupNum(rep.getContact().getBot().getGroup(rep.getContact().getId()) != null ? rep.getContact().getId() : 0);
+                timer.setGroupNum(groupId);
+                timer.setCron(exp);
 
                 // 构建任务触发器
                 Trigger trigger;
-                // 判断是否为cron表达式
-                if (CronExpression.isValidExpression(array[0])) {
-                    timer.setCron(array[0]);
+                // 判断是否为cron表达式 且 人员权级大于0
+                if (validExpression && level > 0) {
                     trigger = TriggerBuilder.newTrigger()
                             .withIdentity(timer.getId(), timer.getGroupNum() + ".trigger")
-                            .withSchedule(CronScheduleBuilder.cronSchedule(array[0]))
+                            .withSchedule(CronScheduleBuilder.cronSchedule(exp))
                             .build();
                     // 若为cron表达式则做持久化处理
                     if (Va.getTimerData().getTimer().containsKey(timer.getGroupNum())) {
@@ -334,25 +345,53 @@ public class Frame {
                         }});
                     }
                 } else {
-                    timer.setCron(array[0] + array[1]);
-                    float time = Float.parseFloat(array[0]);
-                    Date startDate;
-                    switch (array[1]) {
-                        case "s":
-                            startDate = DateUtils.addSecond(new Date(), time);
-                            break;
-                        case "m":
-                            startDate = DateUtils.addMinute(new Date(), time);
-                            break;
-                        case "h":
-                            startDate = DateUtils.addHour(new Date(), time);
-                            break;
-                        case "d":
-                            startDate = DateUtils.addDay(new Date(), time);
-                            break;
-                        case "ms":
-                        default:
-                            startDate = DateUtils.addMilliSecond(new Date(), (int) time);
+                    Date startDate = new Date();
+                    // 若为普通群员添加
+                    if (validExpression) {
+                        try {
+                            CronExpression cron = new CronExpression(exp);
+                            startDate = cron.getNextValidTimeAfter(new Date());
+                        } catch (ParseException ignored) {
+                            tf = false;
+                        }
+                    }
+                    // 判断是否指定时间
+                    else if (dateTimeReg.matcher(exp).find()) {
+                        int year = Integer.parseInt(StringUtils.toString(dateTimeReg.getMatcher().group("year"), String.valueOf(DateUtils.getYearOfDate(new Date()))));
+                        int month = Integer.parseInt(StringUtils.toString(dateTimeReg.getMatcher().group("month"), "1"));
+                        int day = Integer.parseInt(StringUtils.toString(dateTimeReg.getMatcher().group("day"), "1"));
+                        int hour = Integer.parseInt(StringUtils.toString(dateTimeReg.getMatcher().group("hour"), "0"));
+                        int minute = Integer.parseInt(StringUtils.toString(dateTimeReg.getMatcher().group("minute"), "0"));
+                        int second = Integer.parseInt(StringUtils.toString(dateTimeReg.getMatcher().group("second"), "0"));
+                        int millisecond = Integer.parseInt(StringUtils.toString(dateTimeReg.getMatcher().group("millisecond"), "0"));
+                        startDate = DateUtils.getDate(year, month, day, hour, minute, second, millisecond);
+                        tf = startDate.before(new Date());
+                    }
+                    // 否则为加减时间
+                    else {
+                        try {
+                            String unit = exp.replaceAll("[\\d.]", "");
+                            float timeNum = Float.parseFloat(exp.replace(unit, ""));
+                            switch (unit) {
+                                case "s":
+                                    startDate = DateUtils.addSecond(new Date(), timeNum);
+                                    break;
+                                case "m":
+                                    startDate = DateUtils.addMinute(new Date(), timeNum);
+                                    break;
+                                case "h":
+                                    startDate = DateUtils.addHour(new Date(), timeNum);
+                                    break;
+                                case "d":
+                                    startDate = DateUtils.addDay(new Date(), timeNum);
+                                    break;
+                                case "ms":
+                                default:
+                                    startDate = DateUtils.addMilliSecond(new Date(), (int) timeNum);
+                            }
+                        } catch (Exception ignored) {
+                            tf = false;
+                        }
                     }
                     trigger = TriggerBuilder.newTrigger()
                             .withIdentity(timer.getId(), timer.getGroupNum() + ".trigger")
@@ -360,7 +399,6 @@ public class Frame {
                             .startAt(startDate)
                             .build();
                 }
-
                 // 构建任务, 装载任务数据
                 JobDataMap jobDataMap = new JobDataMap();
                 jobDataMap.put("timer", timer);
@@ -368,10 +406,12 @@ public class Frame {
                         .withIdentity(timer.getId(), timer.getGroupNum() + ".job")
                         .usingJobData(jobDataMap)
                         .build();
-
-                try {
-                    Va.getScheduler().scheduleJob(jobDetail, trigger);
-                } catch (SchedulerException ignored) {
+                if (tf) {
+                    try {
+                        Va.getScheduler().scheduleJob(jobDetail, trigger);
+                    } catch (SchedulerException e) {
+                        Va.getLogger().error(e);
+                    }
                 }
             }
             textMsg = "";

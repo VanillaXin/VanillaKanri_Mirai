@@ -16,7 +16,6 @@ import xin.vanilla.common.RegExpConfig;
 import xin.vanilla.entity.TestEntities;
 import xin.vanilla.entity.TestEntity;
 import xin.vanilla.entity.TestTable;
-import xin.vanilla.util.RegUtils;
 import xin.vanilla.util.StringUtils;
 import xin.vanilla.util.sqlite.SqliteUtil;
 import xin.vanilla.util.sqlite.statement.InsertStatement;
@@ -27,9 +26,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.SecureRandom;
 import java.sql.SQLException;
-import java.util.*;
-
-import static xin.vanilla.util.RegUtils.REG_SEPARATOR;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 
 public class VanillaTest {
@@ -217,18 +217,7 @@ public class VanillaTest {
     }
 
     @Test
-    public void test06() {String GROUP_CODE = "<(?:(?:\\d{5,10}"
-            + "|" + RegUtils.processGroup(Collections.singleton("that"))
-            + "|" + RegUtils.processGroup(Collections.singleton("global")) + ")" + REG_SEPARATOR + "?)*?>";
+    public void test06() {
 
-        String thirdPrefix = "add";
-        RegUtils regUtils = RegUtils.start().groupNon(thirdPrefix).separator()
-                .groupIgByName("group", GROUP_CODE).appendIg("?").separator("?")
-                .appendIg("[\"\\'\\<\\[\\{\\(]")
-                .groupIgByName("exp", "(?:\\d{1,6}(?:\\.\\d{1,4})?(?:ms|s|m|h|d|MS|S|M|H|D|Ms|mS)?|(?:[\\d\\*\\-,\\?LW#/]+ ){4,6}(?:[\\d\\*\\-,\\?LW#/]+))")
-                .appendIg("[\"\\'\\>\\]\\}\\)]").separator()
-                .groupNon("rep").separator()
-                .groupIgByName("rep", ".*?").end();
-        System.out.println(regUtils);
     }
 }

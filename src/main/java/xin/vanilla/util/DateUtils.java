@@ -33,7 +33,11 @@ public class DateUtils {
     }
 
     public static String toString(Date date) {
-        return toString(date, "yyyy-MM-dd");
+        return toString(date, ISO_EXPANDED_DATE_FORMAT);
+    }
+
+    public static String toDateTimeString(Date date) {
+        return toString(date, DATETIME_PATTERN);
     }
 
     public static String toString(Date date, String pattern) {

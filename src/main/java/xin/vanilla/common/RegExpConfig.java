@@ -25,6 +25,17 @@ public class RegExpConfig {
     private static final TimerTaskInstructions timer = Va.getGlobalConfig().getInstructions().getTimer();
     private static final BaseInstructions base = Va.getGlobalConfig().getInstructions().getBase();
 
+    public static final String DATE_TIME_CODE = "(?<date>"
+            + "(?<year>\\d{4})"
+            + "[\\\\\\-\\. /_:年](?<month>[01]?\\d)"
+            + "[\\\\\\-\\. /_:月](?<day>[0-3]?\\d)日?"
+            + ")"
+            + "(?<time>"
+            + "(?:[\\\\\\-\\. /_:T]?(?<hour>[012]?\\d)时?)"
+            + "(?:[\\\\\\-\\. /_:]?(?<minute>[0-5]?\\d)分?)?"
+            + "(?:[\\\\\\-\\. /_:]?(?<second>[0-5]?\\d)秒?)?"
+            + "(?:[\\\\\\-\\. /_:]?(?<millisecond>\\d{1,3}))?"
+            + ")?";
 
     public static final String QQ_CODE = "(?:(?:" +
             StringUtils.escapeExprSpecialWord(new At(2333333333L).toString()).replace("2333333333", "\\d{5,10}")
@@ -46,6 +57,8 @@ public class RegExpConfig {
                     .append("players").separator().append("online:").separator()
                     .groupIgByName("player", "[^:]*?")
                     .end();
+
+    public static final RegUtils DATE_TIME = RegUtils.start().appendIg(RegExpConfig.DATE_TIME_CODE).end();
 
 
     // region 群管指令
@@ -259,7 +272,8 @@ public class RegExpConfig {
                 .appendIg("[\"\\'\\<\\[\\{\\(]")
                 .groupIgByName("exp"
                         , "(?:\\d{1,6}(?:\\.\\d{1,4})?(?:ms|s|m|h|d|MS|S|M|H|D|Ms|mS)?"
-                        , "(?:[\\d\\*\\-,\\?LW#/]+" + REG_SEPARATOR + "){4,6}(?:[\\d\\*\\-,\\?LW#/]+))")
+                        , "(?:[\\d\\*\\-,\\?LW#/]+" + REG_SEPARATOR + "){4,6}(?:[\\d\\*\\-,\\?LW#/]+))"
+                        , DATE_TIME_CODE)
                 .appendIg("[\"\\'\\>\\]\\}\\)]").separator()
                 .groupNon(timer.getSuffix()).separator()
                 .groupIgByName("rep", ".*?").end();
