@@ -909,6 +909,7 @@ public class VanillaUtils {
                     tf = false;
                 }
             }
+            result.getRunTime().add(startDate);
             if (tf) {
                 result.setTrigger(TriggerBuilder.newTrigger()
                         .withIdentity(key)

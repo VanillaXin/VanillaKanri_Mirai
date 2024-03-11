@@ -1153,12 +1153,14 @@ public class InstructionMsgEvent {
                             + "\n1. " + DateUtils.toDateTimeString(triggerEntity.getRunTime().get(0))
                             + "\n2. " + DateUtils.toDateTimeString(triggerEntity.getRunTime().get(1)))
                     );
-                } else {
+                } else if (!triggerEntity.getRunTime().isEmpty()) {
                     StringBuilder sb = new StringBuilder();
                     for (int i = 0; i < triggerEntity.getRunTime().size(); i++) {
                         sb.append("\n").append(i + 1).append(". ").append(DateUtils.toDateTimeString(triggerEntity.getRunTime().get(i)));
                     }
-                    forwardMessageBuilder.add(bot, new PlainText("未来两次执行时间: " + sb));
+                    forwardMessageBuilder.add(bot, new PlainText("未来" + triggerEntity.getRunTime().size() + "次执行时间: " + sb));
+                } else {
+                    forwardMessageBuilder.add(bot, new PlainText("未来将不会执行该任务"));
                 }
 
                 // 构建任务, 装载任务数据
