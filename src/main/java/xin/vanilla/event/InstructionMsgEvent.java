@@ -1,5 +1,6 @@
 package xin.vanilla.event;
 
+import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.system.oshi.CpuInfo;
 import cn.hutool.system.oshi.OshiUtil;
 import com.github.houbb.pinyin.constant.enums.PinyinStyleEnum;
@@ -23,6 +24,7 @@ import xin.vanilla.common.RegExpConfig;
 import xin.vanilla.common.annotation.KanriInsEvent;
 import xin.vanilla.common.annotation.KeywordInsEvent;
 import xin.vanilla.common.annotation.TimerInrsEvent;
+import xin.vanilla.entity.TriggerEntity;
 import xin.vanilla.entity.config.instruction.BaseInstructions;
 import xin.vanilla.entity.config.instruction.KanriInstructions;
 import xin.vanilla.entity.config.instruction.KeywordInstructions;
@@ -34,7 +36,6 @@ import xin.vanilla.util.*;
 import xin.vanilla.util.sqlite.PaginationList;
 
 import java.math.BigDecimal;
-import java.text.ParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -110,7 +111,6 @@ public class InstructionMsgEvent {
     public int status(long[] groups, long[] qqs, String text) {
         SemVersion version = MiraiConsole.INSTANCE.getVersion();
         JvmPluginDescription pluginInfo = Va.getDescription();
-        ForwardMessageBuilder forwardMessageBuilder;
         StringBuilder rep = new StringBuilder();
         // 获取Git当前分支的哈希值
         String hash = Va.getResource("hash");
@@ -854,7 +854,7 @@ public class InstructionMsgEvent {
         RegUtils reg = RegExpConfig.keySelRegExp(prefix);
         if (reg.matcher(this.ins).find()) {
             long[] groups;
-            String type, rep, key;
+            String type, key;
             int page = 1;
 
             groups = getGroups(reg);
@@ -923,7 +923,7 @@ public class InstructionMsgEvent {
                 return RETURN_CONTINUE;
 
             long[] groups, keyIds;
-            String type, rep;
+            String type;
 
             groups = getGroups(reg);
             if (groups.length > 1) {
@@ -1065,7 +1065,7 @@ public class InstructionMsgEvent {
                 return RETURN_CONTINUE;
 
             long[] groups, keyIds;
-            String type, rep;
+            String type;
 
             groups = getGroups(reg);
             if (groups.length > 1) {
@@ -1085,7 +1085,6 @@ public class InstructionMsgEvent {
                     .add(sender, msg)
                     .add(bot, new PlainText("关键词类型:\n" + type));
 
-            long groupId = groups[0];
             for (long keyId : keyIds) {
                 int back = Va.getKeywordData().updateStatus(keyId, 1, type);
                 if (back > 0) {
@@ -1116,7 +1115,6 @@ public class InstructionMsgEvent {
             exp = reg.getMatcher().group("exp");
             rep = reg.getMatcher().group("rep");
             boolean validExpression = CronExpression.isValidExpression(exp);
-            RegUtils dateTimeReg = RegExpConfig.DATE_TIME;
             MessageChain keyFormat;
             MessageChain repFormat = MessageChain.deserializeFromMiraiCode(rep, group);
 
@@ -1127,7 +1125,6 @@ public class InstructionMsgEvent {
                     .add(bot, new MessageChainBuilder().append("触发条件:\n").append(keyFormat).build())
                     .add(bot, new MessageChainBuilder().append("任务内容:\n").append(repFormat).build());
             for (long groupId : groups) {
-                boolean tf = true;
                 int level = VanillaUtils.getPermissionLevel(bot, groupId, sender.getId());
 
                 TimerData timer = new TimerData();
@@ -1136,97 +1133,34 @@ public class InstructionMsgEvent {
                 timer.setBotNum(this.bot.getId());
                 timer.setSender(Frame.buildPrivateChatContact(this.bot, this.sender.getId(), groupId, false));
                 timer.setSenderNum(this.sender.getId());
-                timer.setOnce(!validExpression);
+                timer.setOnce(!(validExpression && level > 0));
                 timer.setMsg(rep);
                 timer.setGroupNum(groupId);
                 timer.setCron(exp);
 
                 // 构建任务触发器
-                Trigger trigger;
-                // 判断是否为cron表达式 且 人员权级大于0
-                if (validExpression && level > 0) {
-                    trigger = TriggerBuilder.newTrigger()
-                            .withIdentity(timer.getId(), timer.getGroupNum() + ".trigger")
-                            .withSchedule(CronScheduleBuilder.cronSchedule(exp))
-                            .build();
-                    // 若为cron表达式则做持久化处理
-                    if (Va.getTimerData().getTimer().containsKey(timer.getGroupNum())) {
-                        Va.getTimerData().getTimer().get(timer.getGroupNum()).add(timer);
-                    } else {
-                        Va.getTimerData().getTimer().put(timer.getGroupNum(), new ArrayList<TimerData>() {{
-                            add(timer);
-                        }});
-                    }
-                    try {
-                        CronExpression cron = new CronExpression(exp);
-                        Date nextTime1 = cron.getNextValidTimeAfter(new Date());
-                        Date nextTime2 = cron.getNextValidTimeAfter(nextTime1);
-                        forwardMessageBuilder.add(bot, new PlainText("未来两次执行时间: "
-                                + "\n1. " + DateUtils.toDateTimeString(nextTime1)
-                                + "\n2. " + DateUtils.toDateTimeString(nextTime2))
-                        );
-                    } catch (ParseException ignored) {
-                    }
-                } else {
-                    Date startDate = new Date();
-                    // 若为普通群员添加
-                    if (validExpression) {
-                        try {
-                            CronExpression cron = new CronExpression(exp);
-                            startDate = cron.getNextValidTimeAfter(new Date());
-                        } catch (ParseException ignored) {
-                            tf = false;
-                        }
-                    }
-                    // 判断是否指定时间
-                    else if (dateTimeReg.matcher(exp).find()) {
-                        int year = Integer.parseInt(StringUtils.toString(dateTimeReg.getMatcher().group("year"), String.valueOf(DateUtils.getYearOfDate(new Date()))));
-                        int month = Integer.parseInt(StringUtils.toString(dateTimeReg.getMatcher().group("month"), "1"));
-                        int day = Integer.parseInt(StringUtils.toString(dateTimeReg.getMatcher().group("day"), "1"));
-                        int hour = Integer.parseInt(StringUtils.toString(dateTimeReg.getMatcher().group("hour"), "0"));
-                        int minute = Integer.parseInt(StringUtils.toString(dateTimeReg.getMatcher().group("minute"), "0"));
-                        int second = Integer.parseInt(StringUtils.toString(dateTimeReg.getMatcher().group("second"), "0"));
-                        int millisecond = Integer.parseInt(StringUtils.toString(dateTimeReg.getMatcher().group("millisecond"), "0"));
-                        startDate = DateUtils.getDate(year, month, day, hour, minute, second, millisecond);
-                        tf = startDate.after(new Date());
-                    }
-                    // 否则为加减时间
-                    else {
-                        try {
-                            String unit = exp.replaceAll("[\\d.]", "");
-                            float timeNum = Float.parseFloat(exp.replace(unit, ""));
-                            switch (unit) {
-                                case "s":
-                                    startDate = DateUtils.addSecond(new Date(), timeNum);
-                                    break;
-                                case "m":
-                                    startDate = DateUtils.addMinute(new Date(), timeNum);
-                                    break;
-                                case "h":
-                                    startDate = DateUtils.addHour(new Date(), timeNum);
-                                    break;
-                                case "d":
-                                    startDate = DateUtils.addDay(new Date(), timeNum);
-                                    break;
-                                case "ms":
-                                default:
-                                    startDate = DateUtils.addMilliSecond(new Date(), (int) timeNum);
-                            }
-                        } catch (Exception ignored) {
-                            tf = false;
-                        }
-                    }
-                    trigger = TriggerBuilder.newTrigger()
-                            .withIdentity(timer.getId(), timer.getGroupNum() + ".trigger")
-                            .withSchedule(SimpleScheduleBuilder.simpleSchedule())
-                            .startAt(startDate)
-                            .build();
-
+                TriggerEntity triggerEntity = VanillaUtils.buildTriggerFromExp(new TriggerKey(timer.getId(), timer.getGroupNum() + ".trigger"), exp, level > 0);
+                if (CollectionUtil.isNotEmpty(triggerEntity.getRunTime())) {
+                    timer.setFirstTime(triggerEntity.getRunTime().stream().mapToLong(Date::getTime).min().orElse(0));
+                }
+                if (triggerEntity.getRunTime().size() == 1) {
                     forwardMessageBuilder.add(bot, new PlainText("未来两次执行时间: "
-                            + "\n1. " + DateUtils.toDateTimeString(startDate)
+                            + "\n1. " + DateUtils.toDateTimeString(triggerEntity.getRunTime().get(0))
                             + "\n2. 无")
                     );
+                } else if (triggerEntity.getRunTime().size() == 2) {
+                    forwardMessageBuilder.add(bot, new PlainText("未来两次执行时间: "
+                            + "\n1. " + DateUtils.toDateTimeString(triggerEntity.getRunTime().get(0))
+                            + "\n2. " + DateUtils.toDateTimeString(triggerEntity.getRunTime().get(1)))
+                    );
+                } else {
+                    StringBuilder sb = new StringBuilder();
+                    for (int i = 0; i < triggerEntity.getRunTime().size(); i++) {
+                        sb.append("\n").append(i + 1).append(". ").append(DateUtils.toDateTimeString(triggerEntity.getRunTime().get(i)));
+                    }
+                    forwardMessageBuilder.add(bot, new PlainText("未来两次执行时间: " + sb));
                 }
+
                 // 构建任务, 装载任务数据
                 JobDataMap jobDataMap = new JobDataMap();
                 jobDataMap.put("timer", timer);
@@ -1234,9 +1168,19 @@ public class InstructionMsgEvent {
                         .withIdentity(timer.getId(), timer.getGroupNum() + ".job")
                         .usingJobData(jobDataMap)
                         .build();
+
+                boolean tf = triggerEntity.getTrigger() != null;
                 if (tf) {
                     try {
-                        Va.getScheduler().scheduleJob(jobDetail, trigger);
+                        Va.getScheduler().scheduleJob(jobDetail, triggerEntity.getTrigger());
+                        // 记录在案, 方便删除
+                        if (Va.getTimerData().getTimer().containsKey(timer.getGroupNum())) {
+                            Va.getTimerData().getTimer().get(timer.getGroupNum()).add(timer);
+                        } else {
+                            Va.getTimerData().getTimer().put(timer.getGroupNum(), new ArrayList<TimerData>() {{
+                                add(timer);
+                            }});
+                        }
                     } catch (SchedulerException e) {
                         Va.getLogger().error(e);
                         tf = false;
@@ -1262,7 +1206,6 @@ public class InstructionMsgEvent {
                 return RETURN_CONTINUE;
 
             String[] keyIds;
-            String type, rep;
 
             try {
                 String key = reg.getMatcher().group("keyIds");

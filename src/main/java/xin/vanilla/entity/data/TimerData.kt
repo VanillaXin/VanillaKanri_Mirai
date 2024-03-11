@@ -58,5 +58,9 @@ class TimerData {
      */
     var msg: String = ""
 
+    /**
+     * 首次执行时间
+     */
+    var firstTime: Long = 0
 
 }

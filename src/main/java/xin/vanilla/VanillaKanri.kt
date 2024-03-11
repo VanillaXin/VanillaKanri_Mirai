@@ -19,7 +19,6 @@ import xin.vanilla.config.GlobalConfigFile
 import xin.vanilla.config.GroupConfigFile
 import xin.vanilla.config.TimerDataFile
 import xin.vanilla.config.WifeDataFile
-import xin.vanilla.entity.data.TimerData
 import xin.vanilla.enums.DataCacheKey.*
 import xin.vanilla.event.EventHandlers
 import xin.vanilla.event.TimerMsgEvent
@@ -251,7 +250,7 @@ object VanillaKanri : KotlinPlugin(
     private fun initTimerJob() {
         val timerMap = timerData.getTimer()
         for (target in timerMap.keys) {
-            timerMap[target]?.removeIf(TimerData::once)
+            timerMap[target]?.removeIf { o -> o.once && o.firstTime < System.currentTimeMillis() }
             for (timer in timerMap[target]!!) {
                 if (timer.senderNum == 0L) continue
 
@@ -278,7 +277,14 @@ object VanillaKanri : KotlinPlugin(
                 try {
                     scheduler.scheduleJob(jobDetail, trigger)
                 } catch (_: SchedulerException) {
-                    logger.warning(String.format("定时任务创建失败: %s - %s - %s", timer.groupNum, timer.id, timer.cron))
+                    logger.warning(
+                        String.format(
+                            "定时任务创建失败: %s - %s - %s",
+                            timer.groupNum,
+                            timer.id,
+                            timer.cron
+                        )
+                    )
                 }
             }
         }

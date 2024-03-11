@@ -9,12 +9,16 @@ import net.mamoe.mirai.message.code.MiraiCode;
 import net.mamoe.mirai.message.data.*;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.quartz.*;
 import xin.vanilla.VanillaKanri;
 import xin.vanilla.common.RegExpConfig;
 import xin.vanilla.entity.DecodeKeyParam;
+import xin.vanilla.entity.TriggerEntity;
 import xin.vanilla.enums.DataCacheKey;
 import xin.vanilla.enums.PermissionLevel;
 
+import java.text.ParseException;
+import java.util.Calendar;
 import java.util.*;
 import java.util.regex.Matcher;
 
@@ -829,5 +833,91 @@ public class VanillaUtils {
         return string.toString();
     }
     // endregion 消息转码
+
+    /**
+     * 解析定时任务表达式并构建触发器
+     *
+     * @param key   触发器唯一键
+     * @param exp   表达式
+     * @param level 是否拥有权限
+     */
+    public static TriggerEntity buildTriggerFromExp(TriggerKey key, String exp, boolean level) {
+        TriggerEntity result = new TriggerEntity();
+        boolean validExpression = CronExpression.isValidExpression(exp);
+        // 判断是否为cron表达式 且 人员权级大于0
+        if (validExpression && level) {
+            result.setTrigger(TriggerBuilder.newTrigger()
+                    .withIdentity(key)
+                    .withSchedule(CronScheduleBuilder.cronSchedule(exp))
+                    .build());
+            try {
+                CronExpression cron = new CronExpression(exp);
+                Date nextTime1 = cron.getNextValidTimeAfter(new Date());
+                Date nextTime2 = cron.getNextValidTimeAfter(nextTime1);
+                result.getRunTime().add(nextTime1);
+                result.getRunTime().add(nextTime2);
+            } catch (ParseException ignored) {
+            }
+        } else {
+            RegUtils dateTimeReg = RegExpConfig.DATE_TIME;
+            Date startDate = new Date();
+            boolean tf = true;
+            // 若为普通群员添加
+            if (validExpression) {
+                try {
+                    CronExpression cron = new CronExpression(exp);
+                    startDate = cron.getNextValidTimeAfter(new Date());
+                } catch (ParseException ignored) {
+                    tf = false;
+                }
+            }
+            // 判断是否指定时间
+            else if (dateTimeReg.matcher(exp).find()) {
+                int year = Integer.parseInt(StringUtils.toString(dateTimeReg.getMatcher().group("year"), String.valueOf(DateUtils.getYearOfDate(new Date()))));
+                int month = Integer.parseInt(StringUtils.toString(dateTimeReg.getMatcher().group("month"), "1"));
+                int day = Integer.parseInt(StringUtils.toString(dateTimeReg.getMatcher().group("day"), "1"));
+                int hour = Integer.parseInt(StringUtils.toString(dateTimeReg.getMatcher().group("hour"), "0"));
+                int minute = Integer.parseInt(StringUtils.toString(dateTimeReg.getMatcher().group("minute"), "0"));
+                int second = Integer.parseInt(StringUtils.toString(dateTimeReg.getMatcher().group("second"), "0"));
+                int millisecond = Integer.parseInt(StringUtils.toString(dateTimeReg.getMatcher().group("millisecond"), "0"));
+                startDate = DateUtils.getDate(year, month, day, hour, minute, second, millisecond);
+                tf = startDate.after(new Date());
+            }
+            // 否则为加减时间
+            else {
+                try {
+                    String unit = exp.replaceAll("[\\d.]", "");
+                    float timeNum = Float.parseFloat(exp.replace(unit, ""));
+                    switch (unit) {
+                        case "s":
+                            startDate = DateUtils.addSecond(new Date(), timeNum);
+                            break;
+                        case "m":
+                            startDate = DateUtils.addMinute(new Date(), timeNum);
+                            break;
+                        case "h":
+                            startDate = DateUtils.addHour(new Date(), timeNum);
+                            break;
+                        case "d":
+                            startDate = DateUtils.addDay(new Date(), timeNum);
+                            break;
+                        case "ms":
+                        default:
+                            startDate = DateUtils.addMilliSecond(new Date(), (int) timeNum);
+                    }
+                } catch (Exception ignored) {
+                    tf = false;
+                }
+            }
+            if (tf) {
+                result.setTrigger(TriggerBuilder.newTrigger()
+                        .withIdentity(key)
+                        .withSchedule(SimpleScheduleBuilder.simpleSchedule())
+                        .startAt(startDate)
+                        .build());
+            }
+        }
+        return result;
+    }
 
 }
