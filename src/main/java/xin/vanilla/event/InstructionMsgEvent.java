@@ -1161,9 +1161,9 @@ public class InstructionMsgEvent {
                         CronExpression cron = new CronExpression(exp);
                         Date nextTime1 = cron.getNextValidTimeAfter(new Date());
                         Date nextTime2 = cron.getNextValidTimeAfter(nextTime1);
-                        forwardMessageBuilder.add(bot, new PlainText("未来两次执行时间: \n"
-                                + "1. " + DateUtils.toDateTimeString(nextTime1)
-                                + "2. " + DateUtils.toDateTimeString(nextTime2))
+                        forwardMessageBuilder.add(bot, new PlainText("未来两次执行时间: "
+                                + "\n1. " + DateUtils.toDateTimeString(nextTime1)
+                                + "\n2. " + DateUtils.toDateTimeString(nextTime2))
                         );
                     } catch (ParseException ignored) {
                     }
@@ -1222,9 +1222,9 @@ public class InstructionMsgEvent {
                             .startAt(startDate)
                             .build();
 
-                    forwardMessageBuilder.add(bot, new PlainText("未来两次执行时间: \n"
-                            + "1. " + DateUtils.toDateTimeString(startDate)
-                            + "2. 无")
+                    forwardMessageBuilder.add(bot, new PlainText("未来两次执行时间: "
+                            + "\n1. " + DateUtils.toDateTimeString(startDate)
+                            + "\n2. 无")
                     );
                 }
                 // 构建任务, 装载任务数据
