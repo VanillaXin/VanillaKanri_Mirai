@@ -837,15 +837,15 @@ public class VanillaUtils {
     /**
      * 解析定时任务表达式并构建触发器
      *
-     * @param key   触发器唯一键
-     * @param exp   表达式
-     * @param level 是否拥有权限
+     * @param key     触发器唯一键
+     * @param exp     表达式
+     * @param notOnce 是否拥有权限
      */
-    public static TriggerEntity buildTriggerFromExp(TriggerKey key, String exp, boolean level) {
+    public static TriggerEntity buildTriggerFromExp(TriggerKey key, String exp, boolean notOnce) {
         TriggerEntity result = new TriggerEntity();
         boolean validExpression = CronExpression.isValidExpression(exp);
         // 判断是否为cron表达式 且 人员权级大于0
-        if (validExpression && level) {
+        if (validExpression && notOnce) {
             result.setTrigger(TriggerBuilder.newTrigger()
                     .withIdentity(key)
                     .withSchedule(CronScheduleBuilder.cronSchedule(exp))

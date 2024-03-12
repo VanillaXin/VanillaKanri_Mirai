@@ -27,6 +27,7 @@ import xin.vanilla.mapper.MessageCache
 import xin.vanilla.mapper.impl.KeywordDataImpl
 import xin.vanilla.mapper.impl.MessageCacheImpl
 import xin.vanilla.util.Frame
+import xin.vanilla.util.VanillaUtils
 import xin.vanilla.util.sqlite.SqliteUtil
 import java.security.SecureRandom
 import java.util.*
@@ -269,13 +270,22 @@ object VanillaKanri : KotlinPlugin(
                     .build()
 
                 // 构建任务触发器
-                val trigger = TriggerBuilder.newTrigger()
-                    .withIdentity(timer.id, timer.groupNum.toString() + ".trigger")
-                    .withSchedule(CronScheduleBuilder.cronSchedule(timer.cron))
-                    .build()
+                val triggerEntity = VanillaUtils.buildTriggerFromExp(
+                    TriggerKey(timer.id, timer.groupNum.toString() + ".trigger"),
+                    timer.cron,
+                    !timer.once
+                )
 
                 try {
-                    scheduler.scheduleJob(jobDetail, trigger)
+                    scheduler.scheduleJob(jobDetail, triggerEntity.trigger)
+                    logger.info(
+                        String.format(
+                            "定时任务创建成功: %s - %s - %s",
+                            timer.groupNum,
+                            timer.id,
+                            timer.cron
+                        )
+                    )
                 } catch (_: SchedulerException) {
                     logger.warning(
                         String.format(

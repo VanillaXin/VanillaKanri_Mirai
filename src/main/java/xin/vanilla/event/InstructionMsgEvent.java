@@ -1115,10 +1115,9 @@ public class InstructionMsgEvent {
             exp = reg.getMatcher().group("exp");
             rep = reg.getMatcher().group("rep");
             boolean validExpression = CronExpression.isValidExpression(exp);
-            MessageChain keyFormat;
-            MessageChain repFormat = MessageChain.deserializeFromMiraiCode(rep, group);
 
-            keyFormat = MessageChain.deserializeFromMiraiCode(exp, group);
+            MessageChain repFormat = MessageChain.deserializeFromMiraiCode(rep, group);
+            MessageChain keyFormat = MessageChain.deserializeFromMiraiCode(exp, group);
 
             ForwardMessageBuilder forwardMessageBuilder = new ForwardMessageBuilder(group)
                     .add(sender, new PlainText(VanillaUtils.messageToString(msg)))
