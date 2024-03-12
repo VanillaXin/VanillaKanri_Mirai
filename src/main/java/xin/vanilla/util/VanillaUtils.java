@@ -304,7 +304,7 @@ public class VanillaUtils {
      */
     public static boolean isInstructionMsg(MessageChain msg, boolean secondary) {
         String prefix = Va.getGlobalConfig().getInstructions().getPrefix();
-        if ("".equals(prefix)) {
+        if (prefix.isEmpty()) {
             if (!secondary) return true;
 
             // 如果顶级前缀为空则遍历二级指令前缀
@@ -772,11 +772,11 @@ public class VanillaUtils {
 
             // ChatGPT
             if (messageChain != null) {
-                result = RegExpConfig.VaCode.exeGpt(messageToPlainText(messageChain, group), result, (NormalMember) sender);
+                result = RegExpConfig.VaCode.exeGpt(messageToPlainText(messageChain, group), result, (UserOrBot) sender);
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            Va.getLogger().error(e);
             result = "";
         }
 

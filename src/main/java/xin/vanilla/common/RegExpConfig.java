@@ -451,7 +451,7 @@ public class RegExpConfig {
                     member.mute((int) (time * 60));
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                Va.getLogger().error(e);
             }
             return msg.replaceAll(MUTE.build(), "");
         }
@@ -471,7 +471,7 @@ public class RegExpConfig {
                     }
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                Va.getLogger().error(e);
             }
             return msg.replaceAll(RECALL.build(), "");
         }
@@ -494,7 +494,7 @@ public class RegExpConfig {
                     member.kick(reason, bool);
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                Va.getLogger().error(e);
             }
             return msg.replaceAll(KICK.build(), "");
         }
@@ -504,16 +504,16 @@ public class RegExpConfig {
          * GPT
          */
         @NotNull
-        public static String exeGpt(String word, String msg, NormalMember member) {
+        public static String exeGpt(String word, String msg, UserOrBot user) {
             Matcher matcher = GPT.matcher(msg);
             String chatGPT = "";
             try {
                 if (matcher.find()) {
                     String key = matcher.group("key");
-                    chatGPT = Api.chatGPT(member.getNick(), key, word);
+                    chatGPT = Api.chatGPT(user.getNick(), key, word);
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                Va.getLogger().error(e);
             }
             return msg.replaceAll(GPT.build(), chatGPT);
         }
@@ -533,7 +533,7 @@ public class RegExpConfig {
                     messages = builder.build();
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                Va.getLogger().error(e);
             }
             return messages;
         }
@@ -577,7 +577,7 @@ public class RegExpConfig {
                     }
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                Va.getLogger().error(e);
             }
             return msg.replaceAll(TAP.build(), "");
         }
@@ -607,7 +607,7 @@ public class RegExpConfig {
                     msg = prefix + msg + suffix;
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                Va.getLogger().error(e);
             }
             return msg.replaceAll(REP.build(), "");
         }
@@ -628,7 +628,7 @@ public class RegExpConfig {
                     msg = msg.replaceAll(StringUtils.escapeExprSpecialWord(matcher.group(0)), qq);
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                Va.getLogger().error(e);
             }
             return msg.replaceAll(regUtils.build(), "");
         }
@@ -647,13 +647,13 @@ public class RegExpConfig {
                             nick = member.getNick();
                         }
                     }
-                    if ("".equals(nick)) {
+                    if (nick.isEmpty()) {
                         Friend friend = param.getBot().getFriend(qq);
                         if (friend != null) {
                             nick = friend.getNick();
                         }
                     }
-                    if ("".equals(nick)) {
+                    if (nick.isEmpty()) {
                         Stranger stranger = param.getBot().getStranger(qq);
                         if (stranger != null) {
                             nick = stranger.getNick();
@@ -662,7 +662,7 @@ public class RegExpConfig {
                     msg = msg.replaceAll(StringUtils.escapeExprSpecialWord(matcher.group(0)), nick);
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                Va.getLogger().error(e);
             }
             return msg.replaceAll(regUtils.build(), "");
         }
@@ -685,7 +685,7 @@ public class RegExpConfig {
                     msg = msg.replaceAll(StringUtils.escapeExprSpecialWord(matcher.group(0)), serialize);
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                Va.getLogger().error(e);
             }
             return msg.replaceAll(HEAD.build(), "");
         }

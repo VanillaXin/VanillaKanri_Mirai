@@ -291,14 +291,31 @@ public class Frame {
             }
         }
 
-        // 定时任务特殊码(此处的)
+        // 定时任务特殊码
         if (textMsg.contains("[vacode:timer:")) {
+
+            // 解析及即时发送消息
+            {
+                RegUtils sendNow = new RegUtils().appendIg(".*?").append("[vacode:sendnow:")
+                        .groupIgByName("msg", ".*")
+                        .appendIg(":vacode:sendnow]").end();
+                while (sendNow.matcher(textMsg).find()) {
+                    String msg = sendNow.getMatcher().group("msg");
+                    textMsg = textMsg.replace("[vacode:sendnow:" + msg + ":vacode:sendnow]", "");
+                    MessageChain singleMessages = MessageChain.deserializeFromJsonString(msg);
+                    KeyRepEntity keyRep = new KeyRepEntity(rep.getContact());
+                    keyRep.setRep(singleMessages);
+                    Frame.sendMessage(keyRep);
+                }
+            }
+
             RegUtils regUtils = new RegUtils().appendIg(".*?").append("[vacode:timer:")
                     .groupIgByName("exp"
                             , "(?:\\d{1,6}(?:\\.\\d{1,4})?(?:ms|s|m|h|d|MS|S|M|H|D|Ms|mS)?"
                             , "(?:[\\d\\*\\-,\\?LW#/]+" + REG_SEPARATOR + "){4,6}(?:[\\d\\*\\-,\\?LW#/]+))"
                             , RegExpConfig.DATE_TIME_CODE)
-                    .appendIg("].*?");
+                    .appendIg("].*?")
+                    .end();
             List<String> expList = new ArrayList<>();
             while (regUtils.matcher(textMsg).find()) {
                 String exp = regUtils.getMatcher().group("exp");
