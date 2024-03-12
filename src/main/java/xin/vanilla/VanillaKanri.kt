@@ -90,6 +90,9 @@ object VanillaKanri : KotlinPlugin(
      */
     var random: SecureRandom = SecureRandom()
 
+    /**
+     * 定时任务调度器
+     */
     var scheduler: Scheduler = StdSchedulerFactory.getDefaultScheduler()
 
     // endregion 变量定义
@@ -129,9 +132,15 @@ object VanillaKanri : KotlinPlugin(
         // 定时任务数据
         reloadPluginData(timerData)
 
-        logger.info("创建定时任务")
-        this.initTimerJob()
-        logger.info("创建定时任务完成")
+        // 启动定时任务调度器
+        scheduler.start()
+
+        logger.info("加载定时任务")
+        if (this.initTimerJob() > 0) {
+            logger.info("加载定时任务完成")
+        } else {
+            logger.info("加载定时任务失败")
+        }
 
     }
 
@@ -248,10 +257,23 @@ object VanillaKanri : KotlinPlugin(
     /**
      * 初始化定时任务数据
      */
-    private fun initTimerJob() {
+    fun initTimerJob(): Int {
+        var count = 0
         val timerMap = timerData.getTimer()
+        val flatMap = timerMap.values.asSequence().flatMap { it.asSequence() }
+        logger.info("定时任务数量: " + flatMap.count())
+        logger.info("有效任务数量: " + flatMap
+            .filter { o -> !(o.once && o.firstTime < System.currentTimeMillis()) }
+            .count())
+        logger.info("未初始化数量: " + flatMap
+            .filter { o -> !(o.once && o.firstTime < System.currentTimeMillis()) }
+            .filter { o -> !o.inited }
+            .count())
         for (target in timerMap.keys) {
-            timerMap[target]?.removeIf { o -> o.once && o.firstTime < System.currentTimeMillis() }
+            val totalSize = timerMap[target]?.size
+            timerMap[target]?.removeIf { o -> o.once && o.firstTime < System.currentTimeMillis() || o.inited }
+            val validSize = timerMap[target]?.size
+            logger.info(String.format("%s : %s/%s", target, validSize, totalSize))
             for (timer in timerMap[target]!!) {
                 if (timer.senderNum == 0L) continue
 
@@ -278,6 +300,7 @@ object VanillaKanri : KotlinPlugin(
 
                 try {
                     scheduler.scheduleJob(jobDetail, triggerEntity.trigger)
+                    timer.inited = true
                     logger.info(
                         String.format(
                             "定时任务创建成功: %s - %s - %s",
@@ -286,6 +309,7 @@ object VanillaKanri : KotlinPlugin(
                             timer.cron
                         )
                     )
+                    count++
                 } catch (_: SchedulerException) {
                     logger.warning(
                         String.format(
@@ -298,7 +322,7 @@ object VanillaKanri : KotlinPlugin(
                 }
             }
         }
-        scheduler.start()
+        return count
     }
 
     // endregion 数据/任务初始化

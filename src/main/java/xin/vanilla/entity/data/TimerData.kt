@@ -24,6 +24,12 @@ class TimerData {
     var bot: Bot? = null
 
     /**
+     * 初始化完成
+     */
+    @Transient
+    var inited: Boolean = false
+
+    /**
      * 唯一标识
      */
     var id: String = ""

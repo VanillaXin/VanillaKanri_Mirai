@@ -316,6 +316,13 @@ public class EventHandlers extends SimpleListenerHost {
      */
     @EventHandler
     public void onBotOnline(@NotNull BotOnlineEvent event) {
+        Va.getLogger().info("机器人登录完成");
+        Va.getLogger().info("加载定时任务");
+        if (Va.initTimerJob() > 0) {
+            Va.getLogger().info("加载定时任务完成");
+        } else {
+            Va.getLogger().info("加载定时任务失败");
+        }
         long bot = event.getBot().getId();
         VanillaKanri.INSTANCE.getDataCache().put(PLUGIN_BOT_ONLINE_TIME.getKey(bot), System.currentTimeMillis());
     }
