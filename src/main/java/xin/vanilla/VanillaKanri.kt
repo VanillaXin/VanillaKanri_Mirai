@@ -271,10 +271,13 @@ object VanillaKanri : KotlinPlugin(
             .count())
         for (target in timerMap.keys) {
             val totalSize = timerMap[target]?.size
-            timerMap[target]?.removeIf { o -> o.once && o.firstTime < System.currentTimeMillis() || o.inited }
-            val validSize = timerMap[target]?.size
-            logger.info(String.format("%s : %s/%s", target, validSize, totalSize))
-            for (timer in timerMap[target]!!) {
+            // 移除已过期任务
+            timerMap[target]?.removeIf { o -> o.once && o.firstTime < System.currentTimeMillis() }
+            // 过滤掉已初始化任务
+            val filter = timerMap[target]?.filter { o -> o.inited }
+            val validSize = filter?.size
+            logger.info(String.format("%s : %s(待初始化)/%s(总数)", target, validSize, totalSize))
+            for (timer in filter!!) {
                 if (timer.senderNum == 0L) continue
 
                 timer.bot = Bot.getInstanceOrNull(timer.botNum)
