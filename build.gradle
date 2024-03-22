@@ -22,7 +22,6 @@ dependencies {
 
     implementation 'io.github.karlatemp:caller:1.1.1'
     implementation 'com.aventrix.jnanoid:jnanoid:2.0.0' // Nano ID, 替代UUID
-    implementation 'xin.vanilla.rcon:rcon:1.2.1' // MC RCON依赖
     implementation 'com.github.yangtu222:BeanUtils:1.0.11' // Bean工具类, 复制Bean
     implementation 'com.alibaba.fastjson2:fastjson2-kotlin:2.0.46'
     implementation 'cn.hutool:hutool-all:5.8.26' // 一堆工具类
@@ -31,6 +30,8 @@ dependencies {
     implementation 'com.unfbx:chatgpt-java:1.1.5' // ChatGPT工具类
     implementation 'com.jayway.jsonpath:json-path:2.9.0' // JsonPath工具类
     implementation 'org.quartz-scheduler:quartz:2.3.2' // 定时任务库
+    implementation 'xin.vanilla.rcon:rcon:1.2.1' // MC RCON依赖
+    implementation 'com.github.steveice10:mcprotocollib:1.20.2-1' // 用于与MC客户端/服务器通信的库
 
 
     testCompileOnly 'org.apiguardian:apiguardian-api:1.1.2'
