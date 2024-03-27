@@ -274,7 +274,7 @@ object VanillaKanri : KotlinPlugin(
             // 移除已过期任务
             timerMap[target]?.removeIf { o -> o.once && o.firstTime < System.currentTimeMillis() }
             // 过滤掉已初始化任务
-            val filter = timerMap[target]?.filter { o -> o.inited }
+            val filter = timerMap[target]?.filter { o -> !o.inited }
             val validSize = filter?.size
             logger.info(String.format("%s : %s(待初始化)/%s(总数)", target, validSize, totalSize))
             for (timer in filter!!) {
