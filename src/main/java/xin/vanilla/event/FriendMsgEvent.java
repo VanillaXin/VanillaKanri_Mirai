@@ -7,17 +7,8 @@ import xin.vanilla.common.RegExpConfig;
 import xin.vanilla.common.annotation.Capability;
 import xin.vanilla.entity.KeyRepEntity;
 import xin.vanilla.entity.data.KeyData;
-import xin.vanilla.util.Api;
 import xin.vanilla.util.Frame;
 import xin.vanilla.util.VanillaUtils;
-
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 public class FriendMsgEvent extends BaseMsgEvent {
     private final FriendMessageEvent event;
@@ -32,30 +23,7 @@ public class FriendMsgEvent extends BaseMsgEvent {
     }
 
     public void run() {
-        Map<String, Integer> capability = Va.getGlobalConfig().getBase().getCapability();
-        Method[] methods = this.getClass().getDeclaredMethods();
-        List<Method> methodList = Arrays.stream(methods)
-                .filter(method -> method.isAnnotationPresent(Capability.class)
-                        && method.getReturnType().equals(boolean.class))
-                .collect(Collectors.toList());
-        List<Map.Entry<String, Integer>> entryList = capability.entrySet().stream()
-                .filter(entry -> entry.getValue() != null && entry.getValue() > 0)
-                .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
-                .collect(Collectors.toList());
-        for (Map.Entry<String, Integer> entry : entryList) {
-            Method method = methodList.stream()
-                    .filter(o -> (entry.getKey().equals(this.getClass().getSimpleName() + "." + o.getName())))
-                    .findFirst()
-                    .orElse(null);
-            if (method != null) {
-                try {
-                    boolean result = (boolean) method.invoke(this);
-                    if (result) return;
-                } catch (IllegalAccessException | InvocationTargetException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        }
+        super.run();
     }
 
     /**

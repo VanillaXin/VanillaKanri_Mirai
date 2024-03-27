@@ -10,6 +10,15 @@ import net.mamoe.mirai.message.data.PlainText;
 import net.mamoe.mirai.message.data.SingleMessage;
 import net.mamoe.mirai.utils.MiraiLogger;
 import xin.vanilla.VanillaKanri;
+import xin.vanilla.common.annotation.Capability;
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class BaseMsgEvent {
     protected static final VanillaKanri Va = VanillaKanri.INSTANCE;
@@ -42,6 +51,33 @@ public class BaseMsgEvent {
                 }
             }
             this.msg = messages.build();
+        }
+    }
+
+    protected void run() {
+        Map<String, Integer> capability = Va.getGlobalConfig().getBase().getCapability();
+        Method[] methods = this.getClass().getDeclaredMethods();
+        List<Method> methodList = Arrays.stream(methods)
+                .filter(method -> method.isAnnotationPresent(Capability.class)
+                        && method.getReturnType().equals(boolean.class))
+                .collect(Collectors.toList());
+        List<Map.Entry<String, Integer>> entryList = capability.entrySet().stream()
+                .filter(entry -> entry.getValue() != null && entry.getValue() > 0)
+                .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+                .collect(Collectors.toList());
+        for (Map.Entry<String, Integer> entry : entryList) {
+            Method method = methodList.stream()
+                    .filter(o -> (entry.getKey().equals(this.getClass().getSimpleName() + "." + o.getName())))
+                    .findFirst()
+                    .orElse(null);
+            if (method != null) {
+                try {
+                    boolean result = (boolean) method.invoke(this);
+                    if (result) return;
+                } catch (IllegalAccessException | InvocationTargetException e) {
+                    throw new RuntimeException(e);
+                }
+            }
         }
     }
 }

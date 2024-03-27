@@ -29,8 +29,6 @@ import xin.vanilla.util.sqlite.SqliteUtil;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -60,31 +58,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
     }
 
     public void run() {
-        // logger.info("群聊: " + group.getId() + ":" + sender.getId() + " -> " + msg.serializeToMiraiCode());
-        Map<String, Integer> capability = Va.getGlobalConfig().getBase().getCapability();
-        Method[] methods = this.getClass().getDeclaredMethods();
-        List<Method> methodList = Arrays.stream(methods)
-                .filter(method -> method.isAnnotationPresent(Capability.class)
-                        && method.getReturnType().equals(boolean.class))
-                .collect(Collectors.toList());
-        List<Map.Entry<String, Integer>> entryList = capability.entrySet().stream()
-                .filter(entry -> entry.getValue() != null && entry.getValue() > 0)
-                .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
-                .collect(Collectors.toList());
-        for (Map.Entry<String, Integer> entry : entryList) {
-            Method method = methodList.stream()
-                    .filter(o -> (entry.getKey().equals(this.getClass().getSimpleName() + "." + o.getName())))
-                    .findFirst()
-                    .orElse(null);
-            if (method != null) {
-                try {
-                    boolean result = (boolean) method.invoke(this);
-                    if (result) return;
-                } catch (IllegalAccessException | InvocationTargetException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        }
+        super.run();
     }
 
     @Capability
