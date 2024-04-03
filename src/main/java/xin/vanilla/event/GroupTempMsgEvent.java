@@ -17,8 +17,4 @@ public class GroupTempMsgEvent extends BaseMsgEvent {
         this.sender = this.event.getSender();
         Va.getMessageCache().addMsg(this.sender, this.msg);
     }
-
-    public void run() {
-        super.run();
-    }
 }

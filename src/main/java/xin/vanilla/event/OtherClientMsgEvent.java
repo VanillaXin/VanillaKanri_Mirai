@@ -13,7 +13,4 @@ public class OtherClientMsgEvent extends BaseMsgEvent {
         this.client = this.event.getClient();
     }
 
-    public void run() {
-        super.run();
-    }
 }

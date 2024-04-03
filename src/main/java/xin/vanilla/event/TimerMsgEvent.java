@@ -34,10 +34,6 @@ public class TimerMsgEvent extends BaseMsgEvent implements Job {
         super(null, null, System.currentTimeMillis());
     }
 
-    public void run() {
-        super.run();
-    }
-
     @Override
     public void execute(JobExecutionContext context) {
         // TimerData timer = (TimerData) context.getJobDetail().getJobDataMap().get("timer");

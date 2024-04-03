@@ -22,10 +22,6 @@ public class FriendMsgEvent extends BaseMsgEvent {
         Va.getMessageCache().addMsg(this.friend, this.msg);
     }
 
-    public void run() {
-        super.run();
-    }
-
     /**
      * 解析关键词回复
      */

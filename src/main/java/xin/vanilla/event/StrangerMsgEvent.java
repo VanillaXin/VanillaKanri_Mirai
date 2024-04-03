@@ -21,10 +21,6 @@ public class StrangerMsgEvent extends BaseMsgEvent {
         Va.getMessageCache().addMsg(this.sender, this.msg);
     }
 
-    public void run() {
-        super.run();
-    }
-
     /**
      * 解析关键词回复
      */

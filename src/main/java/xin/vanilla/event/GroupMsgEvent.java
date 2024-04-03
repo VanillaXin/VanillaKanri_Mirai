@@ -57,10 +57,6 @@ public class GroupMsgEvent extends BaseMsgEvent {
         if (event.getOriginalEvent() != null) Va.getMessageCache().addMsg(this.group, this.msg);
     }
 
-    public void run() {
-        super.run();
-    }
-
     @Capability
     private boolean searchMsgAll() {
         if (msg.contentToString().startsWith("/va get msg ")) {

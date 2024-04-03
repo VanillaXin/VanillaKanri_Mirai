@@ -59,19 +59,39 @@ public class BaseMsgEvent {
         Method[] methods = this.getClass().getDeclaredMethods();
         List<Method> methodList = Arrays.stream(methods)
                 .filter(method -> method.isAnnotationPresent(Capability.class)
-                        && method.getReturnType().equals(boolean.class))
+                        && method.getReturnType().equals(boolean.class)
+                        || method.getReturnType().equals(void.class))
                 .collect(Collectors.toList());
         List<Map.Entry<String, Integer>> entryList = capability.entrySet().stream()
                 .filter(entry -> entry.getValue() != null && entry.getValue() > 0)
                 .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
                 .collect(Collectors.toList());
+        // 解析执行无返回值的方法
         for (Map.Entry<String, Integer> entry : entryList) {
             Method method = methodList.stream()
+                    .filter(o -> o.getReturnType().equals(void.class))
                     .filter(o -> (entry.getKey().equals(this.getClass().getSimpleName() + "." + o.getName())))
                     .findFirst()
                     .orElse(null);
             if (method != null) {
                 try {
+                    method.setAccessible(true);
+                    method.invoke(this);
+                } catch (IllegalAccessException | InvocationTargetException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+        // 解析执行返回值为布尔的方法
+        for (Map.Entry<String, Integer> entry : entryList) {
+            Method method = methodList.stream()
+                    .filter(o -> o.getReturnType().equals(boolean.class))
+                    .filter(o -> (entry.getKey().equals(this.getClass().getSimpleName() + "." + o.getName())))
+                    .findFirst()
+                    .orElse(null);
+            if (method != null) {
+                try {
+                    method.setAccessible(true);
                     boolean result = (boolean) method.invoke(this);
                     if (result) return;
                 } catch (IllegalAccessException | InvocationTargetException e) {
