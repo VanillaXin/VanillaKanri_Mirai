@@ -332,7 +332,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
          */
 
         // 关键词查询
-        KeyData keyword = Va.getKeywordData().getKeyword(VanillaUtils.messageToString(msg), bot.getId(), -group.getId());
+        KeyData keyword = Va.getKeyword().getKeyword(VanillaUtils.messageToString(msg), bot.getId(), -group.getId());
         if (keyword.getId() > 0) {
             MessageChain rep = RegExpConfig.VaCode.exeReply(keyword.getRepDecode(group, bot, sender, msg), msg, group);
             KeyRepEntity keyRepEntity = new KeyRepEntity(group);

@@ -6,7 +6,7 @@ import xin.vanilla.util.sqlite.PaginationList;
 import java.util.List;
 
 public interface KeywordData {
-    void createTable(String table);
+    // void createTable(String table);
 
     long addKeyword(String word, String rep, long bot, long group, String type, long time, int level);
 

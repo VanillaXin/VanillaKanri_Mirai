@@ -1,13 +1,18 @@
 package xin.vanilla.entity.data
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.message.data.MessageChain
 import net.mamoe.mirai.message.data.time
 import xin.vanilla.entity.DecodeKeyParam
+import xin.vanilla.mapper.impl.KeywordDataImpl.KEYWORD_TYPE_EXACTLY
+import xin.vanilla.mapper.impl.KeywordDataImpl.KEYWORD_TYPE_REGEXP
+import xin.vanilla.util.StringUtils
 import xin.vanilla.util.VanillaUtils
+import java.util.regex.Pattern
 
 /**
  * 关键词数据
@@ -20,6 +25,12 @@ class KeyData {
      * 关键词
      */
     var word: String = ""
+        set(value) {
+            field = value
+            if (KEYWORD_TYPE_REGEXP.equals(type)) {
+                pattern = Pattern.compile(value)
+            }
+        }
 
     /**
      * 回复词
@@ -49,12 +60,24 @@ class KeyData {
     /**
      * 关键词类型
      */
-    var type: String = ""
+    var type: String = KEYWORD_TYPE_EXACTLY
+        set(value) {
+            field = value
+            if (KEYWORD_TYPE_REGEXP.equals(value) && StringUtils.isNotNullOrEmpty(word)) {
+                pattern = Pattern.compile(word)
+            }
+        }
 
     /**
      * 状态
      */
     var status: Int = 0
+
+    /**
+     * 正则对象
+     */
+    @Transient
+    var pattern: Pattern? = null
 
     /**
      * 获取解Va码后的消息

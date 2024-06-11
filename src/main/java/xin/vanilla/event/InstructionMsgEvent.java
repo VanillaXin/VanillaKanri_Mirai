@@ -826,7 +826,7 @@ public class InstructionMsgEvent {
             boolean tf = false;
             for (long groupId : groups) {
                 int level = VanillaUtils.getPermissionLevel(bot, groupId, sender.getId()) * SettingsUtils.getKeyRadix(group.getId());
-                long keyId = Va.getKeywordData().addKeyword(key, rep, bot.getId(), groupId, type, time, level > 0 ? level : 1);
+                long keyId = Va.getKeyword().addKeyword(key, rep, bot.getId(), groupId, type, time, level > 0 ? level : 1);
                 if (keyId > 0) {
                     tf = true;
                     forwardMessageBuilder.add(bot, new PlainText("群号: " + (groupId == -1 ? "全局" : groupId) + "\n关键词编号: " + keyId));
@@ -863,7 +863,11 @@ public class InstructionMsgEvent {
             }
 
             long groupId = groups[0];
-            type = reg.getMatcher().group("type");
+            try {
+                type = reg.getMatcher().group("type");
+            } catch (Exception ignored) {
+                type = "";
+            }
             try {
                 key = reg.getMatcher().group("key");
             } catch (Exception ignored) {
@@ -881,7 +885,7 @@ public class InstructionMsgEvent {
 
             ForwardMessageBuilder forwardMessageBuilder = new ForwardMessageBuilder(group).add(sender, msg);
 
-            PaginationList<KeyData> keywordByPage = Va.getKeywordData().getKeywordByPage(key, bot.getId(), groupId, type, page, 20);
+            PaginationList<KeyData> keywordByPage = Va.getKeyword().getKeywordByPage(key, bot.getId(), groupId, type, page, 20);
 
             forwardMessageBuilder.add(bot, new PlainText(
                     "关键词类型: " + StringUtils.getKeywordTypeName(type) + "\n" +
@@ -893,6 +897,7 @@ public class InstructionMsgEvent {
                 for (KeyData keyData : keywordByPage) {
                     forwardMessageBuilder.add(bot, new PlainText(
                             "关键词ID: " + keyData.getId() + "\n" +
+                                    "关键词类型: " + StringUtils.getKeywordTypeName(keyData.getType()) + "\n" +
                                     "关键词权级: " + keyData.getLevel() + "\n" +
                                     "关键词状态: " + (keyData.getStatus() > 0 ? "已启用" : "未启用") + "\n" +
                                     "关键词内容:"
@@ -946,7 +951,7 @@ public class InstructionMsgEvent {
             long groupId = groups[0];
             for (long keyId : keyIds) {
                 int level = VanillaUtils.getPermissionLevel(bot, groupId, sender.getId()) * SettingsUtils.getKeyRadix(group.getId());
-                int back = Va.getKeywordData().deleteKeywordById(keyId, type, level);
+                int back = Va.getKeyword().deleteKeywordById(keyId, type, level);
                 if (back > 0) {
                     forwardMessageBuilder.add(bot, new PlainText("关键词编号: " + keyId + "\n删除成功"));
                 } else if (back == -2) {
@@ -1027,13 +1032,13 @@ public class InstructionMsgEvent {
                 long keyId = Long.parseLong(s.substring(s.indexOf("\n关键词编号: ") + "\n关键词编号: ".length()));
                 int level = VanillaUtils.getPermissionLevel(bot, groupId, sender.getId()) * SettingsUtils.getKeyRadix(group.getId());
                 if (operand) {
-                    if (Va.getKeywordData().updateStatus(keyId, 1, type) > 0) {
+                    if (Va.getKeyword().updateStatus(keyId, 1, type) > 0) {
                         forwardMessageBuilder.add(bot, new PlainText(s + "\n操作成功: 已激活关键词"));
                     } else {
                         forwardMessageBuilder.add(bot, new PlainText(s + "\n操作失败"));
                     }
                 } else {
-                    int back = Va.getKeywordData().deleteKeywordById(keyId, type, level);
+                    int back = Va.getKeyword().deleteKeywordById(keyId, type, level);
                     if (back > 0) {
                         forwardMessageBuilder.add(bot, new PlainText(s + "\n操作成功: 已删除关键词"));
                     } else if (back == -2) {
@@ -1086,7 +1091,7 @@ public class InstructionMsgEvent {
                     .add(bot, new PlainText("关键词类型:\n" + type));
 
             for (long keyId : keyIds) {
-                int back = Va.getKeywordData().updateStatus(keyId, 1, type);
+                int back = Va.getKeyword().updateStatus(keyId, 1, type);
                 if (back > 0) {
                     forwardMessageBuilder.add(bot, new PlainText("关键词编号: " + keyId + "\n操作成功: 已激活关键词"));
                 } else {

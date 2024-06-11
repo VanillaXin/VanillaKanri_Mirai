@@ -15,10 +15,7 @@ import net.mamoe.mirai.console.plugin.jvm.reloadPluginData
 import net.mamoe.mirai.event.GlobalEventChannel
 import org.quartz.*
 import org.quartz.impl.StdSchedulerFactory
-import xin.vanilla.config.GlobalConfigFile
-import xin.vanilla.config.GroupConfigFile
-import xin.vanilla.config.TimerDataFile
-import xin.vanilla.config.WifeDataFile
+import xin.vanilla.config.*
 import xin.vanilla.enums.DataCacheKey.*
 import xin.vanilla.event.EventHandlers
 import xin.vanilla.event.TimerMsgEvent
@@ -50,11 +47,6 @@ object VanillaKanri : KotlinPlugin(
     var messageCache: MessageCache = MessageCacheImpl(dataFolderPath.toString())
 
     /**
-     * 关键词数据
-     */
-    var keywordData: KeywordData = KeywordDataImpl(dataFolderPath.toString())
-
-    /**
      * 数据缓存
      *
      * 仅内存
@@ -76,6 +68,13 @@ object VanillaKanri : KotlinPlugin(
     var timerData: TimerDataFile = TimerDataFile()
 
     /**
+     * 关键词数据缓存
+     *
+     * 持久化
+     */
+    var keywordData: KeyDataFile = KeyDataFile()
+
+    /**
      * 全局设置
      */
     var globalConfig: GlobalConfigFile = GlobalConfigFile()
@@ -89,6 +88,11 @@ object VanillaKanri : KotlinPlugin(
      * 随机数生成器
      */
     var random: SecureRandom = SecureRandom()
+
+    /**
+     * 关键词操作
+     */
+    var keyword: KeywordData = KeywordDataImpl(keywordData)
 
     /**
      * 定时任务调度器
@@ -131,6 +135,8 @@ object VanillaKanri : KotlinPlugin(
         reloadPluginData(wifeData)
         // 定时任务数据
         reloadPluginData(timerData)
+        // 关键词数据
+        reloadPluginData(keywordData)
 
         // 启动定时任务调度器
         scheduler.start()

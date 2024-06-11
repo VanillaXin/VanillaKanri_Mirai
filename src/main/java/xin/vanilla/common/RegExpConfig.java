@@ -226,10 +226,10 @@ public class RegExpConfig {
      * 查询关键词回复指令
      */
     public static RegUtils keySelRegExp(String prefix) {
-        // /va key sel [<group>] 精准|包含|拼音|正则 [key]
+        // /va key sel [<group>] [精准|包含|拼音|正则] [key]
         return RegUtils.start().groupNon(prefix).separator()
                 .groupIgByName("group", GROUP_CODE).appendIg("?").separator("?")
-                .groupByName("type", keyword.getExactly(), keyword.getContain(), keyword.getPinyin(), keyword.getRegex()).separator("?")
+                .groupByName("type", keyword.getExactly(), keyword.getContain(), keyword.getPinyin(), keyword.getRegex()).appendIg("?").separator("?")
                 .groupIgByName("key", ".*?")
                 .groupIgByName("page", "\\d+").appendIg("?")
                 .end();

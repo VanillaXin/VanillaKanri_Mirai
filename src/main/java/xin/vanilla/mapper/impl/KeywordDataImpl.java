@@ -4,99 +4,58 @@ import cn.hutool.core.date.DateUtil;
 import com.github.houbb.pinyin.constant.enums.PinyinStyleEnum;
 import com.github.houbb.pinyin.util.PinyinHelper;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import xin.vanilla.VanillaKanri;
+import xin.vanilla.config.KeyDataFile;
 import xin.vanilla.entity.config.instruction.KeywordInstructions;
 import xin.vanilla.entity.data.KeyData;
 import xin.vanilla.mapper.KeywordData;
 import xin.vanilla.util.SettingsUtils;
 import xin.vanilla.util.StringUtils;
 import xin.vanilla.util.VanillaUtils;
-import xin.vanilla.util.lambda.LambdaUtils;
 import xin.vanilla.util.sqlite.PaginationList;
-import xin.vanilla.util.sqlite.SqliteUtil;
-import xin.vanilla.util.sqlite.statement.*;
 
-import java.sql.SQLException;
-import java.util.*;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class KeywordDataImpl extends Base implements KeywordData {
-    public static String dbname = "\\keyword.db";
 
     public static String KEYWORD_TYPE_EXACTLY = "exactly";
     public static String KEYWORD_TYPE_CONTAIN = "contain";
     public static String KEYWORD_TYPE_PINYIN = "pinyin";
     public static String KEYWORD_TYPE_REGEXP = "regexp";
 
-    public static String[] KEYWORD_TYPES = {KEYWORD_TYPE_EXACTLY, KEYWORD_TYPE_CONTAIN, KEYWORD_TYPE_PINYIN, KEYWORD_TYPE_REGEXP};
+    private final List<KeyData> keyword;
 
-    private final SqliteUtil sqliteUtil;
-
-    private final VanillaKanri Va = VanillaKanri.INSTANCE;
-
-    private final Set<String> createdTables = new HashSet<>();
-
-    public KeywordDataImpl(String path) {
-        try {
-            // 开启“读写共享锁”锁定级别
-            Properties properties = new Properties();
-            properties.setProperty("pragma.locking_mode", "EXCLUSIVE");
-            properties.setProperty("pragma.journal_mode", "WAL");
-            this.sqliteUtil = SqliteUtil.getInstance(path + dbname, properties);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    public void createTable(String table) {
-        if (createdTables.contains(table)) return;
-        createdTables.add(table);
-        if (!sqliteUtil.containsTable(table)) {
-            sqliteUtil.executeSql(
-                    "CREATE TABLE IF NOT EXISTS `" + table + "` (" +
-                            " `" + LambdaUtils.getFiledName(KeyData::getId) + "`     INTEGER     PRIMARY KEY AUTOINCREMENT NOT NULL," +
-                            " `" + LambdaUtils.getFiledName(KeyData::getWord) + "`   TEXT                                  NOT NULL," +
-                            " `" + LambdaUtils.getFiledName(KeyData::getRep) + "`    TEXT                                  NOT NULL," +
-                            " `" + LambdaUtils.getFiledName(KeyData::getBot) + "`    INTEGER(10)                           NOT NULL," +
-                            " `" + LambdaUtils.getFiledName(KeyData::getGroup) + "`  INTEGER(10)                           NOT NULL," +
-                            " `" + LambdaUtils.getFiledName(KeyData::getTime) + "`   INTEGER(10)                           NOT NULL," +
-                            " `" + LambdaUtils.getFiledName(KeyData::getLevel) + "`  INTEGER(4)                            NOT NULL DEFAULT 1," +
-                            " `" + LambdaUtils.getFiledName(KeyData::getStatus) + "` INTEGER(1)                            NOT NULL DEFAULT 0" +
-                            ")");
-            sqliteUtil.executeSql("CREATE UNIQUE INDEX IF NOT EXISTS `"
-                    + LambdaUtils.getFiledName(KeyData::getWord)
-                    + "_" + LambdaUtils.getFiledName(KeyData::getRep)
-                    + "_" + LambdaUtils.getFiledName(KeyData::getGroup)
-                    + "_unique`" + " ON `" + table + "` (" +
-                    "`" + LambdaUtils.getFiledName(KeyData::getWord) + "`, " +
-                    "`" + LambdaUtils.getFiledName(KeyData::getRep) + "`, " +
-                    "`" + LambdaUtils.getFiledName(KeyData::getGroup) + "`)");
-        }
+    public KeywordDataImpl(KeyDataFile keyword) {
+        this.keyword = keyword.getKey();
     }
 
     @Override
     public long addKeyword(String word, String rep, long bot, long group, String type, long time, int level) {
         String table = getTable(type);
-        createTable(table);
         // TODO 定义特殊码, 转义特殊码, 判断普通群员的消息中是否有群管操作特殊码
         String wordCode = VanillaUtils.enVanillaCodeKey(word);
 
         // 查询该level创建的关键词数量是否超出限制
-        Statement query = QueryStatement.produce(KeyData::getId).from(table)
-                .where(KeyData::getWord).eq(wordCode)
-                .and(KeyData::getBot).eq(bot);
+        Stream<KeyData> keyDataStream = keyword.stream()
+                .filter(key -> key.getType().equals(table))
+                .filter(key -> key.getWord().equals(wordCode))
+                .filter(key -> key.getBot() == bot)
+                .filter(key -> key.getLevel() <= (level > 0 ? level : 1));
 
         if (group < -1000) {
-            query.and(KeyData::getGroup).in(-1, Math.abs(group));
+            keyDataStream = keyDataStream.filter(key -> key.getGroup() == -1 || key.getGroup() == Math.abs(group));
         } else {
-            query.and(KeyData::getGroup).eq(group);
+            keyDataStream = keyDataStream.filter(key -> key.getGroup() == group);
         }
+        List<KeyData> list = keyDataStream.sorted(Comparator.comparing(KeyData::getId)).collect(Collectors.toList());
 
-        query.and(KeyData::getLevel).eq(level > 0 ? level : 1)
-                .orderBy(KeyData::getId).asc();
-        List<KeyData> list = sqliteUtil.getList(query, KeyData.class);
         // 根据策略判断是否自动删除最旧的关键词
         if (list.size() >= SettingsUtils.getKeyRadix(group)) {
             if (SettingsUtils.getKeyRadixAutoDel(group)) {
@@ -107,22 +66,21 @@ public class KeywordDataImpl extends Base implements KeywordData {
                 return -2;
             }
         }
-
-        InsertStatement insert = InsertStatement.produce(table)
-                .put(KeyData::getWord, wordCode)
-                .put(KeyData::getRep, rep)
-                .put(KeyData::getBot, bot)
-                .put(KeyData::getGroup, group)
-                .put(KeyData::getTime, time)
-                .put(KeyData::getLevel, level > 0 ? level : 1);
+        KeyData insert = new KeyData();
+        insert.setWord(wordCode);
+        insert.setRep(rep);
+        insert.setBot(bot);
+        insert.setGroup(group);
+        insert.setTime(time);
+        insert.setLevel(level > 0 ? level : 1);
+        insert.setType(table);
         // 判断是否非普通群员添加的关键词
         if (level > 1 || SettingsUtils.getKeyAutoExamine(group)) {
-            insert.put(KeyData::getStatus, 1);
+            insert.setStatus(1);
         }
-        if (sqliteUtil.insert(insert) > 0) {
-            return sqliteUtil.getLastInsertRowId(table);
-        }
-        return 0;
+        insert.setId(keyword.stream().max(Comparator.comparing(KeyData::getId)).orElse(new KeyData()).getId() + 1);
+        keyword.add(insert);
+        return insert.getId();
     }
 
     @Override
@@ -143,10 +101,10 @@ public class KeywordDataImpl extends Base implements KeywordData {
     @Override
     public KeyData getKeywordById(long id, String type) {
         String table = getTable(type);
-        Statement query = QueryStatement.produce().from(table).where(KeyData::getId).eq(id);
-        KeyData entity = sqliteUtil.getEntity(query, KeyData.class);
-        if (entity == null) return new KeyData();
-        return entity;
+        return keyword.stream()
+                .filter(key -> key.getType().equals(table))
+                .filter(key -> key.getId() == id)
+                .findFirst().orElse(new KeyData());
     }
 
     @Override
@@ -171,37 +129,27 @@ public class KeywordDataImpl extends Base implements KeywordData {
 
     @Override
     public List<KeyData> getKeywordList(String word, long bot, long group, String type) {
-        String[] types;
-        if (StringUtils.isNullOrEmpty(type)) types = KEYWORD_TYPES;
-        else types = new String[]{type};
-
         word = VanillaUtils.enVanillaCodeKey(word);
+        String table = "";
 
-        List<KeyData> keys = new ArrayList<>();
-        for (String typeString : types) {
-            String table = getTable(typeString);
-            createTable(table);
-            Statement query = QueryStatement.produce().from(table)
-                    .where(KeyData::getBot).eq(bot)
-                    .and(KeyData::getStatus).gt(0);
-
-            if (group < -1000) {
-                query.and(KeyData::getGroup).in(-1, Math.abs(group));
-            } else if (group == -2) {
-                query.and(KeyData::getGroup).in(-1, group);
-            } else if (group != 0) {
-                query.and(KeyData::getGroup).eq(group);
-            }
-
-            assert table != null;
-            andWord(word, table, query);
-            List<KeyData> list = sqliteUtil.getList(query, KeyData.class);
-            if (list != null) {
-                list.forEach(k -> k.setType(table));
-                keys.addAll(list);
-            }
+        Stream<KeyData> keyDataStream = keyword.stream()
+                .filter(key -> key.getBot() == bot)
+                .filter(key -> key.getStatus() > 0);
+        if (StringUtils.isNotNullOrEmpty(type)) {
+            table = getTable(type);
+            keyDataStream = keyDataStream.filter(key -> key.getType().equals(getTable(type)));
         }
-        return keys;
+
+        if (group < -1000) {
+            keyDataStream = keyDataStream.filter(key -> key.getGroup() == -1 || key.getGroup() == Math.abs(group));
+        } else if (group == -2) {
+            keyDataStream = keyDataStream.filter(key -> key.getGroup() == -1 || key.getGroup() == group);
+        } else if (group != 0) {
+            keyDataStream = keyDataStream.filter(key -> key.getGroup() == group);
+        }
+
+        keyDataStream = andWord(word, table, keyDataStream);
+        return keyDataStream.collect(Collectors.toList());
     }
 
     @Override
@@ -221,46 +169,74 @@ public class KeywordDataImpl extends Base implements KeywordData {
 
     @Override
     public PaginationList<KeyData> getKeywordByPage(String word, long bot, long group, String type, int page, int size) {
-        String table = getTable(type);
-        createTable(table);
-        Statement query = QueryStatement.produce().from(table)
-                .where(KeyData::getBot).eq(bot)
-                .and(KeyData::getStatus).gt(0);
+        String table = "";
+
+        Stream<KeyData> keyDataStream = keyword.stream()
+                .filter(key -> key.getBot() == bot)
+                .filter(key -> key.getStatus() > 0);
+        if (StringUtils.isNotNullOrEmpty(type)) {
+            table = getTable(type);
+            keyDataStream = keyDataStream.filter(key -> key.getType().equals(getTable(type)));
+        }
         if (group < -1000) {
-            query.and(KeyData::getGroup).in(-1, Math.abs(group));
+            keyDataStream = keyDataStream.filter(key -> key.getGroup() == -1 || key.getGroup() == Math.abs(group));
         } else if (group != 0) {
-            query.and(KeyData::getGroup).eq(group);
+            keyDataStream = keyDataStream.filter(key -> key.getGroup() == group);
         }
 
-        assert table != null;
-        if (!StringUtils.isNullOrEmpty(word)) {
+        if (StringUtils.isNotNullOrEmpty(word)) {
             word = VanillaUtils.enVanillaCodeKey(word);
-            andWord(word, table, query);
+            keyDataStream = andWord(word, table, keyDataStream);
         }
-        PaginationList<KeyData> paginationList = sqliteUtil.getPaginationList(query, page, size, KeyData.class);
-        paginationList.forEach(k -> k.setType(table));
-        if (paginationList.getTotalItemCount() > 0) return paginationList;
-
-        return new PaginationList<>(page, size, 0);
+        List<KeyData> list = keyDataStream.collect(Collectors.toList());
+        PaginationList<KeyData> result = new PaginationList<>(page, size, list.size());
+        result.addAll(list);
+        return result;
     }
 
-    private void andWord(String word, @NotNull String table, Statement query) {
+    private Stream<KeyData> andWord(String word, @NotNull String table, Stream<KeyData> query) {
+        if (StringUtils.isNullOrEmpty(word)) {
+            query = query.filter(key -> {
+                if ((key.getPattern() == null && (KEYWORD_TYPE_REGEXP.equals(key.getType())))) {
+                    key.setPattern(Pattern.compile(word));
+                }
+                return (KEYWORD_TYPE_EXACTLY.equals(key.getType()) && key.getWord().equals(word))
+                        || (KEYWORD_TYPE_CONTAIN.equals(key.getType()) && key.getWord().contains(word))
+                        || (KEYWORD_TYPE_PINYIN.equals(key.getType()) && key.getWord().contains(PinyinHelper.toPinyin(word, PinyinStyleEnum.NORMAL).trim()))
+                        || (KEYWORD_TYPE_REGEXP.equals(key.getType()) && key.getPattern().matcher(word).matches());
+            });
+        }
         // 完全匹配
-        if (table.startsWith(KEYWORD_TYPE_EXACTLY)) {
-            query.and(KeyData::getWord).eq(word);
+        else if (table.startsWith(KEYWORD_TYPE_EXACTLY)) {
+            query = query.filter(key -> KEYWORD_TYPE_EXACTLY.equals(key.getType()))
+                    .filter(key -> key.getWord().equals(word));
         }
         // 包含匹配
         else if (table.startsWith(KEYWORD_TYPE_CONTAIN)) {
-            query.andLikeContains(KeyData::getWord, word);
+            query = query.filter(key -> KEYWORD_TYPE_CONTAIN.equals(key.getType()))
+                    .filter(key -> key.getWord().contains(word));
         }
         // 拼音包含匹配
         else if (table.startsWith(KEYWORD_TYPE_PINYIN)) {
-            query.andLikeContains(KeyData::getWord, PinyinHelper.toPinyin(word, PinyinStyleEnum.NORMAL).trim());
+            query = query.filter(key -> KEYWORD_TYPE_PINYIN.equals(key.getType()))
+                    .filter(key -> key.getWord().contains(PinyinHelper.toPinyin(word, PinyinStyleEnum.NORMAL).trim()));
         }
         // 正则匹配
         else if (table.startsWith(KEYWORD_TYPE_REGEXP)) {
-            query.andRegexp(KeyData::getWord, word);
+            query = query.filter(key -> KEYWORD_TYPE_REGEXP.equals(key.getType()))
+                    .filter(key -> {
+                        if (key.getPattern() == null) {
+                            key.setPattern(Pattern.compile(word));
+                        }
+                        return key.getPattern().matcher(word).matches();
+                    });
         }
+        // 默认使用完全匹配
+        else {
+            query = query.filter(key -> KEYWORD_TYPE_EXACTLY.equals(key.getType()))
+                    .filter(key -> key.getWord().equals(word));
+        }
+        return query;
     }
 
     @Override
@@ -282,15 +258,13 @@ public class KeywordDataImpl extends Base implements KeywordData {
     public int deleteKeywordById(long id, String type, int level) {
         String table = getTable(type);
         // 查询该id的关键词的level
-        Statement query = QueryStatement.produce().from(table)
-                .where(KeyData::getId).eq(id)
-                .orderBy(KeyData::getId).asc();
-        KeyData keyData = sqliteUtil.getEntity(query, KeyData.class);
+        KeyData keyData = keyword.stream()
+                .filter(key -> key.getType().equals(table))
+                .filter(key -> key.getId() == id)
+                .findFirst().orElse(new KeyData());
         if (keyData.getLevel() > level) return -2;
 
-        Statement deleteStatement = DeleteStatement.produce(table)
-                .where(KeyData::getId).eq(id);
-        return sqliteUtil.delete(deleteStatement);
+        return keyword.removeIf(key -> key.getId() == id) ? 1 : -1;
     }
 
     @Override
@@ -316,16 +290,22 @@ public class KeywordDataImpl extends Base implements KeywordData {
     @Override
     public int updateStatus(long id, int status, String type) {
         String table = getTable(type);
-        Statement updateStatement = UpdateStatement.produce(table)
-                .set(KeyData::getStatus, status)
-                .where(KeyData::getId).eq(id);
-        return sqliteUtil.update(updateStatement);
+        KeyData keyData = keyword.stream()
+                .filter(key -> key.getType().equals(table))
+                .filter(key -> key.getId() == id)
+                .findFirst().orElse(null);
+        if (keyData != null) {
+            keyData.setStatus(status);
+            return 1;
+        } else {
+            return 0;
+        }
     }
 
     /**
      * 获取表名
      */
-    @Nullable
+    @NotNull
     private String getTable(String type) {
         KeywordInstructions keyword = VanillaKanri.INSTANCE.getGlobalConfig().getInstructions().getKeyword();
         if (keyword.getExactly().contains(type)) {

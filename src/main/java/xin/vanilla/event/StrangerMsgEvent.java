@@ -27,7 +27,7 @@ public class StrangerMsgEvent extends BaseMsgEvent {
     @Capability
     private boolean keyRep() {
         // 关键词查询
-        KeyData keyword = Va.getKeywordData().getKeyword(VanillaUtils.messageToString(msg), bot.getId(), -2);
+        KeyData keyword = Va.getKeyword().getKeyword(VanillaUtils.messageToString(msg), bot.getId(), -2);
         if (keyword.getId() > 0) {
             MessageChain rep = RegExpConfig.VaCode.exeReply(keyword.getRepDecode(null, bot, sender, msg), msg, sender);
             KeyRepEntity keyRepEntity = new KeyRepEntity(sender);

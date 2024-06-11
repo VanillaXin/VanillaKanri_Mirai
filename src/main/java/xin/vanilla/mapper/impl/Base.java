@@ -6,6 +6,7 @@ public class Base {
     protected String getTableName(String table) {
         // Date date = new Date(time * 1000);
         // return DateUtils.getYearOfDate(date) + "." + DateUtils.getMonthOfDateWithZero(date);
-        return table + "_" + dbVersion;
+        // return table + "_" + dbVersion;
+        return table;
     }
 }
