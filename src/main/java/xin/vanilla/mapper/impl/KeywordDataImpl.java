@@ -194,8 +194,8 @@ public class KeywordDataImpl extends Base implements KeywordData {
         return result;
     }
 
-    private Stream<KeyData> andWord(String word, @NotNull String table, Stream<KeyData> query) {
-        if (StringUtils.isNullOrEmpty(word)) {
+    private Stream<KeyData> andWord(@NotNull String word, @NotNull String table, Stream<KeyData> query) {
+        if (StringUtils.isNullOrEmpty(table)) {
             query = query.filter(key -> {
                 if ((key.getPattern() == null && (KEYWORD_TYPE_REGEXP.equals(key.getType())))) {
                     key.setPattern(Pattern.compile(word));
