@@ -200,26 +200,26 @@ public class KeywordDataImpl extends Base implements KeywordData {
                 if ((key.getPattern() == null && (KEYWORD_TYPE_REGEXP.equals(key.getType())))) {
                     key.setPattern(Pattern.compile(word));
                 }
-                return (KEYWORD_TYPE_EXACTLY.equals(key.getType()) && key.getWord().equals(word))
-                        || (KEYWORD_TYPE_CONTAIN.equals(key.getType()) && key.getWord().contains(word))
-                        || (KEYWORD_TYPE_PINYIN.equals(key.getType()) && key.getWord().contains(PinyinHelper.toPinyin(word, PinyinStyleEnum.NORMAL).trim()))
+                return (KEYWORD_TYPE_EXACTLY.equals(key.getType()) && word.equals(key.getWord()))
+                        || (KEYWORD_TYPE_CONTAIN.equals(key.getType()) && word.contains(key.getWord()))
+                        || (KEYWORD_TYPE_PINYIN.equals(key.getType()) && PinyinHelper.toPinyin(word, PinyinStyleEnum.NORMAL).trim().contains(key.getWord()))
                         || (KEYWORD_TYPE_REGEXP.equals(key.getType()) && key.getPattern().matcher(word).matches());
             });
         }
         // 完全匹配
         else if (table.startsWith(KEYWORD_TYPE_EXACTLY)) {
             query = query.filter(key -> KEYWORD_TYPE_EXACTLY.equals(key.getType()))
-                    .filter(key -> key.getWord().equals(word));
+                    .filter(key -> word.equals(key.getWord()));
         }
         // 包含匹配
         else if (table.startsWith(KEYWORD_TYPE_CONTAIN)) {
             query = query.filter(key -> KEYWORD_TYPE_CONTAIN.equals(key.getType()))
-                    .filter(key -> key.getWord().contains(word));
+                    .filter(key -> word.contains(key.getWord()));
         }
         // 拼音包含匹配
         else if (table.startsWith(KEYWORD_TYPE_PINYIN)) {
             query = query.filter(key -> KEYWORD_TYPE_PINYIN.equals(key.getType()))
-                    .filter(key -> key.getWord().contains(PinyinHelper.toPinyin(word, PinyinStyleEnum.NORMAL).trim()));
+                    .filter(key -> PinyinHelper.toPinyin(word, PinyinStyleEnum.NORMAL).trim().contains(key.getWord()));
         }
         // 正则匹配
         else if (table.startsWith(KEYWORD_TYPE_REGEXP)) {

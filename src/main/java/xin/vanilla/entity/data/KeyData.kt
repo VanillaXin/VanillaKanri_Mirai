@@ -27,7 +27,7 @@ class KeyData {
     var word: String = ""
         set(value) {
             field = value
-            if (KEYWORD_TYPE_REGEXP.equals(type)) {
+            if (pattern == null && KEYWORD_TYPE_REGEXP.equals(type)) {
                 pattern = Pattern.compile(value)
             }
         }
@@ -63,7 +63,7 @@ class KeyData {
     var type: String = KEYWORD_TYPE_EXACTLY
         set(value) {
             field = value
-            if (KEYWORD_TYPE_REGEXP.equals(value) && StringUtils.isNotNullOrEmpty(word)) {
+            if (pattern == null && KEYWORD_TYPE_REGEXP.equals(value) && StringUtils.isNotNullOrEmpty(word)) {
                 pattern = Pattern.compile(word)
             }
         }
