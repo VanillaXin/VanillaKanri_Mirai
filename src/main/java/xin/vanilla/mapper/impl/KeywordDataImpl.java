@@ -203,7 +203,7 @@ public class KeywordDataImpl extends Base implements KeywordData {
                 return (KEYWORD_TYPE_EXACTLY.equals(key.getType()) && word.equals(key.getWord()))
                         || (KEYWORD_TYPE_CONTAIN.equals(key.getType()) && word.contains(key.getWord()))
                         || (KEYWORD_TYPE_PINYIN.equals(key.getType()) && PinyinHelper.toPinyin(word, PinyinStyleEnum.NORMAL).trim().contains(key.getWord()))
-                        || (KEYWORD_TYPE_REGEXP.equals(key.getType()) && key.getPattern().matcher(word).matches());
+                        || (KEYWORD_TYPE_REGEXP.equals(key.getType()) && key.getPattern().matcher(word).find());
             });
         }
         // 完全匹配
@@ -228,7 +228,7 @@ public class KeywordDataImpl extends Base implements KeywordData {
                         if (key.getPattern() == null) {
                             key.setPattern(Pattern.compile(word));
                         }
-                        return key.getPattern().matcher(word).matches();
+                        return key.getPattern().matcher(word).find();
                     });
         }
         // 默认使用完全匹配
