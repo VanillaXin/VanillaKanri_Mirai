@@ -44,13 +44,13 @@ public interface KeywordData {
 
     int deleteKeywordById(long id, String type, int level);
 
-    int deleteKeyword(String word, long bot, long group, String type, int level);
+    int[] deleteKeyword(String word, long bot, long group, String type, int level);
 
-    int deleteKeyword(String word, long bot, long group, int level);
+    int[] deleteKeyword(String word, long bot, long group, int level);
 
-    int deleteKeyword(String word, long bot, String type, int level);
+    int[] deleteKeyword(String word, long bot, String type, int level, int qq);
 
-    int deleteKeyword(String word, long bot, int level);
+    int[] deleteKeyword(String word, long bot, int level, int qq);
 
     int updateStatus(long id, int status, String type);
 }

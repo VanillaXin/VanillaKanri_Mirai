@@ -243,6 +243,7 @@ public class RegExpConfig {
         return RegUtils.start().groupNon(prefix).separator()
                 .groupIgByName("group", GROUP_CODE).appendIg("?").separator("?")
                 .groupByName("type", keyword.getExactly(), keyword.getContain(), keyword.getPinyin(), keyword.getRegex()).separator()
+                .groupIgByName("key", "\\[.+\\]").appendIg("?")
                 .groupIgByName("keyIds", "(?:\\d+\\s?)+").end();
     }
 

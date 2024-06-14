@@ -25,10 +25,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.SecureRandom;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 
 public class VanillaTest {
@@ -217,6 +215,7 @@ public class VanillaTest {
 
     @Test
     public void test06() {
-
+        int[] arr = new int[]{1, 3, 5, 7, 9};
+        System.out.println(Arrays.stream(arr).mapToObj(String::valueOf).collect(Collectors.joining(" ")));
     }
 }

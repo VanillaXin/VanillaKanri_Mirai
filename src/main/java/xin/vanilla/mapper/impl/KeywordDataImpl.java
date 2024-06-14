@@ -3,22 +3,20 @@ package xin.vanilla.mapper.impl;
 import cn.hutool.core.date.DateUtil;
 import com.github.houbb.pinyin.constant.enums.PinyinStyleEnum;
 import com.github.houbb.pinyin.util.PinyinHelper;
+import net.mamoe.mirai.Bot;
 import org.jetbrains.annotations.NotNull;
 import xin.vanilla.VanillaKanri;
 import xin.vanilla.config.KeyDataFile;
 import xin.vanilla.entity.config.instruction.KeywordInstructions;
 import xin.vanilla.entity.data.KeyData;
+import xin.vanilla.enums.PermissionLevel;
 import xin.vanilla.mapper.KeywordData;
 import xin.vanilla.util.SettingsUtils;
 import xin.vanilla.util.StringUtils;
 import xin.vanilla.util.VanillaUtils;
 import xin.vanilla.util.sqlite.PaginationList;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -140,9 +138,12 @@ public class KeywordDataImpl extends Base implements KeywordData {
             keyDataStream = keyDataStream.filter(key -> key.getType().equals(getTable(type)));
         }
 
+        // 该群(>0)与全局(=-1)
         if (group < -1000) {
             keyDataStream = keyDataStream.filter(key -> key.getGroup() == -1 || key.getGroup() == Math.abs(group));
-        } else if (group == -2) {
+        }
+        // 好友(=-2)
+        else if (group == -2) {
             keyDataStream = keyDataStream.filter(key -> key.getGroup() == -1 || key.getGroup() == group);
         } else if (group != 0) {
             keyDataStream = keyDataStream.filter(key -> key.getGroup() == group);
@@ -202,7 +203,7 @@ public class KeywordDataImpl extends Base implements KeywordData {
                 }
                 return (KEYWORD_TYPE_EXACTLY.equals(key.getType()) && word.equals(key.getWord()))
                         || (KEYWORD_TYPE_CONTAIN.equals(key.getType()) && word.contains(key.getWord()))
-                        || (KEYWORD_TYPE_PINYIN.equals(key.getType()) && PinyinHelper.toPinyin(word, PinyinStyleEnum.NORMAL).trim().contains(key.getWord()))
+                        || (KEYWORD_TYPE_PINYIN.equals(key.getType()) && PinyinHelper.toPinyin(word, PinyinStyleEnum.NORMAL).trim().contains(key.getWord().trim()))
                         || (KEYWORD_TYPE_REGEXP.equals(key.getType()) && key.getPattern().matcher(word).find());
             });
         }
@@ -219,7 +220,7 @@ public class KeywordDataImpl extends Base implements KeywordData {
         // 拼音包含匹配
         else if (table.startsWith(KEYWORD_TYPE_PINYIN)) {
             query = query.filter(key -> KEYWORD_TYPE_PINYIN.equals(key.getType()))
-                    .filter(key -> PinyinHelper.toPinyin(word, PinyinStyleEnum.NORMAL).trim().contains(key.getWord()));
+                    .filter(key -> PinyinHelper.toPinyin(word, PinyinStyleEnum.NORMAL).trim().contains(key.getWord().trim()));
         }
         // 正则匹配
         else if (table.startsWith(KEYWORD_TYPE_REGEXP)) {
@@ -268,23 +269,42 @@ public class KeywordDataImpl extends Base implements KeywordData {
     }
 
     @Override
-    public int deleteKeyword(String word, long bot, long group, String type, int level) {
-        return 0;
+    public int[] deleteKeyword(String word, long bot, long group, String type, int level) {
+        // 查询该id的关键词的level
+        Stream<KeyData> keyDataStream = keyword.stream()
+                .filter(key -> key.getWord().equals(word))
+                .filter(key -> key.getBot() == bot)
+                .filter(key -> key.getLevel() <= level);
+        if (StringUtils.isNotNullOrEmpty(type)) {
+            keyDataStream = keyDataStream.filter(key -> key.getType().equals(getTable(type)));
+        }
+        if (group != 0) {
+            keyDataStream = keyDataStream.filter(key -> key.getGroup() == group);
+        }
+        int[] keyDataList = keyDataStream.mapToInt(KeyData::getId).toArray();
+
+        return keyword.removeIf(key -> Arrays.stream(keyDataList).allMatch(id -> id == key.getId())) ? keyDataList : new int[]{-1};
     }
 
     @Override
-    public int deleteKeyword(String word, long bot, long group, int level) {
-        return 0;
+    public int[] deleteKeyword(String word, long bot, long group, int level) {
+        return deleteKeyword(word, bot, group, null, level);
     }
 
     @Override
-    public int deleteKeyword(String word, long bot, String type, int level) {
-        return 0;
+    public int[] deleteKeyword(String word, long bot, String type, int level, int qq) {
+        // 超管级及上才能忽略群号删除
+        if (VanillaUtils.hasNotPermissionAndMore(Bot.getInstance(bot), null, qq, PermissionLevel.PERMISSION_LEVEL_SUPER_ADMIN))
+            return new int[]{-1};
+        return deleteKeyword(word, bot, 0, type, level);
     }
 
     @Override
-    public int deleteKeyword(String word, long bot, int level) {
-        return 0;
+    public int[] deleteKeyword(String word, long bot, int level, int qq) {
+        // 超管级及上才能忽略群号删除
+        if (VanillaUtils.hasNotPermissionAndMore(Bot.getInstance(bot), null, qq, PermissionLevel.PERMISSION_LEVEL_SUPER_ADMIN))
+            return new int[]{-1};
+        return deleteKeyword(word, bot, 0, null, level);
     }
 
     @Override

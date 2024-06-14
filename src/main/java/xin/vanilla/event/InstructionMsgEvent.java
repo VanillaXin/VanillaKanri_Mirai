@@ -927,7 +927,7 @@ public class InstructionMsgEvent {
             if (VanillaUtils.hasNotPermissionAndMore(bot, group, sender.getId(), PERMISSION_LEVEL_DEPUTY_ADMIN))
                 return RETURN_CONTINUE;
 
-            long[] groups, keyIds;
+            long[] groups, keyIds = null;
             String type;
 
             groups = getGroups(reg);
@@ -936,10 +936,17 @@ public class InstructionMsgEvent {
             }
 
             type = reg.getMatcher().group("type");
+            String key = "";
             try {
-                String key = reg.getMatcher().group("keyIds");
-                keyIds = Arrays.stream(key.split("\\s")).mapToLong(Long::parseLong).toArray();
+                key = reg.getMatcher().group("key");
             } catch (Exception ignored) {
+            }
+            try {
+                String keyIdString = reg.getMatcher().group("keyIds");
+                keyIds = Arrays.stream(keyIdString.split("\\s")).mapToLong(Long::parseLong).toArray();
+            } catch (Exception ignored) {
+            }
+            if (StringUtils.isNullOrEmpty(key) && keyIds == null) {
                 Frame.sendMessage(group, "表达式有误");
                 return RETURN_BREAK_TRUE;
             }
@@ -949,15 +956,27 @@ public class InstructionMsgEvent {
                     .add(bot, new PlainText("关键词类型:\n" + StringUtils.getKeywordTypeName(type)));
 
             long groupId = groups[0];
-            for (long keyId : keyIds) {
+            if (keyIds != null) {
+                for (long keyId : keyIds) {
+                    int level = VanillaUtils.getPermissionLevel(bot, groupId, sender.getId()) * SettingsUtils.getKeyRadix(group.getId());
+                    int back = Va.getKeyword().deleteKeywordById(keyId, type, level);
+                    if (back > 0) {
+                        forwardMessageBuilder.add(bot, new PlainText("关键词编号: " + keyId + "\n删除成功"));
+                    } else if (back == -2) {
+                        forwardMessageBuilder.add(bot, new PlainText("关键词编号: " + keyId + "\n删除失败: 权限不足"));
+                    } else {
+                        forwardMessageBuilder.add(bot, new PlainText("关键词编号: " + keyId + "\n删除失败"));
+                    }
+                }
+            } else {
                 int level = VanillaUtils.getPermissionLevel(bot, groupId, sender.getId()) * SettingsUtils.getKeyRadix(group.getId());
-                int back = Va.getKeyword().deleteKeywordById(keyId, type, level);
-                if (back > 0) {
-                    forwardMessageBuilder.add(bot, new PlainText("关键词编号: " + keyId + "\n删除成功"));
-                } else if (back == -2) {
-                    forwardMessageBuilder.add(bot, new PlainText("关键词编号: " + keyId + "\n删除失败: 权限不足"));
+                int[] back = Va.getKeyword().deleteKeyword(key, bot.getId(), groupId, type, level);
+                if (back.length > 0 && Arrays.stream(back).min().orElse(0) > 0) {
+                    forwardMessageBuilder.add(bot, new PlainText("关键词: " + key + "\n删除成功\n关键词编号: " + Arrays.stream(back).mapToObj(String::valueOf).collect(Collectors.joining(" "))));
+                } else if (back.length == 1 && back[0] == -2) {
+                    forwardMessageBuilder.add(bot, new PlainText("关键词: " + key + "\n删除失败: 权限不足"));
                 } else {
-                    forwardMessageBuilder.add(bot, new PlainText("关键词编号: " + keyId + "\n删除失败"));
+                    forwardMessageBuilder.add(bot, new PlainText("关键词: " + key + "\n删除失败"));
                 }
             }
             Frame.sendMessage(group, forwardMessageBuilder.build());
