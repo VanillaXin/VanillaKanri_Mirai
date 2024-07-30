@@ -15,6 +15,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class McQuery {
@@ -114,6 +115,7 @@ public class McQuery {
             String username = entry.getString("name");
             result.add(username);
         }
+        Collections.sort(result);
         logger.debug("playerList() returning ".concat(result.toString()));
         return result;
     }
