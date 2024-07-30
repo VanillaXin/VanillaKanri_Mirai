@@ -16,6 +16,13 @@ public class StorageUnitUtil {
     public static final BigDecimal MB = KB.multiply(UNIT);
     public static final BigDecimal GB = MB.multiply(UNIT);
     public static final BigDecimal TB = GB.multiply(UNIT);
+    public static final BigDecimal PB = TB.multiply(UNIT);
+    public static final BigDecimal EB = PB.multiply(UNIT);
+    public static final BigDecimal ZB = EB.multiply(UNIT);
+    public static final BigDecimal YB = ZB.multiply(UNIT);
+    public static final BigDecimal BB = YB.multiply(UNIT);
+    public static final BigDecimal NB = BB.multiply(UNIT);
+    public static final BigDecimal DB = NB.multiply(UNIT);
     public static final Integer SCALE = 2;
 
     /**

@@ -27,6 +27,7 @@ public class KeywordDataImpl extends Base implements KeywordData {
     public static String KEYWORD_TYPE_CONTAIN = "contain";
     public static String KEYWORD_TYPE_PINYIN = "pinyin";
     public static String KEYWORD_TYPE_REGEXP = "regexp";
+    public static String KEYWORD_TYPE_LINK = "link";
 
     private final List<KeyData> keyword;
 

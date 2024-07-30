@@ -362,8 +362,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
             if (VanillaUtils.hasNotPermissionAndMore(bot, group, sender.getId(), PermissionLevel.PERMISSION_LEVEL_SUPER_ADMIN))
                 return false;
             command = msg.contentToString().substring(prefix.length());
-        } else if (msg.contentToString().equals("/list") || msg.contentToString().equals("/ls")) command = "list";
-        else return false;
+        } else return false;
 
         try (Rcon rcon = Rcon.open(Va.getGlobalConfig().getOther().getMcRconIp(), Va.getGlobalConfig().getOther().getMcRconPort())) {
             if (rcon.authenticate(Va.getGlobalConfig().getOther().getMcRconPsw())) {

@@ -5,17 +5,20 @@ import net.mamoe.mirai.message.data.*;
 import org.jetbrains.annotations.NotNull;
 import xin.vanilla.VanillaKanri;
 import xin.vanilla.entity.DecodeKeyParam;
+import xin.vanilla.entity.config.Other;
 import xin.vanilla.entity.config.instruction.BaseInstructions;
 import xin.vanilla.entity.config.instruction.KanriInstructions;
 import xin.vanilla.entity.config.instruction.KeywordInstructions;
 import xin.vanilla.entity.config.instruction.TimerTaskInstructions;
 import xin.vanilla.util.*;
+import xin.vanilla.util.mcstatus.McQuery;
 
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
 import static xin.vanilla.util.RegUtils.REG_SEPARATOR;
+import static xin.vanilla.util.mcstatus.McQuery.*;
 
 public class RegExpConfig {
     private static final VanillaKanri Va = VanillaKanri.INSTANCE;
@@ -338,6 +341,16 @@ public class RegExpConfig {
                 .append("]");
 
         /**
+         * MC查询特殊码
+         */
+        public static RegUtils MC = new RegUtils().append("[vacode:")
+                .appendIg("[Mm][Cc][Qq]uery").append(":")
+                .groupIgByName("ip", "[^:]*?")
+                .groupIgByName("port", "\\d{2,5}?")
+                .groupIgByName("name", "[^:]*?")
+                .append("]");
+
+        /**
          * GPT请求特殊码
          */
         public static RegUtils GPT = new RegUtils().append("[vacode:chatgpt:")
@@ -479,6 +492,8 @@ public class RegExpConfig {
 
         /**
          * 踢出
+         *
+         * @param word 触发规则
          */
         @NotNull
         public static String exeKick(String word, String msg, NormalMember member) {
@@ -500,6 +515,98 @@ public class RegExpConfig {
             return msg.replaceAll(KICK.build(), "");
         }
 
+        /**
+         * Minecraft服务器信息查询
+         */
+        @NotNull
+        public static String exeMcQuery(String msg) {
+            RegUtils regUtils = MC;
+            try {
+                while (regUtils.matcher(msg).find()) {
+                    Matcher matcher = regUtils.getMatcher();
+                    String ip = matcher.group("ip");
+                    int port = 25565;
+                    try {
+                        port = Integer.parseInt(matcher.group("port"));
+                    } catch (NumberFormatException ignored) {
+                    }
+                    String name = matcher.group("name");
+                    McQuery mcQuery = new McQuery(name, ip + ":" + port);
+                    mcQuery.query();
+                    StringBuilder info = new StringBuilder();
+                    Other.Mc mcConf = Va.getGlobalConfig().getOther().getMc();
+                    if (StringUtils.isNotNullOrEmpty(mcQuery.error())) {
+                        switch (mcQuery.error()) {
+                            case ERROR_MSG_CONNECT_FAILED:
+                                if (CollectionUtils.isNullOrEmpty(mcConf.getConnectFailed())) {
+                                    info.append(mcQuery.serverName())
+                                            .append(":").append(ERROR_MSG_CONNECT_FAILED);
+                                } else {
+                                    String err = CollectionUtils.getRandomElement(mcConf.getConnectFailed(), Va.getRandom());
+                                    if (err.contains("%s")) {
+                                        info.append(String.format(err, mcQuery.serverName()));
+                                    } else {
+                                        info.append(mcQuery.serverName()).append(":").append(err);
+                                    }
+                                }
+                                break;
+                            case ERROR_MSG_LOADING:
+                                info.append(mcQuery.serverName())
+                                        .append(":").append(ERROR_MSG_LOADING);
+                                break;
+                            case ERROR_MSG_UNKNOWN_HOST:
+                                if (CollectionUtils.isNullOrEmpty(mcConf.getUnknownHost())) {
+                                    info.append(mcQuery.serverName())
+                                            .append(":").append(ERROR_MSG_UNKNOWN_HOST);
+                                } else {
+                                    String err = CollectionUtils.getRandomElement(mcConf.getUnknownHost(), Va.getRandom());
+                                    if (err.contains("%s")) {
+                                        info.append(String.format(err, mcQuery.serverName()));
+                                    } else {
+                                        info.append(mcQuery.serverName()).append(":").append(err);
+                                    }
+                                }
+                                break;
+                            case ERROR_MSG_UNKNOWN_RESPONSE:
+                                if (CollectionUtils.isNullOrEmpty(mcConf.getUnknownResponse())) {
+                                    info.append(mcQuery.serverName())
+                                            .append(":").append(ERROR_MSG_UNKNOWN_RESPONSE);
+                                } else {
+                                    String err = CollectionUtils.getRandomElement(mcConf.getUnknownResponse(), Va.getRandom());
+                                    if (err.contains("%s")) {
+                                        info.append(String.format(err, mcQuery.serverName()));
+                                    } else {
+                                        info.append(mcQuery.serverName()).append(":").append(err);
+                                    }
+                                }
+                                break;
+                        }
+                    } else if (mcQuery.onlinePlayers() == 0) {
+                        String err = CollectionUtils.getRandomElement(mcConf.getNone(), Va.getRandom());
+                        if (err.contains("%s")) {
+                            info.append(String.format(err, mcQuery.serverName()));
+                        } else {
+                            info.append(mcQuery.serverName()).append(":").append(err);
+                        }
+                    } else {
+                        String success = mcConf.getSuccess();
+                        success = success.replace("[name]", mcQuery.serverName());
+                        success = success.replace("[motd]", mcQuery.description());
+                        success = success.replace("[host]", mcQuery.serverIp());
+                        success = success.replace("[port]", String.valueOf(mcQuery.serverPort()));
+                        success = success.replace("[version]", mcQuery.serverVersion());
+                        success = success.replace("[players]", mcQuery.playerListString());
+                        success = success.replace("[online]", String.valueOf(mcQuery.onlinePlayers()));
+                        success = success.replace("[max]", String.valueOf(mcQuery.maxPlayers()));
+                        info.append(success);
+                    }
+                    msg = msg.replaceAll(StringUtils.escapeExprSpecialWord(matcher.group(0)), info.toString());
+                }
+            } catch (Exception e) {
+                Va.getLogger().error(e);
+            }
+            return msg.replaceAll(MC.build(), "");
+        }
 
         /**
          * GPT

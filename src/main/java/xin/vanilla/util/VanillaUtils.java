@@ -770,6 +770,9 @@ public class VanillaUtils {
             // REP
             result = RegExpConfig.VaCode.exeRep(keyParam, result);
 
+            // MC Query
+            result = RegExpConfig.VaCode.exeMcQuery(result);
+
             // ChatGPT
             if (messageChain != null) {
                 result = RegExpConfig.VaCode.exeGpt(messageToPlainText(messageChain, group), result, (UserOrBot) sender);
