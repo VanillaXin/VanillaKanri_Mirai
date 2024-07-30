@@ -5,6 +5,8 @@ import org.jetbrains.annotations.NotNull;
 import xin.vanilla.VanillaKanri;
 import xin.vanilla.entity.config.instruction.KeywordInstructions;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.security.SecureRandom;
 import java.util.Collection;
 
@@ -384,5 +386,82 @@ public class StringUtils {
 
     public static String getAvatarUrl(long qq, int size) {
         return "http://q.qlogo.cn/g?b=qq&nk=" + qq + "&s=" + size;
+    }
+
+    private static final String[] NUM = {"零", "壹", "贰", "叁", "肆", "伍", "陆", "柒", "捌", "玖"};
+    private static final String[] UNIT = {"", "拾", "佰", "仟"
+            , "万", "拾万", "佰万", "仟万"
+            , "亿", "拾亿", "佰亿", "仟亿"
+            , "兆", "拾兆", "佰兆", "仟兆"
+            , "京", "拾京", "佰京", "仟京"
+            , "垓", "拾垓", "佰垓", "仟垓"
+            , "秭", "拾秭", "佰秭", "仟秭"
+            , "穰", "拾穰", "佰穰", "仟穰"
+            , "沟", "拾沟", "佰沟", "仟沟"
+            , "涧", "拾涧", "佰涧", "仟涧"
+            , "正", "拾正", "佰正", "仟正"
+            , "载", "拾载", "佰载", "仟载"};
+    private static final String[] DECIMAL = {"角", "分"};
+
+    /**
+     * 将金额转换为大写
+     */
+    public static String toChineseCapitalized(BigDecimal amount) {
+        StringBuilder sb = new StringBuilder();
+        int scale = amount.scale();
+        if (scale > 2) {
+            amount = amount.setScale(2, RoundingMode.HALF_UP);
+        }
+        String str = amount.toString();
+        String[] parts = str.split("\\.");
+        String integerPart = parts[0];
+        String decimalPart = "00";
+        if (parts.length > 1) {
+            decimalPart = parts[1];
+        }
+        int integerLen = integerPart.length();
+        int decimalLen = decimalPart.length();
+        if (integerLen == 1 && integerPart.charAt(0) == '0') {
+            sb.append(NUM[0]);
+        } else {
+            for (int i = 0; i < integerLen; i++) {
+                int digit = integerPart.charAt(i) - '0';
+                int unitIndex = integerLen - i - 1;
+                int unit = unitIndex % 4;
+                if (digit == 0) {
+                    if (unit != 0 && sb.length() > 0 && sb.charAt(sb.length() - 1) != '零') {
+                        sb.append(NUM[0]);
+                    }
+                } else {
+                    sb.append(NUM[digit]);
+                    sb.append(UNIT[unit]);
+                }
+                if (unit == 0 && unitIndex > 0 && sb.charAt(sb.length() - 1) != '亿') {
+                    sb.append(UNIT[unitIndex]);
+                }
+            }
+        }
+
+        sb.append("元");
+        if (decimalLen == 1) {
+            decimalPart += "0";
+        }
+
+        // 若小数部分不为0
+        if (!decimalPart.equals("00")) {
+            for (int i = 0; i < decimalLen; i++) {
+                int digit = decimalPart.charAt(i) - '0';
+                // 若小数位不为0
+                if (digit != 0) {
+                    sb.append(NUM[digit]);
+                    sb.append(DECIMAL[i]);
+                }
+            }
+        }
+
+        if (decimalPart.equals("00")) {
+            sb.append("整");
+        }
+        return sb.toString();
     }
 }
