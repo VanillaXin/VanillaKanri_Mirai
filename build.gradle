@@ -31,7 +31,7 @@ dependencies {
     implementation 'com.jayway.jsonpath:json-path:2.9.0' // JsonPath工具类
     implementation 'org.quartz-scheduler:quartz:2.3.2' // 定时任务库
     implementation 'xin.vanilla.rcon:rcon:1.2.1' // MC RCON依赖
-    implementation 'org.geysermc.mcprotocollib:protocol:1.20.6-1' // 用于与MC客户端/服务器通信的库
+    // implementation 'org.geysermc.mcprotocollib:protocol:1.20.6-1' // 用于与MC客户端/服务器通信的库
 
 
     testCompileOnly 'org.apiguardian:apiguardian-api:1.1.2'
