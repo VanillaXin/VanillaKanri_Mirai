@@ -30,6 +30,12 @@ class TimerData {
     var inited: Boolean = false
 
     /**
+     * 上次执行结果
+     */
+    @Transient
+    var lastResult: String = ""
+
+    /**
      * 唯一标识
      */
     var id: String = ""

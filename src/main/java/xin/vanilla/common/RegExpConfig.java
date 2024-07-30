@@ -347,7 +347,8 @@ public class RegExpConfig {
                 .appendIg("[Mm][Cc][Qq]uery").append(":")
                 .groupIgByName("ip", "[^:]*?").append(":")
                 .groupIgByName("port", "\\d{2,5}?").append(":")
-                .groupIgByName("name", "[^:]*?")
+                .groupIgByName("name", "[^:]*?").append(":").appendIg("?")
+                .groupIgByName("type", "\\d?")
                 .append("]");
 
         /**
@@ -531,6 +532,7 @@ public class RegExpConfig {
                     } catch (NumberFormatException ignored) {
                     }
                     String name = matcher.group("name");
+                    String type = matcher.group("type");
                     McQuery mcQuery = new McQuery(name, ip + ":" + port);
                     mcQuery.query();
                     StringBuilder info = new StringBuilder();
@@ -542,7 +544,16 @@ public class RegExpConfig {
                                     info.append(mcQuery.serverName())
                                             .append(":").append(ERROR_MSG_CONNECT_FAILED);
                                 } else {
-                                    String err = CollectionUtils.getRandomElement(mcConf.getConnectFailed(), Va.getRandom());
+                                    String err = null;
+                                    if (StringUtils.isNotNullOrEmpty(type)) {
+                                        try {
+                                            err = mcConf.getConnectFailed().get(Integer.parseInt(type));
+                                        } catch (Exception ignored) {
+                                        }
+                                    }
+                                    if (StringUtils.isNullOrEmpty(err)) {
+                                        err = CollectionUtils.getRandomElement(mcConf.getConnectFailed(), Va.getRandom());
+                                    }
                                     if (err.contains("%s")) {
                                         info.append(String.format(err, mcQuery.serverName()));
                                     } else {
@@ -559,7 +570,16 @@ public class RegExpConfig {
                                     info.append(mcQuery.serverName())
                                             .append(":").append(ERROR_MSG_UNKNOWN_HOST);
                                 } else {
-                                    String err = CollectionUtils.getRandomElement(mcConf.getUnknownHost(), Va.getRandom());
+                                    String err = null;
+                                    if (StringUtils.isNotNullOrEmpty(type)) {
+                                        try {
+                                            err = mcConf.getUnknownHost().get(Integer.parseInt(type));
+                                        } catch (Exception ignored) {
+                                        }
+                                    }
+                                    if (StringUtils.isNullOrEmpty(err)) {
+                                        err = CollectionUtils.getRandomElement(mcConf.getUnknownHost(), Va.getRandom());
+                                    }
                                     if (err.contains("%s")) {
                                         info.append(String.format(err, mcQuery.serverName()));
                                     } else {
@@ -572,7 +592,16 @@ public class RegExpConfig {
                                     info.append(mcQuery.serverName())
                                             .append(":").append(ERROR_MSG_UNKNOWN_RESPONSE);
                                 } else {
-                                    String err = CollectionUtils.getRandomElement(mcConf.getUnknownResponse(), Va.getRandom());
+                                    String err = null;
+                                    if (StringUtils.isNotNullOrEmpty(type)) {
+                                        try {
+                                            err = mcConf.getUnknownResponse().get(Integer.parseInt(type));
+                                        } catch (Exception ignored) {
+                                        }
+                                    }
+                                    if (StringUtils.isNullOrEmpty(err)) {
+                                        err = CollectionUtils.getRandomElement(mcConf.getUnknownResponse(), Va.getRandom());
+                                    }
                                     if (err.contains("%s")) {
                                         info.append(String.format(err, mcQuery.serverName()));
                                     } else {
@@ -582,7 +611,16 @@ public class RegExpConfig {
                                 break;
                         }
                     } else if (mcQuery.onlinePlayers() == 0) {
-                        String err = CollectionUtils.getRandomElement(mcConf.getNone(), Va.getRandom());
+                        String err = null;
+                        if (StringUtils.isNotNullOrEmpty(type)) {
+                            try {
+                                err = mcConf.getNone().get(Integer.parseInt(type));
+                            } catch (Exception ignored) {
+                            }
+                        }
+                        if (StringUtils.isNullOrEmpty(err)) {
+                            err = CollectionUtils.getRandomElement(mcConf.getNone(), Va.getRandom());
+                        }
                         if (err.contains("%s")) {
                             info.append(String.format(err, mcQuery.serverName()));
                         } else {

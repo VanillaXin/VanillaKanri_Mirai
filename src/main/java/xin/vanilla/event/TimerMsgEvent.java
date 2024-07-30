@@ -29,6 +29,7 @@ public class TimerMsgEvent extends BaseMsgEvent implements Job {
     private Contact target;
     private Bot bot;
     private String repString;
+    private String lastResult;
 
     public TimerMsgEvent() {
         super(null, null, System.currentTimeMillis());
@@ -43,6 +44,7 @@ public class TimerMsgEvent extends BaseMsgEvent implements Job {
         this.sender = timer.getSender();
         this.target = this.group != null ? this.group : this.sender;
         this.repString = timer.getMsg();
+        this.lastResult = timer.getLastResult();
         this.msg = new MessageChainBuilder().append(timer.getCron()).build();
         this.run();
     }
@@ -59,7 +61,17 @@ public class TimerMsgEvent extends BaseMsgEvent implements Job {
             repWord.setGroup(this.group.getId());
         }
         repWord.setTime(this.time);
-        MessageChain messages = MessageChain.deserializeFromMiraiCode(VanillaUtils.deVanillaCodeIns(new DecodeKeyParam(bot, sender, group, (int) (this.time / 1000), msg, repWord)), target);
+        String result = VanillaUtils.deVanillaCodeIns(new DecodeKeyParam(bot, sender, group, (int) (this.time / 1000), msg, repWord));
+        // 判断是否包含 仅变化才发送 特殊码
+        if (result.contains("[vacode:onlyChanged]")) {
+            result = result.replace("[vacode:onlyChanged]", "");
+            if (!result.equals(this.lastResult)) {
+                timer.setLastResult(result);
+            } else {
+                result = "";
+            }
+        }
+        MessageChain messages = MessageChain.deserializeFromMiraiCode(result, target);
         KeyRepEntity keyRepEntity = new KeyRepEntity(target);
         keyRepEntity.setMsg(VanillaUtils.messageToString(msg));
         keyRepEntity.setSenderId(sender.getId());
