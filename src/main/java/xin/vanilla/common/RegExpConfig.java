@@ -345,8 +345,8 @@ public class RegExpConfig {
          */
         public static RegUtils MC = new RegUtils().append("[vacode:")
                 .appendIg("[Mm][Cc][Qq]uery").append(":")
-                .groupIgByName("ip", "[^:]*?")
-                .groupIgByName("port", "\\d{2,5}?")
+                .groupIgByName("ip", "[^:]*?").append(":")
+                .groupIgByName("port", "\\d{2,5}?").append(":")
                 .groupIgByName("name", "[^:]*?")
                 .append("]");
 
