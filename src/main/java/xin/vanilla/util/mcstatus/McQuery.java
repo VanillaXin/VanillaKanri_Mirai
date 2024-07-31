@@ -116,7 +116,7 @@ public class McQuery {
             result.add(username);
         }
         Collections.sort(result);
-        logger.debug("playerList() returning ".concat(result.toString()));
+        // logger.debug("playerList() returning ".concat(result.toString()));
         return result;
     }
 
@@ -141,13 +141,13 @@ public class McQuery {
         StringBuilder result = new StringBuilder();
         JSONArray descExtra = null;
         String desc = serverJSON.getString("description");
-        logger.info("desc = " + desc);
+        // logger.info("desc: " + desc);
         JSONObject descriptionObj = serverJSON.getJSONObject("description");
         if (descriptionObj != null) {
             desc = descriptionObj.getString("text");
             descExtra = descriptionObj.getJSONArray("extra");
         }
-        logger.info("desc = " + desc);
+        // logger.info("desc: " + desc);
         int curChar = 0;
         if (descExtra != null) {
             while (curChar < descExtra.size()) {
@@ -236,7 +236,7 @@ public class McQuery {
             }
             // 忽略数据包类型, 只用取一个类型
             final int packetType = in.read();
-            logger.info(String.format("%s, %s: 数据包类型: %d%n", serverName, serverAddress, packetType));
+            // logger.info(String.format("%s, %s: 数据包类型: %d%n", serverName, serverAddress, packetType));
             int jsonLength = readVarInt(in);
             if (jsonLength < 0) {
                 in.close();

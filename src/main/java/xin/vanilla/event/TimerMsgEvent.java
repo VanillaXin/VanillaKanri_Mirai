@@ -63,8 +63,8 @@ public class TimerMsgEvent extends BaseMsgEvent implements Job {
         repWord.setTime(this.time);
         String result = VanillaUtils.deVanillaCodeIns(new DecodeKeyParam(bot, sender, group, (int) (this.time / 1000), msg, repWord));
         // 判断是否包含 仅变化才发送 特殊码
-        if (result.contains("[vacode:onlyChanged]")) {
-            result = result.replace("[vacode:onlyChanged]", "");
+        if (result.contains("[vacode:timer:changed]")) {
+            result = result.replace("[vacode:timer:changed]", "");
             if (!result.equals(this.lastResult)) {
                 timer.setLastResult(result);
             } else {
