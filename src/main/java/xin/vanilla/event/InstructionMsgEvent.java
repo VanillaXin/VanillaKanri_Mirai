@@ -955,8 +955,7 @@ public class InstructionMsgEvent {
             }
 
             ForwardMessageBuilder forwardMessageBuilder = new ForwardMessageBuilder(group)
-                    .add(sender, msg)
-                    .add(bot, new PlainText("关键词类型:\n" + StringUtils.getKeywordTypeName(type)));
+                    .add(sender, msg);
 
             long groupId = groups[0];
             if (keyIds != null) {
@@ -966,7 +965,8 @@ public class InstructionMsgEvent {
                     int back = Va.getKeyword().deleteKeywordById(keyId, type, level);
                     if (back > 0) {
                         forwardMessageBuilder.add(bot, new PlainText(
-                                "关键词ID: " + keyId + "\n删除成功\n" +
+                                "删除成功\n" +
+                                        "关键词ID: " + keyId + "\n" +
                                         "关键词类型: " + StringUtils.getKeywordTypeName(keywordById.getType()) + "\n" +
                                         "关键词权级: " + keywordById.getLevel() + "\n" +
                                         "关键词状态: " + (keywordById.getStatus() > 0 ? "已启用" : "未启用") + "\n" +
@@ -977,13 +977,16 @@ public class InstructionMsgEvent {
                         forwardMessageBuilder.add(bot, MessageChain.deserializeFromMiraiCode(keywordById.getRepDecode(true).replaceAll("\\[vacode:", "[☣:").replaceAll(":chatgpt:.*?]", ":chatgpt:***]"), group));
                     } else if (back == -2) {
                         forwardMessageBuilder.add(bot, new PlainText(
-                                "关键词ID: " + keyId + "\n删除失败: 权限不足\n" +
+                                "删除失败: 权限不足\n" +
+                                        "关键词ID: " + keyId + "\n" +
                                         "关键词类型: " + StringUtils.getKeywordTypeName(keywordById.getType()) + "\n" +
                                         "关键词权级: " + keywordById.getLevel() + "\n" +
                                         "关键词状态: " + (keywordById.getStatus() > 0 ? "已启用" : "未启用")
                         ));
                     } else {
-                        forwardMessageBuilder.add(bot, new PlainText("关键词编号: " + keyId + "\n删除失败"));
+                        forwardMessageBuilder.add(bot, new PlainText("删除失败\n" +
+                                "关键词ID: " + keyId + "\n" +
+                                "关键词类型: " + StringUtils.getKeywordTypeName(keywordById.getType())));
                     }
                 }
             } else {
