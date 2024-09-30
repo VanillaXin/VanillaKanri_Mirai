@@ -112,15 +112,15 @@ public class EventHandlers extends SimpleListenerHost {
         String secondPrefix = null;
         if (!StringUtils.isNullOrEmpty(insEvent.getKanri().getPrefix())
                 && insEvent.getIns().startsWith(insEvent.getKanri().getPrefix())) {
-            if (insEvent.delPrefix(insEvent.getKanri().getPrefix())) secondPrefix = insEvent.getKanri().getPrefix();
+            if (!insEvent.delPrefix(insEvent.getKanri().getPrefix())) secondPrefix = insEvent.getKanri().getPrefix();
         } else if (!StringUtils.isNullOrEmpty(insEvent.getKeyword().getPrefix())
                 && insEvent.getIns().startsWith(insEvent.getKeyword().getPrefix())) {
-            if (insEvent.delPrefix(insEvent.getKeyword().getPrefix())) secondPrefix = insEvent.getKeyword().getPrefix();
+            if (!insEvent.delPrefix(insEvent.getKeyword().getPrefix())) secondPrefix = insEvent.getKeyword().getPrefix();
         } else if (!StringUtils.isNullOrEmpty(insEvent.getTimer().getPrefix())
                 && insEvent.getIns().startsWith(insEvent.getTimer().getPrefix())) {
-            if (insEvent.delPrefix(insEvent.getTimer().getPrefix())) secondPrefix = insEvent.getTimer().getPrefix();
+            if (!insEvent.delPrefix(insEvent.getTimer().getPrefix())) secondPrefix = insEvent.getTimer().getPrefix();
         } else {
-            if (insEvent.delPrefix("")) secondPrefix = "";
+            if (!insEvent.delPrefix("")) secondPrefix = "";
         }
         if (secondPrefix == null) return;
 
