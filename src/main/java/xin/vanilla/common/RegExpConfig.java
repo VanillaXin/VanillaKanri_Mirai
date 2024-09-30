@@ -462,7 +462,7 @@ public class RegExpConfig {
                     } catch (Exception ignored) {
                         time2 = time1 + 0.01F;
                     }
-                    double time = new Random().nextDouble(time1, time2);
+                    double time = new Random().doubles(time1, time2).findAny().orElse((time1 + time2) / 2);
                     member.mute((int) (time * 60));
                 }
             } catch (Exception e) {

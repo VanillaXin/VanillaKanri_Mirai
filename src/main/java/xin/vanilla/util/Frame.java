@@ -45,7 +45,7 @@ public class Frame {
     /**
      * 通过图片链接构建图片对象
      *
-     * @param url 可以是http(s)://路径 也可以是file:///路径
+     * @param url 可以是http(s)://路径 也可以是file:///路径 或者指定JsonPath的json字符串
      */
     @NotNull
     public static Image buildImageByUrl(String url, Contact contact) {
