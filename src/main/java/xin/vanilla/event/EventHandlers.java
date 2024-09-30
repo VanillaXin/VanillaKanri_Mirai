@@ -12,7 +12,7 @@ import xin.vanilla.VanillaKanri;
 import xin.vanilla.common.RegExpConfig;
 import xin.vanilla.common.annotation.KanriInsEvent;
 import xin.vanilla.common.annotation.KeywordInsEvent;
-import xin.vanilla.common.annotation.TimerInrsEvent;
+import xin.vanilla.common.annotation.TimerInsEvent;
 import xin.vanilla.entity.config.instruction.KanriInstructions;
 import xin.vanilla.entity.event.events.GroupMessageEvents;
 import xin.vanilla.enums.PermissionLevel;
@@ -37,8 +37,8 @@ public class EventHandlers extends SimpleListenerHost {
     @Override
     public void handleException(@NotNull CoroutineContext context, @NotNull Throwable exception) {
         // 是否已启用调试模式
-        Integer debug = Va.getGlobalConfig().getBase().getCapability().get("EventHandlers.debug");
-        if (debug != null && debug > 0) return;
+        Integer debug = Va.getGlobalConfig().getBase().getCapability().getOrDefault("EventHandlers.debug", 0);
+        if (debug == 0) return;
 
         // 处理事件处理时抛出的异常
         Event event = ((ExceptionInEventHandlerException) exception).getEvent();
@@ -97,7 +97,7 @@ public class EventHandlers extends SimpleListenerHost {
     /**
      * 监听指令消息
      */
-    @EventHandler(priority = EventPriority.HIGH)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onMessage(@NotNull MessageEvent event) {
         // 自增消息接收计数器
         VanillaKanri.INSTANCE.addMsgReceiveCount();
@@ -107,20 +107,24 @@ public class EventHandlers extends SimpleListenerHost {
         // 判断是否群管指令
         if (!insEvent.isKanriIns()) return;
 
+        // /va key
         // 删除二级前缀
+        String secondPrefix = null;
         if (!StringUtils.isNullOrEmpty(insEvent.getKanri().getPrefix())
                 && insEvent.getIns().startsWith(insEvent.getKanri().getPrefix())) {
-            if (insEvent.delPrefix(insEvent.getKanri().getPrefix())) return;
+            if (insEvent.delPrefix(insEvent.getKanri().getPrefix())) secondPrefix = insEvent.getKanri().getPrefix();
         } else if (!StringUtils.isNullOrEmpty(insEvent.getKeyword().getPrefix())
                 && insEvent.getIns().startsWith(insEvent.getKeyword().getPrefix())) {
-            if (insEvent.delPrefix(insEvent.getKeyword().getPrefix())) return;
+            if (insEvent.delPrefix(insEvent.getKeyword().getPrefix())) secondPrefix = insEvent.getKeyword().getPrefix();
         } else if (!StringUtils.isNullOrEmpty(insEvent.getTimer().getPrefix())
                 && insEvent.getIns().startsWith(insEvent.getTimer().getPrefix())) {
-            if (insEvent.delPrefix(insEvent.getTimer().getPrefix())) return;
+            if (insEvent.delPrefix(insEvent.getTimer().getPrefix())) secondPrefix = insEvent.getTimer().getPrefix();
         } else {
-            if (insEvent.delPrefix("")) return;
+            if (insEvent.delPrefix("")) secondPrefix = "";
         }
+        if (secondPrefix == null) return;
 
+        // /va key add
         // 三级前缀
         String thirdPrefix;
         int index = RegUtils.containsRegSeparator(insEvent.getIns());
@@ -234,15 +238,13 @@ public class EventHandlers extends SimpleListenerHost {
                     throw new RuntimeException(e);
                 }
 
-            } else if (method.isAnnotationPresent(KeywordInsEvent.class)) {
+            } else if (secondPrefix.equalsIgnoreCase(insEvent.getKeyword().getPrefix()) && method.isAnnotationPresent(KeywordInsEvent.class)) {
                 try {
                     back = (int) method.invoke(insEvent, thirdPrefix);
                 } catch (IllegalAccessException | InvocationTargetException e) {
                     throw new RuntimeException(e);
                 }
-            }
-            // TODO 解析定时任务指令
-            else if (method.isAnnotationPresent(TimerInrsEvent.class)) {
+            } else if (secondPrefix.equalsIgnoreCase(insEvent.getTimer().getPrefix()) && method.isAnnotationPresent(TimerInsEvent.class)) {
                 try {
                     back = (int) method.invoke(insEvent, thirdPrefix);
                 } catch (IllegalAccessException | InvocationTargetException e) {

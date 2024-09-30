@@ -23,7 +23,7 @@ import xin.vanilla.VanillaKanri;
 import xin.vanilla.common.RegExpConfig;
 import xin.vanilla.common.annotation.KanriInsEvent;
 import xin.vanilla.common.annotation.KeywordInsEvent;
-import xin.vanilla.common.annotation.TimerInrsEvent;
+import xin.vanilla.common.annotation.TimerInsEvent;
 import xin.vanilla.entity.TriggerEntity;
 import xin.vanilla.entity.config.instruction.BaseInstructions;
 import xin.vanilla.entity.config.instruction.KanriInstructions;
@@ -1128,7 +1128,7 @@ public class InstructionMsgEvent {
 
     // region 定时任务指令
 
-    @TimerInrsEvent
+    @TimerInsEvent
     public int timerAdd(@NotNull String thirdPrefix) {
         if (!base.getAdd().contains(thirdPrefix)) return RETURN_CONTINUE;
         RegUtils reg = RegExpConfig.timerAddRegExp(thirdPrefix);
@@ -1221,7 +1221,7 @@ public class InstructionMsgEvent {
         return RETURN_CONTINUE;
     }
 
-    @TimerInrsEvent
+    @TimerInsEvent
     public int timerDel(@NotNull String thirdPrefix) {
         if (!base.getDelete().contains(thirdPrefix)) return RETURN_CONTINUE;
         RegUtils reg = RegExpConfig.timerDelRegExp(thirdPrefix);
