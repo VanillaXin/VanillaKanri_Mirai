@@ -99,9 +99,8 @@ public class KeywordDataImpl extends Base implements KeywordData {
 
     @Override
     public KeyData getKeywordById(long id, String type) {
-        String table = getTable(type);
         return keyword.stream()
-                .filter(key -> key.getType().equals(table))
+                .filter(key -> StringUtils.isNullOrEmpty(type) || key.getType().equals(getTable(type)))
                 .filter(key -> key.getId() == id)
                 .findFirst().orElse(new KeyData());
     }
@@ -258,10 +257,9 @@ public class KeywordDataImpl extends Base implements KeywordData {
 
     @Override
     public int deleteKeywordById(long id, String type, int level) {
-        String table = getTable(type);
         // 查询该id的关键词的level
         KeyData keyData = keyword.stream()
-                .filter(key -> key.getType().equals(table))
+                .filter(key -> StringUtils.isNullOrEmpty(type) || key.getType().equals(getTable(type)))
                 .filter(key -> key.getId() == id)
                 .findFirst().orElse(new KeyData());
         if (keyData.getLevel() > level) return -2;

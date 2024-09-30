@@ -245,7 +245,7 @@ public class RegExpConfig {
         // /va key del [<group>] 精准|包含|拼音|正则 [keyId keyId]
         return RegUtils.start().groupNon(prefix).separator()
                 .groupIgByName("group", GROUP_CODE).appendIg("?").separator("?")
-                .groupByName("type", keyword.getExactly(), keyword.getContain(), keyword.getPinyin(), keyword.getRegex()).separator()
+                .groupByName("type", keyword.getExactly(), keyword.getContain(), keyword.getPinyin(), keyword.getRegex()).appendIg("?").separator("?")
                 .groupIgByName("key", "\\[.+\\]").appendIg("?")
                 .groupIgByName("keyIds", "(?:\\d+\\s?)+").end();
     }

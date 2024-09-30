@@ -928,14 +928,17 @@ public class InstructionMsgEvent {
                 return RETURN_CONTINUE;
 
             long[] groups, keyIds = null;
-            String type;
 
             groups = getGroups(reg);
             if (groups.length > 1) {
                 Frame.sendMessage(group, "表达式有误: 只能同时操作一个群");
             }
 
-            type = reg.getMatcher().group("type");
+            String type = "";
+            try {
+                type = reg.getMatcher().group("type");
+            } catch (Exception ignored) {
+            }
             String key = "";
             try {
                 key = reg.getMatcher().group("key");
@@ -959,11 +962,26 @@ public class InstructionMsgEvent {
             if (keyIds != null) {
                 for (long keyId : keyIds) {
                     int level = VanillaUtils.getPermissionLevel(bot, groupId, sender.getId()) * SettingsUtils.getKeyRadix(group.getId());
+                    KeyData keywordById = Va.getKeyword().getKeywordById(keyId, type);
                     int back = Va.getKeyword().deleteKeywordById(keyId, type, level);
                     if (back > 0) {
-                        forwardMessageBuilder.add(bot, new PlainText("关键词编号: " + keyId + "\n删除成功"));
+                        forwardMessageBuilder.add(bot, new PlainText(
+                                "关键词ID: " + keyId + "\n删除成功\n" +
+                                        "关键词类型: " + StringUtils.getKeywordTypeName(keywordById.getType()) + "\n" +
+                                        "关键词权级: " + keywordById.getLevel() + "\n" +
+                                        "关键词状态: " + (keywordById.getStatus() > 0 ? "已启用" : "未启用") + "\n" +
+                                        "关键词内容:"
+                        ));
+                        forwardMessageBuilder.add(bot, MessageChain.deserializeFromMiraiCode(keywordById.getWordDecode().replaceAll("\\[vacode:", "[☣:").replaceAll(":chatgpt:.*?]", ":chatgpt:***]"), group));
+                        forwardMessageBuilder.add(bot, new PlainText("关键词回复:"));
+                        forwardMessageBuilder.add(bot, MessageChain.deserializeFromMiraiCode(keywordById.getRepDecode(true).replaceAll("\\[vacode:", "[☣:").replaceAll(":chatgpt:.*?]", ":chatgpt:***]"), group));
                     } else if (back == -2) {
-                        forwardMessageBuilder.add(bot, new PlainText("关键词编号: " + keyId + "\n删除失败: 权限不足"));
+                        forwardMessageBuilder.add(bot, new PlainText(
+                                "关键词ID: " + keyId + "\n删除失败: 权限不足\n" +
+                                        "关键词类型: " + StringUtils.getKeywordTypeName(keywordById.getType()) + "\n" +
+                                        "关键词权级: " + keywordById.getLevel() + "\n" +
+                                        "关键词状态: " + (keywordById.getStatus() > 0 ? "已启用" : "未启用")
+                        ));
                     } else {
                         forwardMessageBuilder.add(bot, new PlainText("关键词编号: " + keyId + "\n删除失败"));
                     }
