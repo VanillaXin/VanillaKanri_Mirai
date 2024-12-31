@@ -60,7 +60,7 @@ public class EventHandlers extends SimpleListenerHost {
 
         // 检查是否打印精简异常
         if (type >= 10 && type < 20) {
-            eString = StringUtils.getByLine(eString, 1, 5, "... [num] more");
+            eString = StringUtils.getByLine(eString, 1, 20, "... [num] more");
         }
 
         // 自定义异常格式
@@ -115,7 +115,8 @@ public class EventHandlers extends SimpleListenerHost {
             if (!insEvent.delPrefix(insEvent.getKanri().getPrefix())) secondPrefix = insEvent.getKanri().getPrefix();
         } else if (!StringUtils.isNullOrEmpty(insEvent.getKeyword().getPrefix())
                 && insEvent.getIns().startsWith(insEvent.getKeyword().getPrefix())) {
-            if (!insEvent.delPrefix(insEvent.getKeyword().getPrefix())) secondPrefix = insEvent.getKeyword().getPrefix();
+            if (!insEvent.delPrefix(insEvent.getKeyword().getPrefix()))
+                secondPrefix = insEvent.getKeyword().getPrefix();
         } else if (!StringUtils.isNullOrEmpty(insEvent.getTimer().getPrefix())
                 && insEvent.getIns().startsWith(insEvent.getTimer().getPrefix())) {
             if (!insEvent.delPrefix(insEvent.getTimer().getPrefix())) secondPrefix = insEvent.getTimer().getPrefix();

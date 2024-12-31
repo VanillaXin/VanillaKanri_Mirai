@@ -2,6 +2,8 @@ package xin.vanilla
 
 import cn.hutool.core.date.BetweenFormatter
 import cn.hutool.core.date.DateUtil
+import com.kennycason.kumo.CollisionMode
+import com.kennycason.kumo.WordCloud
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.future.future
@@ -26,6 +28,8 @@ import xin.vanilla.mapper.impl.MessageCacheImpl
 import xin.vanilla.util.Frame
 import xin.vanilla.util.VanillaUtils
 import xin.vanilla.util.sqlite.SqliteUtil
+import java.awt.Dimension
+import java.awt.FontMetrics
 import java.security.SecureRandom
 import java.util.*
 import java.util.concurrent.Callable
@@ -98,6 +102,12 @@ object VanillaKanri : KotlinPlugin(
      * 定时任务调度器
      */
     var scheduler: Scheduler = StdSchedulerFactory.getDefaultScheduler()
+
+    /**
+     * 词云fontMetrics(用于计算文本长度)
+     */
+    var fontMetrics: FontMetrics =
+        WordCloud(Dimension(50, 50), CollisionMode.PIXEL_PERFECT).getBufferedImage().createGraphics().getFontMetrics()
 
     // endregion 变量定义
 
@@ -268,13 +278,15 @@ object VanillaKanri : KotlinPlugin(
         val timerMap = timerData.getTimer()
         val flatMap = timerMap.values.asSequence().flatMap { it.asSequence() }
         logger.info("定时任务数量: " + flatMap.count())
-        logger.info("有效任务数量: " + flatMap
-            .filter { o -> !(o.once && o.firstTime < System.currentTimeMillis()) }
-            .count())
-        logger.info("未初始化数量: " + flatMap
-            .filter { o -> !(o.once && o.firstTime < System.currentTimeMillis()) }
-            .filter { o -> !o.inited }
-            .count())
+        logger.info(
+            "有效任务数量: " + flatMap
+                .filter { o -> !(o.once && o.firstTime < System.currentTimeMillis()) }
+                .count())
+        logger.info(
+            "未初始化数量: " + flatMap
+                .filter { o -> !(o.once && o.firstTime < System.currentTimeMillis()) }
+                .filter { o -> !o.inited }
+                .count())
         for (target in timerMap.keys) {
             val totalSize = timerMap[target]?.size
             // 移除已过期任务

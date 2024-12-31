@@ -22,6 +22,7 @@ import net.mamoe.mirai.contact.*;
 import net.mamoe.mirai.message.data.Image;
 import net.mamoe.mirai.message.data.*;
 import net.mamoe.mirai.utils.ExternalResource;
+import xin.vanilla.VanillaKanri;
 import xin.vanilla.common.RegExpConfig;
 import xin.vanilla.common.annotation.Capability;
 import xin.vanilla.entity.KeyRepEntity;
@@ -538,7 +539,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
 
                 User contact = Frame.buildPrivateChatContact(bot, Long.parseLong(wife), group.getId(), false);
 
-                forwardMessageBuilder.add(sender, new PlainText("抽老婆年度报告"))
+                forwardMessageBuilder.add(sender, new MessageChainBuilder().append(sender.getNick()).append(" 的年度抽老婆报告").build())
                         .add(bot, new MessageChainBuilder().append("阁下在").append(yearOfDate).append("年总计抽取老婆").append(String.valueOf(allCount)).append("次").build())
                         .add(bot, new MessageChainBuilder().append("其中使用得最多的爱称是: ").append(nick).append("\n共使用了").append(String.valueOf(nickMap.get(nick))).append("次")
                                 .append("\n是对").append(nick).append("情有独钟吗").build());
@@ -559,7 +560,11 @@ public class GroupMsgEvent extends BaseMsgEvent {
 
                 // 词云
                 {
-                    final List<WordFrequency> wordFrequencies = nickMap.entrySet().stream().map(entry -> new WordFrequency(entry.getKey(), Math.toIntExact(entry.getValue()))).collect(Collectors.toList());
+                    final List<WordFrequency> wordFrequencies = nickMap.entrySet().stream()
+                            .filter(entry -> StringUtils.isNotNullOrEmpty(entry.getKey()))
+                            .filter(entry -> VanillaKanri.INSTANCE.getFontMetrics().stringWidth(entry.getKey()) > 0)
+                            .map(entry -> new WordFrequency(entry.getKey(), Math.toIntExact(entry.getValue())))
+                            .collect(Collectors.toList());
                     final FrequencyAnalyzer frequencyAnalyzer = new FrequencyAnalyzer();
                     frequencyAnalyzer.setWordFrequenciesToReturn(600);
                     frequencyAnalyzer.setMinWordLength(2);
@@ -570,7 +575,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
                     // wordCloud.setBackgroundColor(Color.WHITE);
                     wordCloud.setBackground(new CircleBackground(300));
                     wordCloud.setColorPalette(new ColorPalette(new Color(0xD5CFFA), new Color(0xBBB1FA), new Color(0x9A8CF5), new Color(0x806EF5)));
-                    wordCloud.setKumoFont(new KumoFont("YueYuan Belle", FontWeight.PLAIN));
+                    wordCloud.setKumoFont(new KumoFont("YueYuan", FontWeight.PLAIN));
                     wordCloud.setFontScalar(new SqrtFontScalar(12, 45));
                     wordCloud.build(wordFrequencies);
                     String outputFileName = Va.getGlobalConfig().getOther().getTempPath() + "\\wife_" + sender.getId() + "_nick_" + System.currentTimeMillis() + ".png";
@@ -580,10 +585,17 @@ public class GroupMsgEvent extends BaseMsgEvent {
 
                 // 老婆云
                 {
-                    final List<WordFrequency> wordFrequencies = wifeMap.entrySet().stream().map(entry -> {
-                        User user = Frame.buildPrivateChatContact(bot, Long.parseLong(entry.getKey()), group.getId(), false);
-                        return new WordFrequency(user != null ? user.getNick() : entry.getKey(), Math.toIntExact(entry.getValue()));
-                    }).collect(Collectors.toList());
+                    final List<WordFrequency> wordFrequencies = wifeMap.entrySet().stream()
+                            .filter(entry -> StringUtils.isNotNullOrEmpty(entry.getKey()))
+                            .map(entry -> {
+                                User user = Frame.buildPrivateChatContact(bot, Long.parseLong(entry.getKey()), group.getId(), false);
+                                return new WordFrequency(user != null
+                                        && StringUtils.isNotNullOrEmpty(user.getNick())
+                                        && VanillaKanri.INSTANCE.getFontMetrics().stringWidth(user.getNick()) > 0
+                                        ? user.getNick()
+                                        : entry.getKey(), Math.toIntExact(entry.getValue()));
+                            })
+                            .collect(Collectors.toList());
                     final FrequencyAnalyzer frequencyAnalyzer = new FrequencyAnalyzer();
                     frequencyAnalyzer.setWordFrequenciesToReturn(600);
                     frequencyAnalyzer.setMinWordLength(2);
@@ -594,12 +606,60 @@ public class GroupMsgEvent extends BaseMsgEvent {
                     // wordCloud.setBackgroundColor(Color.WHITE);
                     wordCloud.setBackground(new CircleBackground(300));
                     wordCloud.setColorPalette(new ColorPalette(new Color(0xD5CFFA), new Color(0xBBB1FA), new Color(0x9A8CF5), new Color(0x806EF5)));
-                    wordCloud.setKumoFont(new KumoFont("YueYuan Belle", FontWeight.PLAIN));
+                    wordCloud.setKumoFont(new KumoFont("YueYuan", FontWeight.PLAIN));
                     wordCloud.setFontScalar(new SqrtFontScalar(12, 45));
                     wordCloud.build(wordFrequencies);
                     String outputFileName = Va.getGlobalConfig().getOther().getTempPath() + "\\wife_" + sender.getId() + "_qq_" + System.currentTimeMillis() + ".png";
                     wordCloud.writeToFile(outputFileName);
                     forwardMessageBuilder.add(bot, new MessageChainBuilder().append("阁下的年度老婆云").append(ExternalResource.uploadAsImage(new File(outputFileName), group)).build());
+                }
+            }
+
+            // 群内
+            {
+                List<Map.Entry<String, String>> entryList = Va.getWifeData().getWife().entrySet().stream()
+                        .filter((entry) -> entry.getKey().startsWith(yearOfDate))
+                        .filter(entry -> entry.getKey().contains("." + group.getId() + "."))
+                        .collect(Collectors.toList());
+                // 分别取冒号前后出现的次数最多的情况
+                Map<String, Long> nickMap = entryList.stream().map(entry -> entry.getValue().split(":")[0])
+                        .collect(Collectors.groupingBy(s -> s, Collectors.counting()));
+                String nick = nickMap
+                        .entrySet().stream().max(Map.Entry.comparingByValue())
+                        .map(Map.Entry::getKey).orElse("");
+                Map<String, Long> wifeMap = entryList.stream().map(entry -> entry.getValue().split(":")[1])
+                        .collect(Collectors.groupingBy(s -> s, Collectors.counting()));
+                String wife = wifeMap
+                        .entrySet().stream().max(Map.Entry.comparingByValue())
+                        .map(Map.Entry::getKey).orElse("");
+
+                forwardMessageBuilder
+                        .add(bot, new MessageChainBuilder().append(yearOfDate).append("群内年度最佳爱称: ").append(nick).append("\n共被使用").append(String.valueOf(nickMap.get(nick))).append("次").build())
+                        .add(bot, new MessageChainBuilder().append("群内年度最佳群友: ").append(wife).append("\n共被抽中").append(String.valueOf(wifeMap.get(wife))).append("次").build());
+
+                // 词云
+                {
+                    final List<WordFrequency> wordFrequencies = nickMap.entrySet().stream()
+                            .filter(entry -> StringUtils.isNotNullOrEmpty(entry.getKey()))
+                            .filter(entry -> VanillaKanri.INSTANCE.getFontMetrics().stringWidth(entry.getKey()) > 0)
+                            .map(entry -> new WordFrequency(entry.getKey(), Math.toIntExact(entry.getValue())))
+                            .collect(Collectors.toList());
+                    final FrequencyAnalyzer frequencyAnalyzer = new FrequencyAnalyzer();
+                    frequencyAnalyzer.setWordFrequenciesToReturn(600);
+                    frequencyAnalyzer.setMinWordLength(2);
+                    frequencyAnalyzer.setWordTokenizer(new ChineseWordTokenizer());
+                    final Dimension dimension = new Dimension(600, 600);
+                    final WordCloud wordCloud = new WordCloud(dimension, CollisionMode.PIXEL_PERFECT);
+                    wordCloud.setPadding(2);
+                    // wordCloud.setBackgroundColor(Color.WHITE);
+                    wordCloud.setBackground(new CircleBackground(300));
+                    wordCloud.setColorPalette(new ColorPalette(new Color(0xD5CFFA), new Color(0xBBB1FA), new Color(0x9A8CF5), new Color(0x806EF5)));
+                    wordCloud.setKumoFont(new KumoFont("YueYuan", FontWeight.PLAIN));
+                    wordCloud.setFontScalar(new SqrtFontScalar(12, 45));
+                    wordCloud.build(wordFrequencies);
+                    String outputFileName = Va.getGlobalConfig().getOther().getTempPath() + "\\wife_nick_" + System.currentTimeMillis() + ".png";
+                    wordCloud.writeToFile(outputFileName);
+                    forwardMessageBuilder.add(bot, new MessageChainBuilder().append("群内年度词云").append(ExternalResource.uploadAsImage(new File(outputFileName), group)).build());
                 }
             }
 
@@ -626,7 +686,11 @@ public class GroupMsgEvent extends BaseMsgEvent {
 
                 // 词云
                 {
-                    final List<WordFrequency> wordFrequencies = nickMap.entrySet().stream().map(entry -> new WordFrequency(entry.getKey(), Math.toIntExact(entry.getValue()))).collect(Collectors.toList());
+                    final List<WordFrequency> wordFrequencies = nickMap.entrySet().stream()
+                            .filter(entry -> StringUtils.isNotNullOrEmpty(entry.getKey()))
+                            .filter(entry -> VanillaKanri.INSTANCE.getFontMetrics().stringWidth(entry.getKey()) > 0)
+                            .map(entry -> new WordFrequency(entry.getKey(), Math.toIntExact(entry.getValue())))
+                            .collect(Collectors.toList());
                     final FrequencyAnalyzer frequencyAnalyzer = new FrequencyAnalyzer();
                     frequencyAnalyzer.setWordFrequenciesToReturn(600);
                     frequencyAnalyzer.setMinWordLength(2);
@@ -637,7 +701,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
                     // wordCloud.setBackgroundColor(Color.WHITE);
                     wordCloud.setBackground(new CircleBackground(300));
                     wordCloud.setColorPalette(new ColorPalette(new Color(0xD5CFFA), new Color(0xBBB1FA), new Color(0x9A8CF5), new Color(0x806EF5)));
-                    wordCloud.setKumoFont(new KumoFont("YueYuan Belle", FontWeight.PLAIN));
+                    wordCloud.setKumoFont(new KumoFont("YueYuan", FontWeight.PLAIN));
                     wordCloud.setFontScalar(new SqrtFontScalar(12, 45));
                     wordCloud.build(wordFrequencies);
                     String outputFileName = Va.getGlobalConfig().getOther().getTempPath() + "\\wife_nick_" + System.currentTimeMillis() + ".png";
