@@ -134,8 +134,8 @@ class Other {
     /**
      * 语音缓存路径
      */
-    @ValueDescription("语音缓存路径")
-    var voiceSavePath: String = ""
+    @ValueDescription("缓存路径")
+    var tempPath: String = ""
 
     /**
      * ai绘画url

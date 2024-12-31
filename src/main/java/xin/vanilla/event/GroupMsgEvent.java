@@ -8,7 +8,18 @@ import cn.hutool.http.HttpResponse;
 import cn.hutool.json.JSONUtil;
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
+import com.kennycason.kumo.CollisionMode;
+import com.kennycason.kumo.WordCloud;
+import com.kennycason.kumo.WordFrequency;
+import com.kennycason.kumo.bg.CircleBackground;
+import com.kennycason.kumo.font.FontWeight;
+import com.kennycason.kumo.font.KumoFont;
+import com.kennycason.kumo.font.scale.SqrtFontScalar;
+import com.kennycason.kumo.nlp.FrequencyAnalyzer;
+import com.kennycason.kumo.nlp.tokenizers.ChineseWordTokenizer;
+import com.kennycason.kumo.palette.ColorPalette;
 import net.mamoe.mirai.contact.*;
+import net.mamoe.mirai.message.data.Image;
 import net.mamoe.mirai.message.data.*;
 import net.mamoe.mirai.utils.ExternalResource;
 import xin.vanilla.common.RegExpConfig;
@@ -20,12 +31,11 @@ import xin.vanilla.entity.data.MsgCache;
 import xin.vanilla.entity.event.events.GroupMessageEvents;
 import xin.vanilla.enums.PermissionLevel;
 import xin.vanilla.rcon.Rcon;
-import xin.vanilla.util.Api;
 import xin.vanilla.util.Frame;
-import xin.vanilla.util.StringUtils;
-import xin.vanilla.util.VanillaUtils;
+import xin.vanilla.util.*;
 import xin.vanilla.util.sqlite.SqliteUtil;
 
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,6 +43,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
@@ -501,6 +512,141 @@ public class GroupMsgEvent extends BaseMsgEvent {
                     return true;
                 }
             }
+        } else if (msg.contentToString().equals("年度抽老婆报告")) {
+            String yearOfDate = String.valueOf(DateUtils.getYearOfDate(DateUtils.addMonth(new Date(), -2)));
+            ForwardMessageBuilder forwardMessageBuilder = new ForwardMessageBuilder(group);
+            // 个人
+            {
+                //   2024.11.07.128528197.1019567669: '老婆:1727009788'
+                List<Map.Entry<String, String>> senderEntryList = Va.getWifeData().getWife().entrySet().stream()
+                        .filter((entry) -> entry.getKey().startsWith(yearOfDate)
+                                // && entry.getKey().contains("." + group.getId() + ".")
+                                && entry.getKey().endsWith(String.valueOf(sender.getId())))
+                        .collect(Collectors.toList());
+                int allCount = senderEntryList.size();
+                // 分别取冒号前后出现的次数最多的情况
+                Map<String, Long> nickMap = senderEntryList.stream().map(entry -> entry.getValue().split(":")[0])
+                        .collect(Collectors.groupingBy(s -> s, Collectors.counting()));
+                String nick = nickMap
+                        .entrySet().stream().max(Map.Entry.comparingByValue())
+                        .map(Map.Entry::getKey).orElse("");
+                Map<String, Long> wifeMap = senderEntryList.stream().map(entry -> entry.getValue().split(":")[1])
+                        .collect(Collectors.groupingBy(s -> s, Collectors.counting()));
+                String wife = wifeMap
+                        .entrySet().stream().max(Map.Entry.comparingByValue())
+                        .map(Map.Entry::getKey).orElse("");
+
+                User contact = Frame.buildPrivateChatContact(bot, Long.parseLong(wife), group.getId(), false);
+
+                forwardMessageBuilder.add(sender, new PlainText("抽老婆年度报告"))
+                        .add(bot, new MessageChainBuilder().append("阁下在").append(yearOfDate).append("年总计抽取老婆").append(String.valueOf(allCount)).append("次").build())
+                        .add(bot, new MessageChainBuilder().append("其中使用得最多的爱称是: ").append(nick).append("\n共使用了").append(String.valueOf(nickMap.get(nick))).append("次")
+                                .append("\n是对").append(nick).append("情有独钟吗").build());
+                if (contact != null) {
+                    forwardMessageBuilder.add(bot, new MessageChainBuilder().append("与阁下最有缘分的群友是")
+                            .append(Frame.buildImageByUrl(contact.getAvatarUrl(), group))
+                            .append("\n『").append(contact.getNick()).append("』")
+                            .append("(").append(wife).append(")")
+                            .append("\n共邂逅了").append(String.valueOf(wifeMap.get(wife))).append("次")
+                            .build());
+                } else {
+                    forwardMessageBuilder.add(bot, new MessageChainBuilder().append("与阁下最有缘分的群友是")
+                            .append(Frame.buildImageByUrl(StringUtils.getAvatarUrl(Long.parseLong(wife), AvatarSpec.ORIGINAL.getSize()), group))
+                            .append("\n(").append(wife).append(")")
+                            .append("\n共邂逅了").append(String.valueOf(wifeMap.get(wife))).append("次")
+                            .build());
+                }
+
+                // 词云
+                {
+                    final List<WordFrequency> wordFrequencies = nickMap.entrySet().stream().map(entry -> new WordFrequency(entry.getKey(), Math.toIntExact(entry.getValue()))).collect(Collectors.toList());
+                    final FrequencyAnalyzer frequencyAnalyzer = new FrequencyAnalyzer();
+                    frequencyAnalyzer.setWordFrequenciesToReturn(600);
+                    frequencyAnalyzer.setMinWordLength(2);
+                    frequencyAnalyzer.setWordTokenizer(new ChineseWordTokenizer());
+                    final Dimension dimension = new Dimension(600, 600);
+                    final WordCloud wordCloud = new WordCloud(dimension, CollisionMode.PIXEL_PERFECT);
+                    wordCloud.setPadding(2);
+                    // wordCloud.setBackgroundColor(Color.WHITE);
+                    wordCloud.setBackground(new CircleBackground(300));
+                    wordCloud.setColorPalette(new ColorPalette(new Color(0xD5CFFA), new Color(0xBBB1FA), new Color(0x9A8CF5), new Color(0x806EF5)));
+                    wordCloud.setKumoFont(new KumoFont("YueYuan Belle", FontWeight.PLAIN));
+                    wordCloud.setFontScalar(new SqrtFontScalar(12, 45));
+                    wordCloud.build(wordFrequencies);
+                    String outputFileName = Va.getGlobalConfig().getOther().getTempPath() + "\\wife_" + sender.getId() + "_nick_" + System.currentTimeMillis() + ".png";
+                    wordCloud.writeToFile(outputFileName);
+                    forwardMessageBuilder.add(bot, new MessageChainBuilder().append("阁下的年度词云").append(ExternalResource.uploadAsImage(new File(outputFileName), group)).build());
+                }
+
+                // 老婆云
+                {
+                    final List<WordFrequency> wordFrequencies = wifeMap.entrySet().stream().map(entry -> {
+                        User user = Frame.buildPrivateChatContact(bot, Long.parseLong(entry.getKey()), group.getId(), false);
+                        return new WordFrequency(user != null ? user.getNick() : entry.getKey(), Math.toIntExact(entry.getValue()));
+                    }).collect(Collectors.toList());
+                    final FrequencyAnalyzer frequencyAnalyzer = new FrequencyAnalyzer();
+                    frequencyAnalyzer.setWordFrequenciesToReturn(600);
+                    frequencyAnalyzer.setMinWordLength(2);
+                    frequencyAnalyzer.setWordTokenizer(new ChineseWordTokenizer());
+                    final Dimension dimension = new Dimension(600, 600);
+                    final WordCloud wordCloud = new WordCloud(dimension, CollisionMode.PIXEL_PERFECT);
+                    wordCloud.setPadding(2);
+                    // wordCloud.setBackgroundColor(Color.WHITE);
+                    wordCloud.setBackground(new CircleBackground(300));
+                    wordCloud.setColorPalette(new ColorPalette(new Color(0xD5CFFA), new Color(0xBBB1FA), new Color(0x9A8CF5), new Color(0x806EF5)));
+                    wordCloud.setKumoFont(new KumoFont("YueYuan Belle", FontWeight.PLAIN));
+                    wordCloud.setFontScalar(new SqrtFontScalar(12, 45));
+                    wordCloud.build(wordFrequencies);
+                    String outputFileName = Va.getGlobalConfig().getOther().getTempPath() + "\\wife_" + sender.getId() + "_qq_" + System.currentTimeMillis() + ".png";
+                    wordCloud.writeToFile(outputFileName);
+                    forwardMessageBuilder.add(bot, new MessageChainBuilder().append("阁下的年度老婆云").append(ExternalResource.uploadAsImage(new File(outputFileName), group)).build());
+                }
+            }
+
+            // 全局
+            {
+                List<Map.Entry<String, String>> entryList = Va.getWifeData().getWife().entrySet().stream()
+                        .filter((entry) -> entry.getKey().startsWith(yearOfDate))
+                        .collect(Collectors.toList());
+                // 分别取冒号前后出现的次数最多的情况
+                Map<String, Long> nickMap = entryList.stream().map(entry -> entry.getValue().split(":")[0])
+                        .collect(Collectors.groupingBy(s -> s, Collectors.counting()));
+                String nick = nickMap
+                        .entrySet().stream().max(Map.Entry.comparingByValue())
+                        .map(Map.Entry::getKey).orElse("");
+                Map<String, Long> wifeMap = entryList.stream().map(entry -> entry.getValue().split(":")[1])
+                        .collect(Collectors.groupingBy(s -> s, Collectors.counting()));
+                String wife = wifeMap
+                        .entrySet().stream().max(Map.Entry.comparingByValue())
+                        .map(Map.Entry::getKey).orElse("");
+
+                forwardMessageBuilder
+                        .add(bot, new MessageChainBuilder().append(yearOfDate).append("年度最佳爱称: ").append(nick).append("\n共被使用").append(String.valueOf(nickMap.get(nick))).append("次").build())
+                        .add(bot, new MessageChainBuilder().append("年度最佳群友: ").append(wife).append("\n共被抽中").append(String.valueOf(wifeMap.get(wife))).append("次").build());
+
+                // 词云
+                {
+                    final List<WordFrequency> wordFrequencies = nickMap.entrySet().stream().map(entry -> new WordFrequency(entry.getKey(), Math.toIntExact(entry.getValue()))).collect(Collectors.toList());
+                    final FrequencyAnalyzer frequencyAnalyzer = new FrequencyAnalyzer();
+                    frequencyAnalyzer.setWordFrequenciesToReturn(600);
+                    frequencyAnalyzer.setMinWordLength(2);
+                    frequencyAnalyzer.setWordTokenizer(new ChineseWordTokenizer());
+                    final Dimension dimension = new Dimension(600, 600);
+                    final WordCloud wordCloud = new WordCloud(dimension, CollisionMode.PIXEL_PERFECT);
+                    wordCloud.setPadding(2);
+                    // wordCloud.setBackgroundColor(Color.WHITE);
+                    wordCloud.setBackground(new CircleBackground(300));
+                    wordCloud.setColorPalette(new ColorPalette(new Color(0xD5CFFA), new Color(0xBBB1FA), new Color(0x9A8CF5), new Color(0x806EF5)));
+                    wordCloud.setKumoFont(new KumoFont("YueYuan Belle", FontWeight.PLAIN));
+                    wordCloud.setFontScalar(new SqrtFontScalar(12, 45));
+                    wordCloud.build(wordFrequencies);
+                    String outputFileName = Va.getGlobalConfig().getOther().getTempPath() + "\\wife_nick_" + System.currentTimeMillis() + ".png";
+                    wordCloud.writeToFile(outputFileName);
+                    forwardMessageBuilder.add(bot, new MessageChainBuilder().append("年度词云").append(ExternalResource.uploadAsImage(new File(outputFileName), group)).build());
+                }
+            }
+            Frame.sendMessage(group, forwardMessageBuilder.build());
+            return true;
         }
         return false;
     }
@@ -515,7 +661,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
             Frame.sendMessage(group, new MessageChainBuilder().append(new At(sender.getId())).append(back).build());
 
             String res = Api.translateToJP(back.replace("\r", "")).replace("\n", "").replace(" ", "");
-            String path = Va.getGlobalConfig().getOther().getVoiceSavePath() + "\\";
+            String path = Va.getGlobalConfig().getOther().getTempPath() + "\\";
             String id = IdUtil.randomUUID();
             path = path + id + ".wav";
             try {
@@ -726,7 +872,7 @@ public class GroupMsgEvent extends BaseMsgEvent {
         if (msg.contentToString().startsWith(prefix)) {
             String command = msg.contentToString().substring(prefix.length());
             String res = Api.translateToJP(command);
-            String path = Va.getGlobalConfig().getOther().getVoiceSavePath() + "\\";
+            String path = Va.getGlobalConfig().getOther().getTempPath() + "\\";
             String id = IdUtil.randomUUID();
             path = path + id + ".wav";
             Frame.sendMessage(group, new MessageChainBuilder()

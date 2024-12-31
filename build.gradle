@@ -32,6 +32,8 @@ dependencies {
     implementation 'org.quartz-scheduler:quartz:2.3.2' // 定时任务库
     implementation 'xin.vanilla.rcon:rcon:1.2.1' // MC RCON依赖
     // implementation 'org.geysermc.mcprotocollib:protocol:1.20.6-1' // 用于与MC客户端/服务器通信的库
+    implementation 'com.kennycason:kumo-core:1.28' // 词云
+    implementation 'com.kennycason:kumo-tokenizers:1.28' // 词云
 
 
     testCompileOnly 'org.apiguardian:apiguardian-api:1.1.2'

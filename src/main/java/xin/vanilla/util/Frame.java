@@ -5,6 +5,7 @@ import cn.hutool.http.HttpResponse;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.contact.Contact;
 import net.mamoe.mirai.contact.Group;
+import net.mamoe.mirai.contact.User;
 import net.mamoe.mirai.message.MessageReceipt;
 import net.mamoe.mirai.message.data.*;
 import net.mamoe.mirai.utils.ExternalResource;
@@ -147,8 +148,8 @@ public class Frame {
      *
      * @param fail 未获取到对象是否抛出异常
      */
-    public static Contact buildPrivateChatContact(Bot bot, long qqNum, long groupNum, boolean fail) {
-        Contact contact = null;
+    public static User buildPrivateChatContact(Bot bot, long qqNum, long groupNum, boolean fail) {
+        User contact = null;
         if (groupNum > 0) {
             Group group = bot.getGroup(groupNum);
             if (group != null) {
